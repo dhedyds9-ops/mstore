@@ -199,7 +199,8 @@ class WhatsAppService
                 $payload = [
                     'target' => $phone,
                     'message' => $message,
-                    'countryCode' => '62'
+                    'countryCode' => '62',
+                    'connectOnly' => true,
                 ];
                 
                 if ($mediaUrl) {
@@ -313,14 +314,16 @@ class WhatsAppService
                         'status' => 'failed',
                     ],
                 ]));
-                $errorMsg = 'WhatsApp gagal dikirim: ' . ($providerValidation['error'] ?? $responseBody);
-                Log::error($errorMsg);
+                $rawError = (string) ($providerValidation['error'] ?? $responseBody);
+                $humanized = $this->humanizeProviderError($rawError);
+                $errorMsg = 'WhatsApp gagal dikirim: ' . $humanized;
+                Log::error($errorMsg, ['raw' => $rawError]);
                 return [
                     'success' => false,
                     'message' => $errorMsg,
                     'provider' => $provider,
                     'response' => $responseJson,
-                    'error' => $errorMsg
+                    'error' => $rawError
                 ];
             }
 
@@ -420,7 +423,8 @@ class WhatsAppService
                 ->post($this->baseUrl . '/send', [
                     'target' => $phone,
                     'message' => $message,
-                    'countryCode' => '62'
+                    'countryCode' => '62',
+                    'connectOnly' => true,
                 ]);
 
             $responseBody = $response->body();
@@ -656,7 +660,20 @@ class WhatsAppService
 
             if ($response && $response->successful()) {
                 $connected = $this->extractConnectionFlag($body);
-                $statusMessage = $connected ? 'Device WhatsApp terhubung.' : 'Device WhatsApp belum terhubung.';
+
+                // Surface provider-supplied reason (token invalid, device not found, dll)
+                $reason = isset($body['reason']) ? (string) $body['reason'] : '';
+                $detail = isset($body['detail']) ? (string) $body['detail'] : '';
+
+                if (! $connected) {
+                    if ($reason !== '' || $detail !== '') {
+                        $statusMessage = 'Device WhatsApp belum terhubung. Alasan: ' . ($reason ?: $detail);
+                    } else {
+                        $statusMessage = 'Device WhatsApp belum terhubung. Silakan buka panel provider dan sambungkan ulang device (scan QR).';
+                    }
+                } else {
+                    $statusMessage = 'Device WhatsApp terhubung.';
+                }
             } else {
                 $statusMessage = 'Gagal terhubung ke gateway WhatsApp (cek URL/API Key).';
             }
@@ -770,25 +787,44 @@ class WhatsAppService
 
     private function extractConnectionFlag(array $body): bool
     {
-        // Check for Wablas send success response {"status": true}
-        if (isset($body['status']) && is_bool($body['status']) && $body['status'] === true) {
-            return true;
+        // Fonnte: device_status = "connect" | "disconnect". This is the SOURCE OF TRUTH.
+        // The top-level "status": true only means the API call succeeded, NOT device connected.
+        if (isset($body['device_status'])) {
+            $ds = strtolower(trim((string) $body['device_status']));
+            if (in_array($ds, ['connect', 'connected', 'online', 'aktif'], true)) {
+                return true;
+            }
+            if (in_array($ds, ['disconnect', 'disconnected', 'offline', 'nonaktif'], true)) {
+                return false;
+            }
         }
 
-        // Check for Wablas device status with array
+        // Wablas / generic: list of devices inside data[]
         if (isset($body['data']) && is_array($body['data'])) {
-            foreach ($body['data'] as $device) {
-                if (is_array($device) && isset($device['status'])) {
-                    $deviceStatus = strtolower((string)$device['status']);
-                    if (in_array($deviceStatus, ['connected', 'online', 'aktif'])) {
+            $list = $body['data'];
+            $isList = array_keys($list) === range(0, count($list) - 1);
+            if (! $isList) {
+                $list = [$list];
+            }
+            foreach ($list as $device) {
+                if (! is_array($device)) {
+                    continue;
+                }
+                $deviceStatus = strtolower(trim((string) ($device['status'] ?? $device['device_status'] ?? '')));
+                if ($deviceStatus !== '') {
+                    if (in_array($deviceStatus, ['connected', 'connect', 'online', 'aktif'], true)) {
                         return true;
+                    }
+                    if (in_array($deviceStatus, ['disconnected', 'disconnect', 'offline', 'nonaktif'], true)) {
+                        return false;
                     }
                 }
             }
         }
 
-        // Check various flags
-        foreach (['device_status', 'deviceStatus', 'connected', 'is_connected', 'isConnected', 'active', 'status'] as $key) {
+        // Generic flags. NOTE: for Fonnte, 'status' is API success not device status,
+        // so we only treat it as connected flag when device_status is absent.
+        foreach (['connected', 'is_connected', 'isConnected', 'active', 'deviceStatus', 'status'] as $key) {
             if (! array_key_exists($key, $body)) {
                 continue;
             }
@@ -810,8 +846,8 @@ class WhatsAppService
             }
         }
 
-        // Default: since send works, assume connected if no disconnect indication
-        return true;
+        // Fail-safe: jika tidak ada indikator status device yang jelas, anggap disconnected.
+        return false;
     }
 
     private function humanizeProviderError(string $error): string
