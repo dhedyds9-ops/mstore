@@ -607,16 +607,25 @@ class TechnicianAttendanceController extends Controller implements HasMiddleware
 
     public function kiosk()
     {
-        $todayLogs = TechnicianAttendance::with('user')
+        $todayQuery = TechnicianAttendance::with('user')
             ->where(function ($q) {
                 $q->whereDate('clock_in', today()->toDateString())
                     ->orWhereDate('work_date', today()->toDateString());
-            })
+            });
+
+        $todayLogs = (clone $todayQuery)
             ->latest('clock_in')
             ->limit(50)
             ->get();
 
-        return view('technicians.attendance.kiosk', compact('todayLogs'));
+        $stats = [
+            'total_present' => (clone $todayQuery)->whereNotNull('clock_in')->distinct('user_id')->count('user_id'),
+            'on_time' => (clone $todayQuery)->where('status', 'present')->distinct('user_id')->count('user_id'),
+            'late' => (clone $todayQuery)->where('status', 'late')->distinct('user_id')->count('user_id'),
+            'clocked_out' => (clone $todayQuery)->whereNotNull('clock_out')->distinct('user_id')->count('user_id'),
+        ];
+
+        return view('technicians.attendance.kiosk', compact('todayLogs', 'stats'));
     }
 
     public function kioskScan(Request $request)
