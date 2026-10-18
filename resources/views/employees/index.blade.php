@@ -107,7 +107,7 @@
                         <th class="ps-3" style="width:40px;">
                             <input type="checkbox" class="form-check-input" id="checkAllEmployees">
                         </th>
-                        <th>Karyawan</th>
+                        <th>Nama Karyawan</th>
                         <th>NIK</th>
                         <th>Posisi / Dept</th>
                         <th>No HP</th>
@@ -158,7 +158,7 @@
                                         <span class="badge bg-primary-subtle text-primary x-small border border-primary-subtle" title="User Account: {{ $employee->user->username }}">User</span>
                                     @endif
                                     @if($employee->wash_employee_id)
-                                        <span class="badge bg-info-subtle text-info x-small border border-info-subtle">Wash</span>
+                                        <span class="badge bg-info-subtle text-info x-small border border-info-subtle">Layanan</span>
                                     @endif
                                     @if(!$employee->user_id && !$employee->wash_employee_id)
                                         <span class="text-muted x-small italic">Manual</span>

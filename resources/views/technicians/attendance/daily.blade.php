@@ -123,7 +123,7 @@
                                                     @endphp
                                                     <tr>
                                                         <th style="width: 50px;" class="ps-3">#</th>
-                                                        <th>{{ __('Karyawan') }}</th>
+                                                        <th>{{ __('Nama Karyawan') }}</th>
                                                         <th>{{ __('Peran') }}</th>
                                                         <th>{{ __('Jam Masuk') }}</th>
                                                         <th>{{ __('Jam Keluar') }}</th>
@@ -149,12 +149,12 @@
                                                                         <img src="{{ Storage::url($user->avatar) }}" class="rounded-circle me-2 object-fit-cover" width="32" height="32" alt="">
                                                                     @else
                                                                         <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center me-2 fw-bold" style="width: 32px; height: 32px; font-size: 0.85rem;">
-                                                                            {{ strtoupper(substr($user->name, 0, 1)) }}
+                                                                            {{ strtoupper(substr($user->employee?->full_name ?? $user->name, 0, 1)) }}
                                                                         </div>
                                                                     @endif
                                                                     <div>
-                                                                        <div class="fw-bold text-dark lh-sm">{{ $user->name }}</div>
-                                                                        <div class="small text-muted" style="font-size: 0.75rem;">{{ $user->username ?? $user->email }}</div>
+                                                                        <div class="fw-bold text-dark lh-sm">{{ $user->employee?->full_name ?? $user->name }}</div>
+                                                                        <div class="small text-muted" style="font-size: 0.75rem;">{{ $user->employee?->position ?? ($user->username ?? $user->email) }}</div>
                                                                     </div>
                                                                 </div>
                                                             </td>

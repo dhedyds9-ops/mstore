@@ -36,12 +36,12 @@
                 <form action="{{ route('attendance.payslip') }}" method="GET" class="w-100 border-top pt-3">
                     <div class="row g-2 align-items-end">
                         <div class="col-12 col-md-3">
-                            <label class="form-label small fw-bold text-muted mb-1">{{ __('Filter Pengguna') }}</label>
+                            <label class="form-label small fw-bold text-muted mb-1">{{ __('Filter Karyawan') }}</label>
                             <select name="user_id" class="form-select form-select-sm js-search-select">
-                                <option value="">{{ __('Semua Staf') }}</option>
+                                <option value="">{{ __('Semua Karyawan') }}</option>
                                 @foreach($technicians as $tech)
                                     <option value="{{ $tech->id }}" {{ request('user_id') == $tech->id ? 'selected' : '' }}>
-                                        {{ $tech->name }} ({{ $tech->role->name ?? __('User') }})
+                                        {{ $tech->employee?->full_name ?? $tech->name }} ({{ $tech->employee?->position ?? $tech->role->name ?? __('User') }})
                                     </option>
                                 @endforeach
                             </select>
@@ -162,8 +162,9 @@
                     <div class="px-3 py-2 bg-white border-bottom border-light">
                         <div class="row g-0">
                             <div class="col-7">
-                                <p class="x-small text-uppercase fw-bold text-muted mb-0">Teknisi</p>
-                                <p class="fs-6 fw-bold text-dark mb-0">{{ $data['user']->name }}</p>
+                                <p class="x-small text-uppercase fw-bold text-muted mb-0">Nama Karyawan</p>
+                                <p class="fs-6 fw-bold text-dark mb-0">{{ $data['user']->employee?->full_name ?? $data['user']->name }}</p>
+                                <div class="x-small text-muted">{{ $data['user']->employee?->position ?? $data['user']->job_title ?? ($data['user']->role?->name ?? 'Karyawan') }}@if($data['user']->employee?->nik) • NIK: {{ $data['user']->employee->nik }}@endif</div>
                             </div>
                             <div class="col-5 text-end">
                                 <p class="x-small text-uppercase fw-bold text-muted mb-0">Periode</p>

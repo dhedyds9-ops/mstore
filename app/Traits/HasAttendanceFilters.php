@@ -16,7 +16,7 @@ trait HasAttendanceFilters
      */
     protected function getFilteredAttendanceQuery(Request $request)
     {
-        $query = TechnicianAttendance::with('user');
+        $query = TechnicianAttendance::with(['user.employee', 'user.role']);
 
         if ($request->filled('start_date') && $request->filled('end_date')) {
             $start = $request->start_date;

@@ -65,12 +65,12 @@
                     <form action="{{ route('attendance.index') }}" method="GET" class="w-100 border-top pt-3">
                         <div class="row g-2 align-items-end">
                             <div class="col-12 col-md-3">
-                                <label class="form-label small fw-bold text-muted mb-1">{{ __('Filter Pengguna') }}</label>
+                                <label class="form-label small fw-bold text-muted mb-1">{{ __('Filter Karyawan') }}</label>
                                 <select name="user_id" class="form-select form-select-sm js-search-select">
-                                    <option value="">{{ __('Semua Staf') }}</option>
+                                    <option value="">{{ __('Semua Karyawan') }}</option>
                                     @foreach($technicians as $tech)
                                         <option value="{{ $tech->id }}" {{ request('user_id') == $tech->id ? 'selected' : '' }}>
-                                            {{ $tech->name }} ({{ $tech->role->name ?? __('User') }})
+                                            {{ $tech->employee?->full_name ?? $tech->name }} ({{ $tech->employee?->position ?? $tech->role->name ?? __('User') }})
                                         </option>
                                     @endforeach
                                 </select>
@@ -224,7 +224,7 @@
                                         <input type="checkbox" id="selectAllAttendance" onclick="toggleSelectAll()">
                                     </th>
                                 @endif
-                                <th>{{ __('Teknisi') }}</th>
+                                <th>{{ __('Nama Karyawan') }}</th>
                                 <th>{{ __('Tanggal') }}</th>
                                 <th>{{ __('Jam Masuk') }}</th>
                                 <th>{{ __('Jam Pulang') }}</th>
@@ -245,7 +245,15 @@
                                         </td>
                                     @endif
                                     <td>
-                                        <div class="fw-medium">{{ $attendance->user->name }}</div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="avatar-circle bg-primary-subtle text-primary fw-bold d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style="width: 36px; height: 36px; font-size: 0.82rem;">
+                                                {{ strtoupper(substr($attendance->user->employee?->full_name ?? $attendance->user->name ?? 'K', 0, 2)) }}
+                                            </div>
+                                            <div>
+                                                <div class="fw-semibold text-dark">{{ $attendance->user->employee?->full_name ?? $attendance->user->name }}</div>
+                                                <div class="x-small text-muted">{{ $attendance->user->employee?->position ?? $attendance->user->role?->name ?? 'Karyawan' }}</div>
+                                            </div>
+                                        </div>
                                         <div class="mt-1">
                                             @php $shift = $attendance->shift_info; @endphp
                                             <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle x-small py-1" title="{{ __('Jadwal Shift') }}">
@@ -366,11 +374,11 @@
                 @csrf
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label fw-medium">{{ __('Pengguna') }} (Total: {{ $technicians->count() }})</label>
+                        <label class="form-label fw-medium">{{ __('Karyawan') }} (Total: {{ $technicians->count() }})</label>
                         <select name="user_id" class="form-select js-search-select-modal" required>
-                            <option value="">{{ __('Pilih Pengguna') }}</option>
+                            <option value="">{{ __('Pilih Karyawan') }}</option>
                             @foreach($technicians as $tech)
-                                <option value="{{ $tech->id }}">{{ $tech->name }} ({{ $tech->role->name ?? 'N/A' }})</option>
+                                <option value="{{ $tech->id }}">{{ $tech->employee?->full_name ?? $tech->name }} ({{ $tech->employee?->position ?? $tech->role->name ?? 'N/A' }})</option>
                             @endforeach
                         </select>
                     </div>
@@ -415,11 +423,11 @@
                 @csrf
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label fw-medium">{{ __('Pengguna') }} (Total: {{ $technicians->count() }})</label>
+                        <label class="form-label fw-medium">{{ __('Karyawan') }} (Total: {{ $technicians->count() }})</label>
                         <select name="user_id" class="form-select js-search-select-modal" required>
-                            <option value="">{{ __('Pilih Pengguna') }}</option>
+                            <option value="">{{ __('Pilih Karyawan') }}</option>
                             @foreach($technicians as $tech)
-                                <option value="{{ $tech->id }}">{{ $tech->name }} ({{ $tech->role->name ?? 'N/A' }})</option>
+                                <option value="{{ $tech->id }}">{{ $tech->employee?->full_name ?? $tech->name }} ({{ $tech->employee?->position ?? $tech->role->name ?? 'N/A' }})</option>
                             @endforeach
                         </select>
                     </div>
@@ -539,7 +547,7 @@
                     e.preventDefault();
                     Swal.fire({
                         title: '{{ __('Kirim Notifikasi WhatsApp?') }}',
-                        text: '{{ __('Sistem akan mengirimkan ringkasan absensi ini ke nomor teknisi terkait.') }}',
+                        text: '{{ __('Sistem akan mengirimkan ringkasan absensi ini ke nomor karyawan terkait.') }}',
                         icon: 'question',
                         showCancelButton: true,
                         confirmButtonColor: '#198754', // Warna sukses hijau WA

@@ -103,7 +103,7 @@ class TechnicianAttendanceController extends Controller implements HasMiddleware
         $usersQuery = \App\Models\User::whereHas('role', function ($q) {
             $q->whereNotIn('name', ['customer', 'partner', 'super-admin', 'manager', 'field-leader']);
         })->where('is_active', true)
-            ->with('role')
+            ->with(['role', 'employee'])
             ->orderBy('name');
 
         if (!$this->attendanceService->canViewAllAttendanceData($user)) {
@@ -120,7 +120,7 @@ class TechnicianAttendanceController extends Controller implements HasMiddleware
 
         $attendancesQuery = TechnicianAttendance::whereBetween('clock_in', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
             ->orWhereBetween('work_date', [$startDate, $endDate])
-            ->with('user');
+            ->with(['user.employee', 'user.role']);
 
         $allAttendances = $attendancesQuery->get();
 
@@ -175,7 +175,7 @@ class TechnicianAttendanceController extends Controller implements HasMiddleware
         $techniciansQuery = \App\Models\User::whereHas('role', function ($q) {
             $q->whereNotIn('name', ['customer', 'partner', 'super-admin', 'manager', 'field-leader']);
         })->where('is_active', true)
-            ->with('role');
+            ->with(['role', 'employee']);
 
         if (!$this->attendanceService->canViewAllAttendanceData($user)) {
             $techniciansQuery->where('id', Auth::id());
@@ -203,7 +203,7 @@ class TechnicianAttendanceController extends Controller implements HasMiddleware
         $techniciansQuery = \App\Models\User::whereHas('role', function ($q) {
             $q->whereNotIn('name', ['customer', 'partner', 'super-admin', 'manager', 'field-leader']);
         })->where('is_active', true)
-            ->with('role');
+            ->with(['role', 'employee']);
 
         if (!$this->attendanceService->canViewAllAttendanceData($user)) {
             $techniciansQuery->where('id', Auth::id());
