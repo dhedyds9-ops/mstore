@@ -22,9 +22,12 @@ return [
         'core',       // Dashboard, Pengaturan, User & Role, Audit, Payment Gateway
         'finance',    // Finance & Accounting
         'atk',        // POS ATK & Toko
+        'pos',        // POS Retail
         'wash',       // GT Wash
         'wedding',    // Wedding & Event
         'cctv',       // Solusi CCTV
+        'hr',         // Manajemen SDM & Karyawan
+        'inventory',  // Inventaris & Stok
     ],
 
     // Section sidebar yang dimatikan total bila modulnya tidak aktif.

@@ -110,9 +110,10 @@ class AppServiceProvider extends ServiceProvider
                         : Cache::remember("sidebar.permission_map.role.{$roleId}", 300, $computePermissionMap);
                 }
 
+                $sidebarCacheKey = "sidebar.menu.tree.v18.user.{$authUser->id}.comp." . ($authUser->company_id ?? 0);
                 $sidebarMenu = $runningUnitTests
                     ? \App\Support\ModuleGate::filterSidebar(\App\Support\Sidebar\SidebarMenu::tree())
-                    : Cache::rememberForever('sidebar.menu.tree.v16', function () {
+                    : Cache::remember($sidebarCacheKey, 300, function () {
                         return \App\Support\ModuleGate::filterSidebar(\App\Support\Sidebar\SidebarMenu::tree());
                     });
                 $unreadNotificationCount = $authUser->unreadNotifications()->count();
