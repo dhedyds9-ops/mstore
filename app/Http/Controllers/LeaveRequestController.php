@@ -129,11 +129,19 @@ class LeaveRequestController extends Controller implements HasMiddleware
 
     public function admin()
     {
-        $query = LeaveRequest::query()->with('user')->orderBy('created_at', 'desc');
+        $query = LeaveRequest::query()->with(['user.employee', 'user.role'])->orderBy('created_at', 'desc');
 
         if (request()->filled('reason_keyword')) {
             $kw = strtolower(request('reason_keyword'));
-            $query->whereRaw('LOWER(reason) LIKE ?', ['%'.$kw.'%']);
+            $query->where(function ($q) use ($kw) {
+                $q->whereRaw('LOWER(reason) LIKE ?', ['%'.$kw.'%'])
+                    ->orWhereHas('user', function ($uq) use ($kw) {
+                        $uq->whereRaw('LOWER(name) LIKE ?', ['%'.$kw.'%'])
+                            ->orWhereHas('employee', function ($eq) use ($kw) {
+                                $eq->whereRaw('LOWER(full_name) LIKE ?', ['%'.$kw.'%']);
+                            });
+                    });
+            });
         }
 
         $requests = $query->customPaginate()->withQueryString();

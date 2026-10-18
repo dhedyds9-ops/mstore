@@ -8,7 +8,7 @@
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
             <div>
                 <h1 class="h2 mb-1 fw-bold">Kelola Pengajuan Cuti & Izin</h1>
-                <p class="text-body-secondary mb-0">Review, approve, dan reject semua pengajuan cuti & izin teknisi.</p>
+                <p class="text-body-secondary mb-0">Review, approve, dan kelola semua pengajuan cuti & izin karyawan.</p>
             </div>
         </div>
     </div>
@@ -51,7 +51,7 @@
                 <div class="col-12 col-lg-5">
                     <div class="input-group">
                         <span class="input-group-text bg-body-tertiary border-0"><i class="fa-solid fa-magnifying-glass"></i></span>
-                        <input type="text" name="reason_keyword" value="{{ request('reason_keyword') }}" class="form-control border-0 bg-body-tertiary" placeholder="Cari alasan...">
+                        <input type="text" name="reason_keyword" value="{{ request('reason_keyword') }}" class="form-control border-0 bg-body-tertiary" placeholder="Cari nama karyawan atau alasan...">
                     </div>
                 </div>
                 <div class="col-12 col-lg-7 d-flex flex-wrap gap-2">
@@ -73,7 +73,7 @@
                 <table class="table table-hover align-middle mb-0 leave-table">
                     <thead class="table-light">
                         <tr>
-                            <th class="ps-3">Teknisi</th>
+                            <th class="ps-3">Nama Karyawan</th>
                             <th>Tanggal Mulai</th>
                             <th>Tanggal Selesai</th>
                             <th>Durasi</th>
@@ -85,7 +85,22 @@
                     <tbody>
                         @forelse($requests as $req)
                         <tr>
-                            <td class="ps-3 fw-semibold">{{ $req->user->name }}</td>
+                            <td class="ps-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="avatar-circle bg-primary-subtle text-primary fw-bold d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style="width: 36px; height: 36px; font-size: 0.85rem;">
+                                        {{ strtoupper(substr($req->user->employee?->full_name ?? $req->user->name ?? 'K', 0, 2)) }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold text-body">{{ $req->user->employee?->full_name ?? $req->user->name }}</div>
+                                        <div class="small text-body-secondary">
+                                            {{ $req->user->employee?->position ?? $req->user->employee?->department ?? $req->user->job_title ?? ($req->user->role?->name ?? 'Karyawan') }}
+                                            @if($req->user->employee?->nik)
+                                                <span class="opacity-75">• {{ $req->user->employee->nik }}</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
                             <td>{{ $req->start_date->translatedFormat('d M Y') }}</td>
                             <td>{{ $req->end_date->translatedFormat('d M Y') }}</td>
                             <td>{{ $req->start_date->diffInDays($req->end_date) + 1 }} Hari</td>

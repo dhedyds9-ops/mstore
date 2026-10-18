@@ -6,7 +6,7 @@
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
             <div>
                 <h1 class="h3 mb-1 fw-bold">{{ __('Leave Requests') }}</h1>
-                <p class="text-body-secondary mb-0">{{ __('Kelola pengajuan cuti dan izin teknisi dalam satu halaman.') }}</p>
+                <p class="text-body-secondary mb-0">{{ __('Kelola pengajuan cuti dan izin karyawan dalam satu halaman.') }}</p>
             </div>
             <button type="button" class="btn btn-primary px-4" data-bs-toggle="modal" data-bs-target="#createLeaveModal">
                 <i class="fa-solid fa-plus me-1"></i>{{ __('Request Leave') }}
@@ -83,7 +83,7 @@
                 <table class="table table-hover align-middle mb-0 leave-table">
                     <thead class="table-light">
                         <tr>
-                            <th class="ps-3">{{ __('Employee') }}</th>
+                            <th class="ps-3">Nama Karyawan</th>
                             <th>{{ __('Start Date') }}</th>
                             <th>{{ __('End Date') }}</th>
                             <th>{{ __('Duration') }}</th>
@@ -97,7 +97,19 @@
                     <tbody>
                         @forelse($requests as $req)
                         <tr>
-                            <td class="ps-3 fw-semibold">{{ $req->user->name }}</td>
+                            <td class="ps-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="avatar-circle bg-primary-subtle text-primary fw-bold d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style="width: 36px; height: 36px; font-size: 0.85rem;">
+                                        {{ strtoupper(substr($req->user->employee?->full_name ?? $req->user->name ?? 'K', 0, 2)) }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold text-body">{{ $req->user->employee?->full_name ?? $req->user->name }}</div>
+                                        <div class="small text-body-secondary">
+                                            {{ $req->user->employee?->position ?? $req->user->role?->name ?? 'Karyawan' }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
                             <td>{{ $req->start_date->translatedFormat('d M Y') }}</td>
                             <td>{{ $req->end_date->translatedFormat('d M Y') }}</td>
                             <td>{{ $req->start_date->diffInDays($req->end_date) + 1 }} {{ __('Days') }}</td>

@@ -180,4 +180,22 @@ class PiketAndLeaveTest extends TestCase
         $this->assertEquals('approved', $leave->fresh()->status);
         $this->assertEquals($this->admin->id, $leave->fresh()->approved_by);
     }
+
+    public function test_admin_can_view_leave_requests_with_employee_name_column()
+    {
+        LeaveRequest::create([
+            'user_id' => $this->technician->id,
+            'start_date' => Carbon::now()->addDays(2),
+            'end_date' => Carbon::now()->addDays(3),
+            'reason' => 'Izin keperluan keluarga',
+            'status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($this->admin)->get(route('admin.leave-requests'));
+
+        $response->assertStatus(200);
+        $response->assertSee('Nama Karyawan');
+        $response->assertDontSee('<th>Teknisi</th>', false);
+        $response->assertSee($this->technician->name);
+    }
 }
