@@ -5,10 +5,13 @@
 @section('content')
 <div class="container-fluid">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
-        <h1 class="h3 mb-0 text-body">{{ __('Laporan Laba Bersih Investor') }}</h1>
-        <div class="d-flex flex-column flex-md-row gap-2 w-100 w-md-auto">
-            <form action="{{ route('finance.investor_report') }}" method="GET" class="d-flex flex-column flex-md-row gap-2 w-100 w-md-auto">
-                <select name="coordinator_id" class="form-select form-control-lg" onchange="this.form.submit()">
+        <div>
+            <h1 class="h4 mb-1 fw-bold text-body"><i class="fa-solid fa-file-invoice-dollar text-primary me-2"></i>{{ __('Laporan Laba Bersih Investor') }}</h1>
+            <p class="text-body-secondary small mb-0">{{ __('Perhitungan pembagian hasil keuntungan dan alokasi dana investor.') }}</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2 align-items-center justify-content-md-end">
+            <form action="{{ route('finance.investor_report') }}" method="GET" class="d-flex flex-wrap gap-2">
+                <select name="coordinator_id" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="">{{ __('Semua Pengurus') }}</option>
                     @foreach($coordinators as $coordinator)
                         <option value="{{ $coordinator->id }}" {{ $coordinatorId == $coordinator->id ? 'selected' : '' }}>
@@ -16,27 +19,25 @@
                         </option>
                     @endforeach
                 </select>
-                <input type="month" name="month" class="form-control form-control-lg" value="{{ $selectedMonth }}" onchange="this.form.submit()">
+                <input type="month" name="month" class="form-control form-control-sm" value="{{ $selectedMonth }}" onchange="this.form.submit()">
             </form>
-            <div class="d-flex flex-column flex-md-row gap-2">
-                <a href="{{ route('finance.investor_report.pdf', ['month' => $selectedMonth, 'coordinator_id' => $coordinatorId]) }}" class="btn btn-danger btn-lg w-100 w-md-auto" target="_blank">
-                    <i class="fas fa-file-pdf me-1"></i> {{ __('Ekspor PDF') }}
-                </a>
-                <a href="{{ route('finance.index') }}" class="btn btn-secondary btn-lg w-100 w-md-auto">
-                    <i class="fas fa-arrow-left me-1"></i> {{ __('Kembali') }}
-                </a>
-            </div>
+            <a href="{{ route('finance.investor_report.pdf', ['month' => $selectedMonth, 'coordinator_id' => $coordinatorId]) }}" class="btn btn-outline-danger btn-sm shadow-sm" target="_blank">
+                <i class="fa-solid fa-file-pdf me-1"></i> {{ __('Ekspor PDF') }}
+            </a>
+            <a href="{{ route('finance.index') }}" class="btn btn-outline-secondary btn-sm shadow-sm">
+                <i class="fa-solid fa-arrow-left me-1"></i> {{ __('Kembali') }}
+            </a>
         </div>
     </div>
 
-    <div class="card shadow mb-4">
-        <div class="card-header py-3 bg-primary text-white">
-            <h6 class="m-0 font-weight-bold">{{ __('Perhitungan Pembagian Hasil Investor') }} - {{ \Carbon\Carbon::parse($selectedMonth)->format('F Y') }}</h6>
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+        <div class="card-header bg-primary text-white py-3">
+            <h6 class="m-0 fw-bold"><i class="fa-solid fa-calculator me-2"></i>{{ __('Perhitungan Pembagian Hasil Investor') }} - {{ \Carbon\Carbon::parse($selectedMonth)->format('F Y') }}</h6>
         </div>
-        <div class="card-body">
+        <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-bordered table-striped table-responsive-mobile">
-                    <thead class="">
+                <table class="table table-hover align-middle mb-0 table-responsive-mobile">
+                    <thead class="table-light">
                         <tr>
                             <th>{{ __('Keterangan') }}</th>
                             <th class="text-end">{{ __('Nilai (IDR)') }}</th>

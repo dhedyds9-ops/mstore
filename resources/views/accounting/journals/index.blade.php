@@ -4,59 +4,59 @@
 <div class="container-fluid py-4">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
-            <h1 class="h3 mb-1 fw-bold text-gray-800">Jurnal Umum (General Journal)</h1>
-            <p class="text-muted small mb-0">Catatan transaksi keuangan sistematis dengan prinsip pembukuan ganda (Debit / Kredit).</p>
+            <h1 class="h4 mb-1 fw-bold text-body"><i class="fa-solid fa-book-journal-whills text-primary me-2"></i>Jurnal Umum (General Journal)</h1>
+            <p class="text-body-secondary small mb-0">Catatan transaksi keuangan sistematis dengan prinsip pembukuan ganda (Debit / Kredit).</p>
         </div>
-        <a href="{{ route('accounting.journals.create') }}" class="btn btn-primary btn-lg shadow-sm">
-            <i class="fas fa-plus me-1"></i> Buat Jurnal Manual
+        <a href="{{ route('accounting.journals.create') }}" class="btn btn-sm btn-primary shadow-sm">
+            <i class="fa-solid fa-plus me-1"></i> Buat Jurnal Manual
         </a>
     </div>
 
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-            <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
+        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm rounded-3" role="alert">
+            <i class="fa-solid fa-circle-check me-2"></i> {{ session('success') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
     @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
-            <i class="fas fa-exclamation-triangle me-2"></i> {{ session('error') }}
+        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm rounded-3" role="alert">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i> {{ session('error') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
 
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body">
+    <div class="card shadow-sm border-0 rounded-4 mb-4 overflow-hidden">
+        <div class="card-body p-4">
             <form method="get" class="row g-3 align-items-end mb-4">
                 <div class="col-12 col-md-3">
-                    <label class="form-label small fw-bold text-muted">Dari Tanggal</label>
-                    <input type="date" name="start_date" value="{{ $start }}" class="form-control">
+                    <label class="form-label small fw-semibold text-body-secondary mb-1">Dari Tanggal</label>
+                    <input type="date" name="start_date" value="{{ $start }}" class="form-control form-control-sm">
                 </div>
                 <div class="col-12 col-md-3">
-                    <label class="form-label small fw-bold text-muted">Sampai Tanggal</label>
-                    <input type="date" name="end_date" value="{{ $end }}" class="form-control">
+                    <label class="form-label small fw-semibold text-body-secondary mb-1">Sampai Tanggal</label>
+                    <input type="date" name="end_date" value="{{ $end }}" class="form-control form-control-sm">
                 </div>
                 <div class="col-12 col-md-4">
-                    <label class="form-label small fw-bold text-muted">Cari No Jurnal / Deskripsi</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-light"><i class="fas fa-search text-muted"></i></span>
+                    <label class="form-label small fw-semibold text-body-secondary mb-1">Cari No Jurnal / Deskripsi</label>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-body-tertiary"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
                         <input type="text" name="search" value="{{ $search }}" class="form-control" placeholder="Contoh: JU-2026 atau Gaji">
                     </div>
                 </div>
                 <div class="col-12 col-md-auto">
-                    <button type="submit" class="btn btn-primary px-3">
-                        <i class="fas fa-filter me-1"></i> Filter
+                    <button type="submit" class="btn btn-sm btn-primary px-3 shadow-sm">
+                        <i class="fa-solid fa-filter me-1"></i> Filter
                     </button>
                     @if($start || $end || $search)
-                        <a href="{{ route('accounting.journals.index') }}" class="btn btn-outline-secondary ms-1">Reset</a>
+                        <a href="{{ route('accounting.journals.index') }}" class="btn btn-sm btn-outline-secondary ms-1">Reset</a>
                     @endif
                 </div>
             </form>
 
             <div class="table-responsive">
-                <table class="table table-hover table-bordered align-middle">
+                <table class="table table-hover table-bordered align-middle mb-0">
                     <thead class="table-light">
-                        <tr>
+                        <tr class="small text-uppercase text-body-secondary">
                             <th style="width: 14%;">Tanggal</th>
                             <th style="width: 16%;">No. Jurnal</th>
                             <th>Keterangan / Deskripsi</th>

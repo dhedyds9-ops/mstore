@@ -155,7 +155,7 @@
                                     <td class="text-end text-danger fw-bold">Rp {{ number_format($expenseISP, 0, ',', '.') }}</td>
                                 </tr>
                                 <tr>
-                                    <td>Gaji (Teknisi & Staf)</td>
+                                    <td>Gaji Karyawan & Staf</td>
                                     <td class="text-end text-danger fw-bold">Rp {{ number_format($expenseSalaries, 0, ',', '.') }}</td>
                                 </tr>
                                 <tr>

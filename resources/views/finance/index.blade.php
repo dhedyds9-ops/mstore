@@ -243,8 +243,8 @@
                     <table class="table table-bordered table-striped table-responsive-mobile" width="100%" cellspacing="0">
                         <thead class="bg-body-tertiary">
                             <tr>
-                                <th rowspan="2" class="text-end">{{ __('Koordinator') }}</th>
-                                <th rowspan="2" class="text-end">{{ __('Pendapatan') }}</th>
+                                <th rowspan="2" class="text-start align-middle">{{ __('Koordinator') }}</th>
+                                <th rowspan="2" class="text-end align-middle">{{ __('Pendapatan') }}</th>
                                 <th rowspan="2" class="text-end text-danger">{{ __('Komisi') }}</th>
                                 <th rowspan="2" class="text-end text-danger">
                                     {{ __('Pengeluaran Tunai') }}
@@ -301,7 +301,7 @@
                                 </td>
                                 
                                 <td class="text-center align-middle">
-                                    <a href="{{ route('finance.coordinator.detail', $summary->id) }}" class="btn btn-outline-primary" title="{{ __('Lihat Detail Transaksi') }}">
+                                    <a href="{{ route('finance.coordinator.detail', $summary->id) }}" class="btn btn-sm btn-outline-primary" title="{{ __('Lihat Detail Transaksi') }}">
                                         <i class="fas fa-magnifying-glass"></i>
                                     </a>
                                 </td>

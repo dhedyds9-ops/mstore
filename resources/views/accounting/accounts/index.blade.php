@@ -4,40 +4,40 @@
 <div class="container-fluid py-4">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
-            <h1 class="h3 mb-1 fw-bold text-gray-800">Bagan Akun (Chart of Accounts)</h1>
-            <p class="text-muted small mb-0">Daftar kode akun standar akuntansi (PSAK) untuk klasifikasi transaksi & pelaporan keuangan.</p>
+            <h1 class="h4 mb-1 fw-bold text-body"><i class="fa-solid fa-folder-tree text-primary me-2"></i>Bagan Akun (Chart of Accounts)</h1>
+            <p class="text-body-secondary small mb-0">Daftar kode akun standar akuntansi (PSAK) untuk klasifikasi transaksi & pelaporan keuangan.</p>
         </div>
-        <button type="button" class="btn btn-primary btn-lg shadow-sm" data-bs-toggle="modal" data-bs-target="#createAccountModal">
-            <i class="fas fa-plus me-1"></i> Tambah Akun Baru
+        <button type="button" class="btn btn-sm btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#createAccountModal">
+            <i class="fa-solid fa-plus me-1"></i> Tambah Akun Baru
         </button>
     </div>
 
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-            <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
+        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm rounded-3" role="alert">
+            <i class="fa-solid fa-circle-check me-2"></i> {{ session('success') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
     @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
-            <i class="fas fa-exclamation-triangle me-2"></i> {{ session('error') }}
+        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm rounded-3" role="alert">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i> {{ session('error') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
 
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body">
-            <form method="get" class="row g-3 align-items-end mb-3">
+    <div class="card shadow-sm border-0 rounded-4 mb-4 overflow-hidden">
+        <div class="card-body p-4">
+            <form method="get" class="row g-3 align-items-end mb-4">
                 <div class="col-12 col-md-4">
-                    <label class="form-label small fw-bold text-muted">Cari Kode atau Nama</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-light"><i class="fas fa-search text-muted"></i></span>
+                    <label class="form-label small fw-semibold text-body-secondary mb-1">Cari Kode atau Nama</label>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-body-tertiary"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
                         <input type="text" name="search" value="{{ $search }}" class="form-control" placeholder="Contoh: 1-1000 atau Kas">
                     </div>
                 </div>
                 <div class="col-12 col-md-3">
-                    <label class="form-label small fw-bold text-muted">Klasifikasi Akun</label>
-                    <select name="type" class="form-select">
+                    <label class="form-label small fw-semibold text-body-secondary mb-1">Klasifikasi Akun</label>
+                    <select name="type" class="form-select form-select-sm">
                         <option value="">Semua Tipe Akun</option>
                         @foreach($accountTypes as $k => $v)
                             <option value="{{ $k }}" @selected($type === $k)>{{ $v }}</option>
@@ -45,19 +45,19 @@
                     </select>
                 </div>
                 <div class="col-12 col-md-auto">
-                    <button type="submit" class="btn btn-primary px-4">
-                        <i class="fas fa-filter me-1"></i> Filter
+                    <button type="submit" class="btn btn-sm btn-primary px-3 shadow-sm">
+                        <i class="fa-solid fa-filter me-1"></i> Filter
                     </button>
                     @if($type || $search)
-                        <a href="{{ route('accounting.accounts.index') }}" class="btn btn-outline-secondary ms-1">Reset</a>
+                        <a href="{{ route('accounting.accounts.index') }}" class="btn btn-sm btn-outline-secondary ms-1">Reset</a>
                     @endif
                 </div>
             </form>
 
             <div class="table-responsive">
-                <table class="table table-hover table-striped align-middle">
+                <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
-                        <tr>
+                        <tr class="small text-uppercase text-body-secondary">
                             <th style="width: 15%;">Kode Akun</th>
                             <th>Nama Akun</th>
                             <th style="width: 20%;">Klasifikasi / Tipe</th>

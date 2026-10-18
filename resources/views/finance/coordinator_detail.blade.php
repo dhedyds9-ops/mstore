@@ -3,64 +3,57 @@
 @section('title', __('Laporan Keuangan Pengurus'))
 
 @section('content')
-<div class="container-fluid">
-    <!-- HEADER FILTER (Sesuai saran tambahan sebelumnya) -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
+<div class="container-fluid py-4">
+    <!-- Header Standar -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+        <div>
+            <h4 class="fw-bold mb-1"><i class="fas fa-file-invoice-dollar text-primary me-2"></i>Laporan Keuangan Pengurus</h4>
+            <p class="text-secondary small mb-0">{{ $coordinator->name }} &bull; Wilayah: <span class="badge bg-light text-dark border">{{ $coordinator->region->name ?? '-' }}</span></p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ route('finance.index') }}" class="btn btn-outline-secondary btn-sm shadow-sm">
+                <i class="fas fa-arrow-left me-1"></i> Kembali ke Kas
+            </a>
+        </div>
+    </div>
+
+    <!-- FILTER & PERIODE CARD -->
+    <div class="card shadow-sm border-0 rounded-4 mb-4">
+        <div class="card-body p-3 p-md-4">
             <form action="{{ route('finance.coordinator.detail', $coordinator->id) }}" method="GET" class="row g-3 align-items-end" id="coordFilterForm">
-                <div class="col-md-auto">
-                    <label class="form-label small text-muted fw-bold">Pilih Bulan</label>
-                    <div class="input-group">
+                <div class="col-md-3">
+                    <label class="form-label small text-secondary fw-semibold mb-1">Pilih Bulan</label>
+                    <div class="input-group input-group-sm">
                         <span class="input-group-text bg-light"><i class="fa-solid fa-calendar-days"></i></span>
-                        <input type="month" name="month" id="monthPicker" class="form-control" value="{{ request('month', (!request('start_date') ? \Carbon\Carbon::parse($startDate)->format('Y-m') : '')) }}" onchange="this.form.submit()">
+                        <input type="month" name="month" id="monthPicker" class="form-control form-control-sm" value="{{ request('month', (!request('start_date') ? \Carbon\Carbon::parse($startDate)->format('Y-m') : '')) }}" onchange="this.form.submit()">
                     </div>
                 </div>
 
-                <div class="col-md-auto d-none d-lg-flex align-items-center">
-                    <span class="text-muted small mt-4">Atau Periode</span>
-                </div>
-
-                <div class="col-md-auto">
-                    <label class="form-label small text-muted fw-bold">Rentang Tanggal</label>
-                    <div class="input-group">
-                        <input type="date" name="start_date" id="start_date" class="form-control" value="{{ request('start_date', $startDate) }}" onchange="this.form.submit()">
+                <div class="col-md-4">
+                    <label class="form-label small text-secondary fw-semibold mb-1">Rentang Tanggal</label>
+                    <div class="input-group input-group-sm">
+                        <input type="date" name="start_date" id="start_date" class="form-control form-control-sm" value="{{ request('start_date', $startDate) }}" onchange="this.form.submit()">
                         <span class="input-group-text bg-light">-</span>
-                        <input type="date" name="end_date" id="end_date" class="form-control" value="{{ request('end_date', $endDate) }}" onchange="this.form.submit()">
+                        <input type="date" name="end_date" id="end_date" class="form-control form-control-sm" value="{{ request('end_date', $endDate) }}" onchange="this.form.submit()">
                     </div>
                 </div>
 
-                <div class="col-md-auto ms-lg-auto">
-                    <label class="form-label small text-muted fw-bold">{{ __('Filter Tipe') }}</label>
-                    <select name="type" class="form-select" onchange="this.form.submit()">
-                        <option value="">{{ __('Semua') }}</option>
+                <div class="col-md-3">
+                    <label class="form-label small text-secondary fw-semibold mb-1">{{ __('Filter Tipe') }}</label>
+                    <select name="type" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="">{{ __('Semua Tipe Transaksi') }}</option>
                         <option value="income" {{ request('type') == 'income' ? 'selected' : '' }}>{{ __('Pemasukan') }}</option>
                         <option value="expense" {{ request('type') == 'expense' ? 'selected' : '' }}>{{ __('Pengeluaran') }}</option>
                         <option value="transfer" {{ request('type') == 'transfer' ? 'selected' : '' }}>{{ __('Transfer') }}</option>
                     </select>
                 </div>
-            </form>
-        </div>
-    </div>
 
-    <!-- HEADER INFO (Dinamis) -->
-    <h1 class="h3 mb-4 text-gray-800">Laporan Keuangan Pengurus</h1>
-    <div class="card shadow mb-4">
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <p><strong>Nama Pengurus:</strong> {{ $coordinator->name }}</p>
-                    <p><strong>Wilayah:</strong> {{ $coordinator->region->name ?? '-' }}</p>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary btn-sm w-100 shadow-sm">
+                        <i class="fas fa-filter me-1"></i> Terapkan
+                    </button>
                 </div>
-                <div class="col-md-6 text-md-end">
-                    <p><strong>Periode Laporan:</strong> 
-                        @if(request('month') && request('month') != 'all')
-                            {{ \Carbon\Carbon::parse(request('month'))->format('F Y') }}
-                        @else
-                            {{ \Carbon\Carbon::parse($startDate)->format('d M Y') }} s/d {{ \Carbon\Carbon::parse($endDate)->format('d M Y') }}
-                        @endif
-                    </p>
-                </div>
-            </div>
+            </form>
         </div>
     </div>
 

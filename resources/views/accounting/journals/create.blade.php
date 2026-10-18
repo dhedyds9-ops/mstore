@@ -2,73 +2,73 @@
 @section('title', 'Buat Jurnal Umum Manual')
 @section('content')
 <div class="container-fluid py-4">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
         <div>
-            <h1 class="h3 mb-1 fw-bold text-gray-800">Buat Jurnal Umum Manual</h1>
-            <p class="text-muted small mb-0">Input penyesuaian, penyusutan aset, setoran modal, atau beban operasional berpasangan.</p>
+            <h4 class="fw-bold mb-1"><i class="fas fa-file-circle-plus text-primary me-2"></i>Buat Jurnal Umum Manual</h4>
+            <p class="text-secondary small mb-0">Input penyesuaian, penyusutan aset, setoran modal, atau beban operasional berpasangan.</p>
         </div>
-        <a href="{{ route('accounting.journals.index') }}" class="btn btn-outline-secondary">
+        <a href="{{ route('accounting.journals.index') }}" class="btn btn-outline-secondary btn-sm shadow-sm">
             <i class="fas fa-arrow-left me-1"></i> Kembali ke Daftar Jurnal
         </a>
     </div>
 
     @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
-            <i class="fas fa-exclamation-triangle me-2"></i> {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div class="alert alert-danger border-0 shadow-sm rounded-3 d-flex align-items-center mb-4" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <div>{{ session('error') }}</div>
         </div>
     @endif
 
     <form method="post" action="{{ route('accounting.journals.store') }}" id="journalForm">
         @csrf
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white py-3 border-bottom">
-                <h6 class="mb-0 fw-bold text-primary"><i class="fas fa-file-invoice me-2"></i>Informasi Header Jurnal</h6>
+        <div class="card shadow-sm border-0 rounded-4 mb-4">
+            <div class="card-header bg-white py-3 border-0">
+                <h6 class="mb-0 fw-bold text-dark"><i class="fas fa-file-invoice text-primary me-2"></i>Informasi Header Jurnal</h6>
             </div>
-            <div class="card-body">
+            <div class="card-body p-3 p-md-4">
                 <div class="row g-3">
                     <div class="col-md-4">
-                        <label class="form-label fw-semibold">Tanggal Transaksi <span class="text-danger">*</span></label>
-                        <input type="date" name="date" value="{{ old('date', date('Y-m-d')) }}" class="form-control" required>
+                        <label class="form-label fw-semibold small text-secondary">Tanggal Transaksi <span class="text-danger">*</span></label>
+                        <input type="date" name="date" value="{{ old('date', date('Y-m-d')) }}" class="form-control form-control-sm" required>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label fw-semibold">Nomor Jurnal <span class="text-danger">*</span></label>
-                        <input type="text" name="journal_no" value="{{ old('journal_no', $defaultNo) }}" class="form-control font-monospace" required>
+                        <label class="form-label fw-semibold small text-secondary">Nomor Jurnal <span class="text-danger">*</span></label>
+                        <input type="text" name="journal_no" value="{{ old('journal_no', $defaultNo) }}" class="form-control form-control-sm font-monospace" required>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label fw-semibold">Periode Akuntansi</label>
-                        <input type="text" class="form-control bg-light" value="{{ $openPeriod ? $openPeriod->name . ' (OPEN)' : 'Belum Ada Periode Terbuka' }}" readonly>
+                        <label class="form-label fw-semibold small text-secondary">Periode Akuntansi</label>
+                        <input type="text" class="form-control form-control-sm bg-light" value="{{ $openPeriod ? $openPeriod->name . ' (TERBUKA)' : 'Belum Ada Periode Terbuka' }}" readonly>
                     </div>
                     <div class="col-12">
-                        <label class="form-label fw-semibold">Keterangan / Deskripsi Transaksi <span class="text-danger">*</span></label>
-                        <input type="text" name="description" value="{{ old('description') }}" class="form-control" placeholder="Contoh: Beban listrik dan air cabang utama bulan berjalan" required>
+                        <label class="form-label fw-semibold small text-secondary">Keterangan / Deskripsi Transaksi <span class="text-danger">*</span></label>
+                        <input type="text" name="description" value="{{ old('description') }}" class="form-control form-control-sm" placeholder="Contoh: Beban listrik dan air cabang utama bulan berjalan" required>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-                <h6 class="mb-0 fw-bold text-primary"><i class="fas fa-list-ol me-2"></i>Rincian Akun (Debit & Kredit)</h6>
-                <button type="button" class="btn btn-sm btn-outline-primary" id="addRowBtn">
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+            <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold text-dark"><i class="fas fa-list-ol text-primary me-2"></i>Rincian Akun (Debit & Kredit)</h6>
+                <button type="button" class="btn btn-sm btn-outline-primary shadow-sm" id="addRowBtn">
                     <i class="fas fa-plus me-1"></i> Tambah Baris
                 </button>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-bordered mb-0 align-middle" id="entriesTable">
+                    <table class="table table-hover align-middle mb-0" id="entriesTable">
                         <thead class="table-light">
                             <tr>
-                                <th style="width: 38%;">Akun (COA) <span class="text-danger">*</span></th>
-                                <th style="width: 24%;">Debit (Rp)</th>
-                                <th style="width: 24%;">Kredit (Rp)</th>
-                                <th style="width: 14%;" class="text-center">Aksi</th>
+                                <th class="ps-4 small text-uppercase text-body-secondary fw-semibold" style="width: 38%;">Akun (COA) <span class="text-danger">*</span></th>
+                                <th class="small text-uppercase text-body-secondary fw-semibold" style="width: 24%;">Debit (Rp)</th>
+                                <th class="small text-uppercase text-body-secondary fw-semibold" style="width: 24%;">Kredit (Rp)</th>
+                                <th class="pe-4 text-center small text-uppercase text-body-secondary fw-semibold" style="width: 14%;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="entriesBody">
                             <tr class="entry-row">
-                                <td>
-                                    <select name="entries[0][account_id]" class="form-select select-account" required>
+                                <td class="ps-4">
+                                    <select name="entries[0][account_id]" class="form-select form-select-sm select-account" required>
                                         <option value="">Pilih Akun</option>
                                         @foreach($accounts as $acc)
                                             <option value="{{ $acc->id }}">{{ $acc->code }} - {{ $acc->name }} ({{ strtoupper($acc->type) }})</option>
@@ -77,20 +77,20 @@
                                     <input type="text" name="entries[0][memo]" class="form-control form-control-sm mt-1" placeholder="Catatan memo (opsional)">
                                 </td>
                                 <td>
-                                    <input type="number" name="entries[0][debit]" class="form-control font-monospace input-debit" min="0" step="any" value="0">
+                                    <input type="number" name="entries[0][debit]" class="form-control form-control-sm font-monospace input-debit" min="0" step="any" value="0">
                                 </td>
                                 <td>
-                                    <input type="number" name="entries[0][credit]" class="form-control font-monospace input-credit" min="0" step="any" value="0">
+                                    <input type="number" name="entries[0][credit]" class="form-control form-control-sm font-monospace input-credit" min="0" step="any" value="0">
                                 </td>
-                                <td class="text-center">
+                                <td class="text-center pe-4">
                                     <button type="button" class="btn btn-outline-danger btn-sm remove-row" disabled>
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </td>
                             </tr>
                             <tr class="entry-row">
-                                <td>
-                                    <select name="entries[1][account_id]" class="form-select select-account" required>
+                                <td class="ps-4">
+                                    <select name="entries[1][account_id]" class="form-select form-select-sm select-account" required>
                                         <option value="">Pilih Akun</option>
                                         @foreach($accounts as $acc)
                                             <option value="{{ $acc->id }}">{{ $acc->code }} - {{ $acc->name }} ({{ strtoupper($acc->type) }})</option>
@@ -99,36 +99,36 @@
                                     <input type="text" name="entries[1][memo]" class="form-control form-control-sm mt-1" placeholder="Catatan memo (opsional)">
                                 </td>
                                 <td>
-                                    <input type="number" name="entries[1][debit]" class="form-control font-monospace input-debit" min="0" step="any" value="0">
+                                    <input type="number" name="entries[1][debit]" class="form-control form-control-sm font-monospace input-debit" min="0" step="any" value="0">
                                 </td>
                                 <td>
-                                    <input type="number" name="entries[1][credit]" class="form-control font-monospace input-credit" min="0" step="any" value="0">
+                                    <input type="number" name="entries[1][credit]" class="form-control form-control-sm font-monospace input-credit" min="0" step="any" value="0">
                                 </td>
-                                <td class="text-center">
+                                <td class="text-center pe-4">
                                     <button type="button" class="btn btn-outline-danger btn-sm remove-row">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </td>
                             </tr>
                         </tbody>
-                        <tfoot class="table-light fw-bold">
+                        <tfoot class="table-light fw-bold border-top-2">
                             <tr>
-                                <td class="text-end">Total:</td>
-                                <td class="text-end font-monospace" id="displayTotalDebit">Rp 0</td>
-                                <td class="text-end font-monospace" id="displayTotalCredit">Rp 0</td>
-                                <td class="text-center">
-                                    <span id="balanceBadge" class="badge bg-danger">Selisih: Rp 0</span>
+                                <td class="ps-4 text-end text-uppercase small">Total:</td>
+                                <td class="font-monospace text-primary" id="displayTotalDebit">Rp 0</td>
+                                <td class="font-monospace text-primary" id="displayTotalCredit">Rp 0</td>
+                                <td class="text-center pe-4">
+                                    <span id="balanceBadge" class="badge bg-danger rounded-pill px-3 py-2">Selisih: Rp 0</span>
                                 </td>
                             </tr>
                         </tfoot>
                     </table>
                 </div>
             </div>
-            <div class="card-footer bg-white py-3 d-flex justify-content-between align-items-center">
-                <span class="small text-muted" id="balanceHint">
-                    <i class="fas fa-info-circle me-1"></i> Total Debit harus sama dengan Total Kredit (Balance) sebelum dapat disimpan.
+            <div class="card-footer bg-white py-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+                <span class="small text-secondary" id="balanceHint">
+                    <i class="fas fa-info-circle text-primary me-1"></i> Total Debit harus sama dengan Total Kredit (Balance) sebelum dapat disimpan.
                 </span>
-                <button type="submit" class="btn btn-primary btn-lg px-4" id="submitBtn" disabled>
+                <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm" id="submitBtn" disabled>
                     <i class="fas fa-check me-1"></i> Posting Jurnal
                 </button>
             </div>
