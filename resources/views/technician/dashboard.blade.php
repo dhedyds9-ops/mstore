@@ -100,13 +100,6 @@
                 <h3 class="fw-bold mb-1">{{ $stats['assigned_installations'] }}</h3>
                 <div class="small text-body-secondary">{{ __('Jadwal Berikutnya') }}</div>
             </div>
-            <div class="card-footer bg-transparent border-0 text-center py-2">
-                @if (Route::has('installations.index'))
-                    <a href="{{ route('installations.index') }}" class="text-decoration-none small fw-bold text-info">
-                        {{ __('Lihat Detail') }} <i class="fa-solid fa-arrow-right ms-1"></i>
-                    </a>
-                @endif
-            </div>
         </div>
     </div>
 
@@ -288,9 +281,6 @@
                         </div>
                         <h6 class="mb-1 fw-bold text-body-emphasis">{{ $install->customer->name }}</h6>
                         <p class="mb-2 small text-body-secondary"><i class="fa-solid fa-location-dot me-1"></i> {{ Str::limit($install->customer->address, 30) }}</p>
-                        @if (Route::has('installations.show'))
-                            <a href="{{ route('installations.show', $install) }}" class="btn btn-sm btn-outline-info w-100">{{ __('Lihat Detail') }}</a>
-                        @endif
                     </div>
                     @empty
                     <div class="p-4 text-center text-muted">

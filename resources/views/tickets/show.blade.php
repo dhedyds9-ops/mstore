@@ -670,9 +670,6 @@
                             <button class="btn btn-outline-secondary" type="button" id="getCurrentLocation">
                                 <i class="fa-solid fa-crosshairs"></i>
                             </button>
-                            <button class="btn btn-outline-info" type="button" id="openNetworkMapPicker">
-                                <i class="fa-solid fa-map-location-dot me-1"></i>{{ __('Pilih di Peta') }}
-                            </button>
                         </div>
                         <div class="form-text">{{ __('Klik ikon bidik untuk mengambil lokasi saat ini atau gunakan Scan QR.') }}</div>
                         <div id="locationAccuracyStatus" class="small text-muted mt-1"></div>
@@ -1004,7 +1001,6 @@
         }
         
         const getCurrentLocationBtn = document.getElementById('getCurrentLocation');
-        const openNetworkMapPickerBtn = document.getElementById('openNetworkMapPicker');
         const locationInput = document.getElementById('location');
         const locationAccuracyStatus = document.getElementById('locationAccuracyStatus');
         const editLocationModal = document.getElementById('editLocationModal');
@@ -1049,7 +1045,6 @@
         let isCompletionMacQrScannerRunning = false;
         let ticketLocationMap = null;
         let ticketLocationMarker = null;
-        let mapPickerWindow = null;
         const scannerFormats = (typeof Html5QrcodeSupportedFormats !== 'undefined') ? [
             Html5QrcodeSupportedFormats.QR_CODE,
             Html5QrcodeSupportedFormats.CODE_128,
@@ -1539,16 +1534,6 @@
             });
         }
 
-        if (openNetworkMapPickerBtn) {
-            openNetworkMapPickerBtn.addEventListener('click', function() {
-                const pickerUrl = '{{ route('map.index') }}?picker=1';
-                mapPickerWindow = window.open(pickerUrl, 'mstoreMapPickerTicket', 'width=1280,height=800');
-                if (!mapPickerWindow) {
-                    alert('{{ __('Popup diblokir browser. Izinkan popup untuk memilih lokasi dari peta.') }}');
-                }
-            });
-        }
-
         if (startQrScanBtn && locationInput) {
             startQrScanBtn.addEventListener('click', async function() {
                 if (typeof Html5Qrcode === 'undefined') {
@@ -1886,17 +1871,6 @@
                 }
             });
         }
-
-        window.addEventListener('message', function(event) {
-            if (event.origin !== window.location.origin) return;
-            const payload = event.data || {};
-            if (payload.type !== 'mstore-map-picked') return;
-            const lat = Number(payload.lat);
-            const lng = Number(payload.lng);
-            if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
-            updateLocationFromCoords(lat, lng, 17);
-            setAccuracyStatus('{{ __('Koordinat dipilih dari peta jaringan.') }}', 'success');
-        });
 
         const editCustomerModal = document.getElementById('editCustomerModal');
         if (editCustomerModal) {

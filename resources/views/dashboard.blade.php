@@ -4,312 +4,282 @@
 
 @section('content')
 
-<div class="mb-4">
-    <h4 class="fw-bold text-primary mb-1">{{ __('Dasbor') }}</h4>
-    <p class="text-muted small mb-0">{{ __('Selamat datang kembali di ringkasan dasbor Anda.') }}</p>
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h4 class="fw-bold text-primary mb-1"><i class="fa-solid fa-chart-pie me-2"></i>{{ __('Dasbor Eksekutif & Bisnis') }}</h4>
+        <p class="text-muted small mb-0">{{ __('Konsolidasi Finansial Terpadu: Toko & Retail, Jasa & Layanan, serta Booking & Reservasi') }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ route('accounting.income_statement') }}" class="btn btn-outline-primary btn-sm">
+            <i class="fa-solid fa-file-invoice-dollar me-1"></i> {{ __('Laporan Laba Rugi') }}
+        </a>
+        <a href="{{ route('accounting.journals.index') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="fa-solid fa-book-journal-whills me-1"></i> {{ __('Buku Jurnal Umum') }}
+        </a>
+    </div>
 </div>
 
-@if(Auth::user()->hasPermission('attendance.view'))
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card border-0 shadow-sm border-start border-4 border-primary">
-            <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <div>
-                    <h5 class="fw-bold mb-1">{{ __('Absensi Saya Hari Ini') }}</h5>
-                    <p class="mb-0 text-muted small">
-                        @if($todayAttendance)
-                            <span class="badge bg-{{ $todayAttendance->status == 'present' ? 'success' : ($todayAttendance->status == 'late' ? 'warning' : 'secondary') }}">
-                                {{ __(ucfirst($todayAttendance->status)) }}
-                            </span>
-                            <span class="ms-2">
-                                <i class="fa-solid fa-clock me-1"></i> {{ __('Masuk') }}: {{ \Carbon\Carbon::parse($todayAttendance->clock_in)->format('H:i') }}
-                                @if($todayAttendance->clock_out)
-                                    | <i class="fa-solid fa-clock me-1"></i> {{ __('Pulang') }}: {{ \Carbon\Carbon::parse($todayAttendance->clock_out)->format('H:i') }}
-                                @endif
-                            </span>
-                        @else
-                            <span class="badge bg-secondary">{{ __('Belum Hadir') }}</span>
-                            <span class="ms-2 text-muted">{{ __('Anda belum melakukan absen masuk hari ini.') }}</span>
-                        @endif
-                    </p>
-                </div>
-                <div>
-                    <a href="{{ route('attendance.create') }}" class="btn {{ !$todayAttendance ? 'btn-primary' : (!$todayAttendance->clock_out ? 'btn-danger' : 'btn-primary') }}">
-                        @if(!$todayAttendance)
-                            <i class="fa-solid fa-fingerprint"></i> <span class="d-none d-md-inline ms-1">{{ __('Absen Masuk') }}</span>
-                        @elseif(!$todayAttendance->clock_out)
-                            <i class="fa-solid fa-fingerprint"></i> <span class="d-none d-md-inline ms-1">{{ __('Absen Pulang') }}</span>
-                        @else
-                            <i class="fa-solid fa-fingerprint"></i> <span class="d-none d-md-inline ms-1">{{ __('Absensi') }}</span>
-                        @endif
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-@endif
-<div class="row g-4 mb-4">
-    <div class="col-md-6 col-xl-3">
-        <div class="card border-0 shadow-sm h-100 border-start border-4 border-success position-relative">
+<!-- Executive Financial KPI Cards -->
+<div class="row g-3 mb-4">
+    <!-- Likuiditas (Kas & Bank) -->
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100 border-start border-4 border-success">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6 class="text-uppercase text-body-secondary small fw-bold mb-0">{{ __('Teknisi Masuk') }}</h6>
-                    <div class="bg-success bg-opacity-10 text-success rounded p-2">
-                        <i class="fa-solid fa-user-check"></i>
+                    <span class="text-uppercase text-body-secondary small fw-bold">{{ __('Total Kas & Bank') }}</span>
+                    <div class="bg-success bg-opacity-10 text-success rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                        <i class="fa-solid fa-wallet"></i>
                     </div>
                 </div>
-                <h3 class="fw-bold mb-1">{{ $stats['technician_present_today'] }}</h3>
-                <div class="small text-body-secondary">
-                    <span>{{ __('Dari total') }} {{ $stats['technician_total'] }} {{ __('teknisi aktif') }}</span>
+                <h3 class="fw-bold mb-1 text-success">Rp {{ number_format($executiveMetrics['total_cash_and_bank'] ?? 0, 0, ',', '.') }}</h3>
+                <div class="small text-muted d-flex justify-content-between pt-1 border-top">
+                    <span>Kas: Rp {{ number_format($executiveMetrics['cash_total'] ?? 0, 0, ',', '.') }}</span>
+                    <span>Bank: Rp {{ number_format($executiveMetrics['bank_total'] ?? 0, 0, ',', '.') }}</span>
                 </div>
             </div>
-            <a class="stretched-link" href="{{ route('dashboard', ['attendance_role' => 'field-technician', 'attendance_state' => 'present', 'attendance_date' => $attendanceDate ?? now()->toDateString()]) }}" aria-label="Lihat teknisi masuk"></a>
         </div>
     </div>
-    <div class="col-md-6 col-xl-3">
-        <div class="card border-0 shadow-sm h-100 border-start border-4 border-danger position-relative">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6 class="text-uppercase text-body-secondary small fw-bold mb-0">{{ __('Teknisi Tidak Masuk') }}</h6>
-                    <div class="bg-danger bg-opacity-10 text-danger rounded p-2">
-                        <i class="fa-solid fa-user-xmark"></i>
-                    </div>
-                </div>
-                <h3 class="fw-bold mb-1">{{ $stats['technician_not_present_today'] }}</h3>
-                <div class="small text-body-secondary">
-                    <span>{{ __('Belum melakukan absensi hari ini') }}</span>
-                </div>
-            </div>
-            <a class="stretched-link" href="{{ route('dashboard', ['attendance_role' => 'field-technician', 'attendance_state' => 'not_present', 'attendance_date' => $attendanceDate ?? now()->toDateString()]) }}" aria-label="Lihat teknisi tidak masuk"></a>
-        </div>
-    </div>
-    <div class="col-md-6 col-xl-3">
-        <div class="card border-0 shadow-sm h-100 border-start border-4 border-info position-relative">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6 class="text-uppercase text-body-secondary small fw-bold mb-0">{{ __('Karyawan Wash Masuk') }}</h6>
-                    <div class="bg-info bg-opacity-10 text-info rounded p-2">
-                        <i class="fa-solid fa-soap"></i>
-                    </div>
-                </div>
-                <h3 class="fw-bold mb-1">{{ $stats['wash_employee_present_today'] }}</h3>
-                <div class="small text-body-secondary">
-                    <span>{{ __('Dari total') }} {{ $stats['wash_employee_total'] }} {{ __('karyawan wash aktif') }}</span>
-                </div>
-            </div>
-            <a class="stretched-link" href="{{ route('dashboard', ['attendance_role' => 'wash-operator', 'attendance_state' => 'present', 'attendance_date' => $attendanceDate ?? now()->toDateString()]) }}" aria-label="Lihat karyawan wash masuk"></a>
-        </div>
-    </div>
-    <div class="col-md-6 col-xl-3">
-        <div class="card border-0 shadow-sm h-100 border-start border-4 border-warning position-relative">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6 class="text-uppercase text-body-secondary small fw-bold mb-0">{{ __('Karyawan Wash Tidak Masuk') }}</h6>
-                    <div class="bg-warning bg-opacity-10 text-warning rounded p-2">
-                        <i class="fa-solid fa-user-clock"></i>
-                    </div>
-                </div>
-                <h3 class="fw-bold mb-1">{{ $stats['wash_employee_not_present_today'] }}</h3>
-                <div class="small text-body-secondary">
-                    <span>{{ __('Belum melakukan absensi hari ini') }}</span>
-                </div>
-            </div>
-            <a class="stretched-link" href="{{ route('dashboard', ['attendance_role' => 'wash-operator', 'attendance_state' => 'not_present', 'attendance_date' => $attendanceDate ?? now()->toDateString()]) }}" aria-label="Lihat karyawan wash tidak masuk"></a>
-        </div>
-    </div>
-    <div class="col-md-6 col-xl-3">
+
+    <!-- Total Omset Konsolidasian -->
+    <div class="col-sm-6 col-xl-3">
         <div class="card border-0 shadow-sm h-100 border-start border-4 border-primary">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6 class="text-uppercase text-body-secondary small fw-bold mb-0">{{ __('OLT Online') }}</h6>
-                    <div class="bg-primary bg-opacity-10 text-primary rounded p-2">
-                        <i class="fa-solid fa-server"></i>
+                    <span class="text-uppercase text-body-secondary small fw-bold">{{ __('Omset Bulan Ini') }}</span>
+                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                        <i class="fa-solid fa-money-bill-trend-up"></i>
                     </div>
                 </div>
-                <h3 class="fw-bold mb-1">{{ $stats['online_olts'] }} / {{ $stats['total_olts'] }}</h3>
-                <div class="small text-body-secondary">
-                    <span>{{ __('Total OLT terdaftar') }}</span>
+                <h3 class="fw-bold mb-1 text-primary">Rp {{ number_format($executiveMetrics['consolidated_month_revenue'] ?? 0, 0, ',', '.') }}</h3>
+                <div class="small text-muted pt-1 border-top text-truncate" title="Toko/Retail + Jasa/Layanan + Booking/Reservasi">
+                    <span>Toko: {{ number_format($executiveMetrics['atk_month_revenue'] ?? 0, 0, ',', '.') }} | Jasa: {{ number_format($executiveMetrics['wash_month_revenue'] ?? 0, 0, ',', '.') }} | Booking: {{ number_format($executiveMetrics['wedding_month_revenue'] ?? 0, 0, ',', '.') }}</span>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-md-6 col-xl-3">
-        <div class="card border-0 shadow-sm h-100 border-start border-4 border-success">
+
+    <!-- Total Piutang & Kasbon -->
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100 border-start border-4 border-warning">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6 class="text-uppercase text-body-secondary small fw-bold mb-0">{{ __('ONU Online') }}</h6>
-                    <div class="bg-success bg-opacity-10 text-success rounded p-2">
-                        <i class="fa-solid fa-network-wired"></i>
+                    <span class="text-uppercase text-body-secondary small fw-bold">{{ __('Piutang & Kasbon') }}</span>
+                    <div class="bg-warning bg-opacity-10 text-warning rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                        <i class="fa-solid fa-file-invoice-dollar"></i>
                     </div>
                 </div>
-                <h3 class="fw-bold mb-1">{{ $stats['online_onts'] }} / {{ $stats['total_onts'] }}</h3>
-                <div class="small text-body-secondary">
-                    <span>{{ __('Total ONU terdaftar') }}</span>
+                <h3 class="fw-bold mb-1 text-warning">Rp {{ number_format($executiveMetrics['total_receivables'] ?? 0, 0, ',', '.') }}</h3>
+                <div class="small text-muted d-flex justify-content-between pt-1 border-top">
+                    <span>Usaha: Rp {{ number_format($executiveMetrics['trade_receivables'] ?? 0, 0, ',', '.') }}</span>
+                    <span>Kasbon: Rp {{ number_format($executiveMetrics['staff_receivables'] ?? 0, 0, ',', '.') }}</span>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<div class="row g-4 mb-4">
-    <div class="col-12">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-transparent border-0 py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <h6 class="mb-0 fw-bold">{{ __('Data Absensi Karyawan') }}</h6>
-                <div class="d-flex gap-2 flex-wrap">
-                    <form action="{{ route('dashboard') }}" method="GET" class="d-flex gap-2 flex-wrap align-items-center">
-                        <input type="hidden" name="attendance_role" value="{{ $attendanceRole }}">
-                        <input type="hidden" name="attendance_state" value="{{ $attendanceState }}">
-                        <input type="date" name="attendance_date" value="{{ $attendanceDate ?? now()->toDateString() }}" class="form-control form-control-sm" style="max-width: 170px;">
-                        <button type="submit" class="btn btn-sm btn-outline-secondary">Terapkan</button>
-                    </form>
-                    <a href="{{ route('dashboard', ['attendance_role' => 'field-technician', 'attendance_state' => 'present', 'attendance_date' => $attendanceDate ?? now()->toDateString()]) }}"
-                       class="btn btn-sm {{ $attendanceRole === 'field-technician' && $attendanceState === 'present' ? 'btn-primary' : 'btn-outline-primary' }}">
-                        Teknisi Masuk
-                    </a>
-                    <a href="{{ route('dashboard', ['attendance_role' => 'field-technician', 'attendance_state' => 'not_present', 'attendance_date' => $attendanceDate ?? now()->toDateString()]) }}"
-                       class="btn btn-sm {{ $attendanceRole === 'field-technician' && $attendanceState === 'not_present' ? 'btn-danger' : 'btn-outline-danger' }}">
-                        Teknisi Tidak Masuk
-                    </a>
-                    <a href="{{ route('dashboard', ['attendance_role' => 'wash-operator', 'attendance_state' => 'present', 'attendance_date' => $attendanceDate ?? now()->toDateString()]) }}"
-                       class="btn btn-sm {{ $attendanceRole === 'wash-operator' && $attendanceState === 'present' ? 'btn-info' : 'btn-outline-info' }}">
-                        Karyawan Wash Masuk
-                    </a>
-                    <a href="{{ route('dashboard', ['attendance_role' => 'wash-operator', 'attendance_state' => 'not_present', 'attendance_date' => $attendanceDate ?? now()->toDateString()]) }}"
-                       class="btn btn-sm {{ $attendanceRole === 'wash-operator' && $attendanceState === 'not_present' ? 'btn-warning' : 'btn-outline-warning' }}">
-                        Karyawan Wash Tidak Masuk
-                    </a>
-                    <span class="badge bg-primary-subtle text-primary">
-                        {{ $attendanceRole === 'field-technician' ? 'Peran: Teknisi' : 'Peran: Karyawan Wash' }}
-                    </span>
-                    <span class="badge {{ $attendanceState === 'present' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }}">
-                        {{ $attendanceState === 'present' ? 'Status: Masuk' : 'Status: Tidak Masuk' }}
-                    </span>
-                    <span class="badge bg-secondary-subtle text-secondary">
-                        {{ __('Tanggal') }}: {{ $attendanceDateLabel ?? now()->translatedFormat('d M Y') }}
-                    </span>
-                </div>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light">
-                        <tr>
-                            <th class="ps-4 text-uppercase small text-muted border-0">{{ __('Nama') }}</th>
-                            <th class="text-uppercase small text-muted border-0">{{ __('Peran') }}</th>
-                            <th class="text-uppercase small text-muted border-0">{{ __('Status Hari Ini') }}</th>
-                            <th class="text-uppercase small text-muted border-0">{{ __('Jam Masuk') }}</th>
-                            <th class="text-uppercase small text-muted border-0">{{ __('Jam Pulang') }}</th>
-                            @if($attendanceRole === 'field-technician')
-                                <th class="text-uppercase small text-muted border-0">{{ __('Status Tugas') }}</th>
-                                <th class="text-uppercase small text-muted border-0">{{ __('Tugas Aktif') }}</th>
-                            @endif
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($attendanceEmployees as $employee)
-                            @php
-                                $attendanceRow = $attendanceByUser->get($employee->id);
-                                $taskSummary = $technicianTaskSummary->get($employee->id, [
-                                    'label' => 'Standby',
-                                    'total_active' => 0,
-                                    'active_ticket_id' => 0,
-                                    'ticket_active' => 0,
-                                    'installation_active' => 0,
-                                ]);
-                            @endphp
-                            <tr>
-                                <td class="ps-4 fw-medium">{{ $employee->name }}</td>
-                                <td>{{ $employee->role->label ?? '-' }}</td>
-                                <td>
-                                    @if($attendanceRow && in_array($attendanceRow->status, ['present', 'late']))
-                                        <span class="badge bg-success-subtle text-success">{{ ucfirst($attendanceRow->status) }}</span>
-                                    @elseif($attendanceRow)
-                                        <span class="badge bg-warning-subtle text-warning">{{ ucfirst($attendanceRow->status) }}</span>
-                                    @else
-                                        <span class="badge bg-danger-subtle text-danger">{{ __('Tidak Masuk') }}</span>
-                                    @endif
-                                </td>
-                                <td>{{ $attendanceRow?->clock_in ? \Carbon\Carbon::parse($attendanceRow->clock_in)->format('H:i') : '-' }}</td>
-                                <td>{{ $attendanceRow?->clock_out ? \Carbon\Carbon::parse($attendanceRow->clock_out)->format('H:i') : '-' }}</td>
-                                @if($attendanceRole === 'field-technician')
-                                    <td>
-                                        @if(($taskSummary['active_ticket_id'] ?? 0) > 0)
-                                            <a href="{{ route('tickets.show', $taskSummary['active_ticket_id']) }}" class="text-decoration-none">
-                                                <span class="badge bg-info-subtle text-info">
-                                                    {{ $taskSummary['label'] }}
-                                                </span>
-                                            </a>
-                                        @elseif(($taskSummary['active_installation_id'] ?? 0) > 0)
-                                            <a href="{{ route('installations.show', $taskSummary['active_installation_id']) }}" class="text-decoration-none">
-                                                <span class="badge bg-info-subtle text-info">
-                                                    {{ $taskSummary['label'] }}
-                                                </span>
-                                            </a>
-                                        @else
-                                            <span class="badge bg-secondary-subtle text-secondary">
-                                                {{ $taskSummary['label'] }}
-                                            </span>
-                                        @endif
-                                    </td>
-                                    <td class="small">
-                                        @if(($taskSummary['active_ticket_id'] ?? 0) > 0)
-                                            <a href="{{ route('tickets.show', $taskSummary['active_ticket_id']) }}" class="text-decoration-none fw-semibold">
-                                                <i class="fa-solid fa-ticket-alt me-1"></i>{{ __('Tiket') }}: {{ $taskSummary['ticket_active'] }}
-                                            </a>
-                                        @else
-                                            <span class="text-muted"><i class="fa-solid fa-ticket-alt me-1"></i>{{ __('Tiket') }}: {{ $taskSummary['ticket_active'] }}</span>
-                                        @endif
-                                        <span class="mx-1">|</span>
-                                        @if(($taskSummary['active_installation_id'] ?? 0) > 0)
-                                            <a href="{{ route('installations.show', $taskSummary['active_installation_id']) }}" class="text-decoration-none fw-semibold text-info">
-                                                <i class="fa-solid fa-tools me-1"></i>{{ __('Instalasi') }}: {{ $taskSummary['installation_active'] }}
-                                            </a>
-                                        @else
-                                            <span class="text-muted"><i class="fa-solid fa-tools me-1"></i>{{ __('Instalasi') }}: {{ $taskSummary['installation_active'] }}</span>
-                                        @endif
-                                    </td>
-                                @endif
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="{{ $attendanceRole === 'field-technician' ? 7 : 5 }}" class="text-center py-4 text-muted">{{ __('Tidak ada data karyawan untuk filter ini.') }}</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row g-4 mb-4">
-    <div class="col-md-6 col-xl-3">
-        <div class="card border-0 shadow-sm h-100 border-start border-4 border-success">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6 class="text-uppercase text-body-secondary small fw-bold mb-0">{{ __('Teknisi Online') }}</h6>
-                    <div class="bg-success bg-opacity-10 text-success rounded p-2"><i class="fa-solid fa-signal"></i></div>
-                </div>
-                <h3 class="fw-bold mb-1" id="onlineTechniciansCount">{{ $onlineTechnicians ?? 0 }}</h3>
-                <div class="small text-body-secondary">{{ __('Realtime terdeteksi aktif') }}</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6 col-xl-3">
+    <!-- Estimasi Laba Bersih GL PSAK -->
+    <div class="col-sm-6 col-xl-3">
         <div class="card border-0 shadow-sm h-100 border-start border-4 border-info">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6 class="text-uppercase text-body-secondary small fw-bold mb-0">{{ __('Wash Online') }}</h6>
-                    <div class="bg-info bg-opacity-10 text-info rounded p-2"><i class="fa-solid fa-wifi"></i></div>
+                    <span class="text-uppercase text-body-secondary small fw-bold">{{ __('Laba Bersih Bulan Ini') }}</span>
+                    <div class="bg-info bg-opacity-10 text-info rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                        <i class="fa-solid fa-scale-balanced"></i>
+                    </div>
                 </div>
-                <h3 class="fw-bold mb-1" id="onlineWashCount">{{ $onlineWashEmployees ?? 0 }}</h3>
-                <div class="small text-body-secondary">{{ __('Karyawan wash sedang aktif') }}</div>
+                <h3 class="fw-bold mb-1 text-info">Rp {{ number_format($executiveMetrics['month_net_profit'] ?? 0, 0, ',', '.') }}</h3>
+                <div class="small text-muted d-flex justify-content-between pt-1 border-top">
+                    <span>{{ __('Margin Laba') }}: <strong class="text-info">{{ $executiveMetrics['net_profit_margin'] ?? 0 }}%</strong></span>
+                    <span>PSAK GL</span>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Quick Action Shortcuts Bar -->
+<div class="card border-0 shadow-sm mb-4 bg-light">
+    <div class="card-body py-3">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary px-3 py-2 text-uppercase"><i class="fa-solid fa-bolt me-1"></i> {{ __('Akses Cepat') }}</span>
+                <span class="text-muted small fw-medium d-none d-md-inline">{{ __('Operasional kasir & pembukuan akuntansi terintegrasi') }}</span>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ route('atk.pos') }}" class="btn btn-sm btn-primary">
+                    <i class="fa-solid fa-store me-1"></i> Kasir Toko
+                </a>
+                <a href="{{ route('wash.pos') }}" class="btn btn-sm btn-info text-white">
+                    <i class="fa-solid fa-hand-sparkles me-1"></i> Kasir Layanan
+                </a>
+                <a href="{{ route('wedding.bookings.index') }}" class="btn btn-sm btn-danger">
+                    <i class="fa-solid fa-calendar-check me-1"></i> Booking & Reservasi
+                </a>
+                <a href="{{ route('accounting.income_statement') }}" class="btn btn-sm btn-success">
+                    <i class="fa-solid fa-chart-column me-1"></i> Laba Rugi Segmented
+                </a>
+                <a href="{{ route('accounting.periods.index') }}" class="btn btn-sm btn-secondary">
+                    <i class="fa-solid fa-calendar-check me-1"></i> Tutup Buku
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Business Unit Breakdown & Financial Chart -->
+<div class="row g-4 mb-4">
+    <!-- Komposisi Kontribusi Unit Bisnis -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent border-0 py-3">
+                <h6 class="mb-0 fw-bold"><i class="fa-solid fa-layer-group text-primary me-2"></i>{{ __('Kontribusi Omset Unit Bisnis') }}</h6>
+                <small class="text-muted">{{ __('Akumulasi penjualan bulan ini') }}</small>
+            </div>
+            <div class="card-body">
+                @foreach($unitBreakdown as $key => $unit)
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="small fw-semibold">
+                            <i class="fa-solid {{ $unit['icon'] }} me-1 text-{{ $unit['badge'] }}"></i> {{ $unit['label'] }}
+                        </span>
+                        <div class="text-end">
+                            <span class="small fw-bold">Rp {{ number_format($unit['revenue'], 0, ',', '.') }}</span>
+                            <span class="badge bg-{{ $unit['badge'] }}-subtle text-{{ $unit['badge'] }} ms-1">{{ $unit['percentage'] }}%</span>
+                        </div>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-{{ $unit['badge'] }}" role="progressbar" style="width: {{ $unit['percentage'] }}%" aria-valuenow="{{ $unit['percentage'] }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+                @endforeach
+
+                <hr class="my-3">
+
+                <!-- Ringkasan Transaksi Hari Ini -->
+                <h6 class="small fw-bold text-uppercase text-muted mb-2">{{ __('Aktivitas Hari Ini') }}</h6>
+                <div class="row g-2 text-center">
+                    <div class="col-4">
+                        <div class="p-2 border rounded bg-light">
+                            <small class="text-muted d-block">Toko</small>
+                            <span class="fw-bold fs-6 text-primary">{{ $stats['atk_today'] ?? 0 }}</span>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-2 border rounded bg-light">
+                            <small class="text-muted d-block">Jasa</small>
+                            <span class="fw-bold fs-6 text-info">{{ $stats['wash_today'] ?? 0 }}</span>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-2 border rounded bg-light">
+                            <small class="text-muted d-block">Booking</small>
+                            <span class="fw-bold fs-6 text-danger">{{ $stats['wedding_today'] ?? 0 }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Chart (Real-time PSAK General Ledger) -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent border-0 py-3 d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="mb-0 fw-bold"><i class="fa-solid fa-chart-column text-success me-2"></i>{{ __('Tren Pendapatan & Beban GL') }} ({{ date('Y') }})</h6>
+                    <small class="text-muted">{{ __('Data akuntansi riil dari Buku Jurnal Umum PSAK') }}</small>
+                </div>
+                <div class="badge bg-success-subtle text-success border border-success-subtle">
+                    <i class="fa-solid fa-circle-check me-1"></i> Real-time GL
+                </div>
+            </div>
+            <div class="card-body">
+                <div style="height: 280px; width: 100%;">
+                    <canvas id="financialChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Live General Ledger Feed (Audit Trail Terkini) -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-transparent border-0 py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h6 class="mb-0 fw-bold"><i class="fa-solid fa-receipt text-primary me-2"></i>{{ __('Mutasi Jurnal Umum Terkini (Live GL Feed)') }}</h6>
+            <small class="text-muted">{{ __('Audit trail transaksi otomatis dari kasir Toko, Jasa Layanan, Booking Reservasi, dan Payroll') }}</small>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            @if(!empty($glIsBalanced))
+                <span class="badge bg-success-subtle text-success border border-success">
+                    <i class="fa-solid fa-check-double me-1"></i> {{ __('Status GL: Balanced (Seimbang)') }}
+                </span>
+            @else
+                <span class="badge bg-danger-subtle text-danger border border-danger">
+                    <i class="fa-solid fa-triangle-exclamation me-1"></i> {{ __('Status GL: Unbalanced') }}
+                </span>
+            @endif
+            <a href="{{ route('accounting.journals.index') }}" class="btn btn-sm btn-outline-primary">
+                {{ __('Lihat Semua Jurnal') }} <i class="fa-solid fa-arrow-right ms-1"></i>
+            </a>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light">
+                <tr>
+                    <th class="ps-3 text-uppercase small text-muted border-0">{{ __('No. Jurnal') }}</th>
+                    <th class="text-uppercase small text-muted border-0">{{ __('Tanggal') }}</th>
+                    <th class="text-uppercase small text-muted border-0">{{ __('Unit') }}</th>
+                    <th class="text-uppercase small text-muted border-0">{{ __('Akun Perkiraan') }}</th>
+                    <th class="text-uppercase small text-muted border-0">{{ __('Keterangan / Memo') }}</th>
+                    <th class="text-end text-uppercase small text-muted border-0">{{ __('Debit') }}</th>
+                    <th class="text-end pe-3 text-uppercase small text-muted border-0">{{ __('Kredit') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($latestJournalEntries ?? [] as $entry)
+                <tr>
+                    <td class="ps-3 font-monospace small fw-bold text-primary">
+                        {{ $entry->journal->journal_no ?? ('#' . $entry->journal_id) }}
+                    </td>
+                    <td class="small text-muted">
+                        {{ $entry->journal?->date ? \Carbon\Carbon::parse($entry->journal->date)->format('d/m/Y') : '-' }}
+                    </td>
+                    <td>
+                        @php
+                            $unitBadge = match($entry->unit) {
+                                'ATK' => 'primary',
+                                'WASH' => 'info',
+                                'EVENT' => 'danger',
+                                default => 'secondary',
+                            };
+                        @endphp
+                        <span class="badge bg-{{ $unitBadge }}-subtle text-{{ $unitBadge }} fw-semibold">{{ $entry->unit ?? 'GEN' }}</span>
+                    </td>
+                    <td>
+                        <span class="font-monospace small text-muted me-1">{{ $entry->account->code ?? '-' }}</span>
+                        <span class="fw-medium">{{ $entry->account->name ?? '-' }}</span>
+                    </td>
+                    <td class="small text-muted">{{ Str::limit($entry->memo ?: ($entry->journal->description ?? '-'), 35) }}</td>
+                    <td class="text-end fw-semibold {{ $entry->debit > 0 ? 'text-body-emphasis' : 'text-muted' }}">
+                        {{ $entry->debit > 0 ? 'Rp ' . number_format($entry->debit, 0, ',', '.') : '-' }}
+                    </td>
+                    <td class="text-end pe-3 fw-semibold {{ $entry->credit > 0 ? 'text-body-emphasis' : 'text-muted' }}">
+                        {{ $entry->credit > 0 ? 'Rp ' . number_format($entry->credit, 0, ',', '.') : '-' }}
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="7" class="text-center py-4 text-muted">{{ __('Belum ada entri jurnal.') }}</td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if(\App\Support\ModuleGate::isEnabled('isp') || \App\Support\ModuleGate::isEnabled('ticketing'))
 <!-- Stats Cards -->
 <div class="row g-4 mb-4">
     <!-- Customers -->
@@ -428,24 +398,27 @@
         </div>
     </div>
 </div>
+@endif
 
 <!-- Inventory & Finance Section -->
+@if(\App\Support\ModuleGate::isEnabled('inventory'))
+<!-- Inventory Section -->
 <div class="row g-4 mb-4">
-    <!-- Inventory Summary -->
-    <div class="col-lg-4">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent border-0 py-3">
-                <h6 class="mb-0 fw-bold">{{ __('Stok Barang') }}</h6>
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-transparent border-0 py-3 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold"><i class="fa-solid fa-boxes-stacked me-2 text-primary"></i>{{ __('Stok Inventaris') }}</h6>
+                <a href="{{ route('inventory.index') }}" class="btn btn-link btn-sm text-decoration-none">{{ __('Lihat Semua Inventaris') }}</a>
             </div>
             <div class="card-body">
-                <div class="d-flex justify-content-between mb-4">
-                    <div class="text-center w-50 border-end">
+                <div class="row mb-3">
+                    <div class="col-sm-6 text-center border-end">
                         <h3 class="fw-bold text-primary mb-0">{{ $inventoryItems->count() }}</h3>
                         <small class="text-muted">{{ __('Barang') }}</small>
                     </div>
-                    <div class="text-center w-50">
-                        <h4 class="fw-bold text-success mb-0">{{ number_format($totalInventoryValue, 0, ',', '.') }}</h4>
-                        <small class="text-muted">{{ __('Total Nilai') }}</small>
+                    <div class="col-sm-6 text-center">
+                        <h4 class="fw-bold text-success mb-0">Rp {{ number_format($totalInventoryValue, 0, ',', '.') }}</h4>
+                        <small class="text-muted">{{ __('Total Nilai Aset Inventaris') }}</small>
                     </div>
                 </div>
                 <div class="table-responsive">
@@ -468,7 +441,7 @@
                                                 <i class="fa-solid fa-box text-info"></i>
                                             @endif
                                         </div>
-                                        <span class="small fw-medium">{{ Str::limit($item->name, 20) }}</span>
+                                        <span class="small fw-medium">{{ Str::limit($item->name, 25) }}</span>
                                     </div>
                                 </td>
                                 <td class="text-end">
@@ -479,45 +452,22 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="text-center mt-3">
-                    <a href="{{ route('inventory.index') }}" class="btn btn-link btn-sm text-decoration-none">{{ __('Lihat Semua Inventaris') }}</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Financial Chart -->
-    <div class="col-lg-8">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent border-0 py-3 d-flex justify-content-between align-items-center">
-                <h6 class="mb-0 fw-bold">{{ __('Pendapatan & Pengeluaran') }} ({{ date('Y') }})</h6>
-                <div class="dropdown">
-                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        {{ __('Tahun Ini') }}
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item active" href="#">{{ __('Tahun Ini') }}</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="card-body">
-                <div style="height: 300px; width: 100%;">
-                    <canvas id="financialChart"></canvas>
-                </div>
             </div>
         </div>
     </div>
 </div>
+@endif
 
+@if(\App\Support\ModuleGate::isEnabled('isp'))
 <!-- POS & Car Wash Summary -->
 <div class="row g-4 mb-4">
     <div class="col-md-6">
         <div class="card border-0 shadow-sm h-100 border-start border-4 border-primary">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6 class="text-uppercase text-body-secondary small fw-bold mb-0">{{ __('Pendapatan ATK') }}</h6>
+                    <h6 class="text-uppercase text-body-secondary small fw-bold mb-0">{{ __('Pendapatan Toko & Retail') }}</h6>
                     <div class="bg-primary bg-opacity-10 text-primary rounded p-2">
-                        <i class="fa-solid fa-cash-register"></i>
+                        <i class="fa-solid fa-store"></i>
                     </div>
                 </div>
                 <div class="d-flex justify-content-between align-items-center">
@@ -537,9 +487,9 @@
         <div class="card border-0 shadow-sm h-100 border-start border-4 border-info">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6 class="text-uppercase text-body-secondary small fw-bold mb-0">{{ __('Pendapatan GT Wash') }}</h6>
+                    <h6 class="text-uppercase text-body-secondary small fw-bold mb-0">{{ __('Pendapatan Jasa & Layanan') }}</h6>
                     <div class="bg-info bg-opacity-10 text-info rounded p-2">
-                        <i class="fa-solid fa-car"></i>
+                        <i class="fa-solid fa-hand-sparkles"></i>
                     </div>
                 </div>
                 <div class="d-flex justify-content-between align-items-center">
@@ -556,7 +506,9 @@
         </div>
     </div>
 </div>
+@endif
 
+@if(\App\Support\ModuleGate::isEnabled('ticketing') || \App\Support\ModuleGate::isEnabled('isp'))
 <div class="row g-4 mb-4">
     <!-- Recent Tickets -->
     <div class="col-lg-8">
@@ -652,24 +604,6 @@
 
     <!-- Right Column: Info & Installations -->
     <div class="col-lg-4">
-        <div class="card border-0 shadow-sm mb-4" id="mixradius-card">
-            <div class="card-body d-flex justify-content-between align-items-center">
-                <div>
-                    <h6 class="mb-1 fw-bold">MixRADIUS</h6>
-                    <div class="small text-muted">
-                        <span>Konektivitas Layanan</span>
-                        <span class="ms-2" id="mixradius-meta" style="display:none"></span>
-                    </div>
-                </div>
-                <div class="d-flex align-items-center gap-2">
-                    @if(!empty($mixRadiusOk))
-                        <span id="mixradius-badge" class="badge bg-success">{{ __('Terhubung') }}</span>
-                    @else
-                        <span id="mixradius-badge" class="badge bg-danger">{{ __('Terputus') }}</span>
-                    @endif
-                </div>
-            </div>
-        </div>
         <!-- Info Card -->
         <div class="card border-0 shadow-sm mb-4 bg-primary text-white">
             <div class="card-body p-4">
@@ -714,15 +648,12 @@
                 </div>
                 @endforelse
             </div>
-            <div class="card-footer bg-transparent border-0 text-center pb-3">
-                @if (Route::has('installations.index'))
-                    <a href="{{ route('installations.index') }}" class="text-decoration-none small fw-bold">{{ __('Lihat Kalender') }} <i class="fa-solid fa-arrow-right ms-1"></i></a>
-                @endif
-            </div>
         </div>
     </div>
 </div>
+@endif
 
+@if(\App\Support\ModuleGate::isEnabled('inventory'))
 <!-- Deployed Tools Section -->
 <div class="row mb-4">
     <div class="col-12">
@@ -782,6 +713,7 @@
         </div>
     </div>
 </div>
+@endif
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -854,6 +786,7 @@
 </script>
 @endpush
 
+@if(\App\Support\ModuleGate::isEnabled('isp'))
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -897,5 +830,6 @@
     });
 </script>
 @endpush
+@endif
 
 @endsection

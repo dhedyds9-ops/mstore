@@ -56,7 +56,7 @@
                                         </div>
                                     @endif
                                     <div class="small text-muted">
-                                        <i class="fa-solid fa-id-badge me-1"></i>{{ $user->attendance_card_code ?: $user->username }}
+                                        <i class="fa-solid fa-user me-1"></i>{{ $user->username }}
                                         @if($user->phone)
                                             <span class="mx-1">·</span>
                                             <i class="fa-solid fa-phone me-1"></i>{{ $user->phone }}

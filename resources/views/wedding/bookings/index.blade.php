@@ -5,21 +5,30 @@
 @section('content')
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="mb-0">Booking Wedding</h4>
-        <a href="{{ route('wedding.bookings.create') }}" class="btn btn-primary">Tambah Booking</a>
+        <h4 class="mb-0 fw-bold">{{ __('Booking Wedding') }}</h4>
+        <a href="{{ route('wedding.bookings.create') }}" class="btn btn-sm btn-primary shadow-sm">
+            <i class="fa-solid fa-plus me-1"></i>{{ __('Tambah Booking') }}
+        </a>
     </div>
 
     <div class="card border-0 shadow-sm mb-3">
-        <div class="card-body">
-            <form class="row g-2">
+        <div class="card-body py-2">
+            <form class="row g-2 align-items-center" method="GET">
                 <div class="col-md-4">
-                    <input class="form-control" name="q" placeholder="Cari booking / pelanggan / WA" value="{{ request('q') }}">
+                    <input class="form-control form-control-sm" name="q" placeholder="{{ __('Cari booking / pelanggan / WA...') }}" value="{{ request('q') }}">
                 </div>
                 <div class="col-md-3">
-                    <input class="form-control" name="status" placeholder="Status" value="{{ request('status') }}">
+                    <input class="form-control form-control-sm" name="status" placeholder="{{ __('Status...') }}" value="{{ request('status') }}">
                 </div>
-                <div class="col-md-2">
-                    <button class="btn btn-outline-primary w-100" type="submit">Filter</button>
+                <div class="col-auto d-flex gap-2">
+                    <button class="btn btn-sm btn-primary" type="submit">
+                        <i class="fa-solid fa-filter me-1"></i>{{ __('Filter') }}
+                    </button>
+                    @if(request('q') || request('status'))
+                        <a href="{{ route('wedding.bookings.index') }}" class="btn btn-sm btn-outline-secondary" title="{{ __('Reset Filter') }}">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </a>
+                    @endif
                 </div>
             </form>
         </div>

@@ -64,7 +64,7 @@
                                 <ol class="list-group list-group-numbered">
                                     <li class="list-group-item">Buka menu <strong>GT Wash &gt; Dashboard</strong></li>
                                     <li class="list-group-item">Lihat <strong>Total Penjualan Hari Ini</strong> dan <strong>Jumlah Transaksi</strong></li>
-                                    <li class="list-group-item">Periksa <strong>Kehadiran Karyawan</strong> yang sudah absen hari ini</li>
+                                    <li class="list-group-item">Periksa <strong>Kinerja Karyawan & Komisi</strong> hari ini</li>
                                     <li class="list-group-item">Lihat <strong>Grafik Tren Layanan</strong> 7 hari terakhir</li>
                                     <li class="list-group-item">Lihat <strong>Member Terbaru</strong> dan <strong>Top Customer Loyalty</strong></li>
                                 </ol>

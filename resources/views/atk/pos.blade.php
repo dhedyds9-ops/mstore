@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', __('ATK POS'))
+@section('title', __('Kasir Toko & Retail'))
 
 @section('content')
 <div class="atk-pos-page">
@@ -27,7 +27,7 @@
             </div>
             <div class="collapse" id="posHelpBoxContent">
                 <div class="card-body">
-                    <p><strong>Selamat datang di POS ATK!</strong> Berikut langkah-langkah transaksi:</p>
+                    <p><strong>Selamat datang di Kasir Toko & Retail!</strong> Berikut langkah-langkah transaksi:</p>
                     <ol class="mb-0">
                         <li><strong>Pilih Tab:</strong> Klik tab di atas untuk memilih jenis transaksi (Produk, Jasa, Bank, dll).</li>
                         <li><strong>Tambah Item:</strong>
@@ -1714,7 +1714,7 @@ function processTransaction() {
 .atk-pos-shell {
     max-width: 1440px;
     margin: 0 auto;
-    padding: 1.5rem 1rem;
+    padding: 0 0.5rem 1rem 0.5rem;
 }
 
 .atk-pos-header {
@@ -1722,7 +1722,7 @@ function processTransaction() {
     align-items: flex-start;
     justify-content: flex-end;
     gap: 1rem;
-    margin-bottom: 1.1rem;
+    margin-bottom: 0.6rem;
 }
 
 .atk-pos-title {
@@ -2154,7 +2154,7 @@ function processTransaction() {
 
 @media (max-width: 767.98px) {
     .atk-pos-shell {
-        padding: 0.7rem 0.35rem 0.8rem;
+        padding: 0.25rem 0.35rem 0.8rem;
     }
 
     .atk-pos-header {

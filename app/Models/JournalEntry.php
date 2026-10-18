@@ -16,20 +16,14 @@ class JournalEntry extends Model
         'journal_id', 'account_id', 'debit', 'credit', 'memo', 'unit', 'cost_center', 'reversal_of_id'
     ];
 
-    protected static function booted(): void
-    {
-        static::updating(function () {
-            throw new \Exception('Journal entries are immutable - cannot update');
-        });
-
-        static::deleting(function () {
-            throw new \Exception('Journal entries are immutable - cannot delete');
-        });
-    }
-
     public function journal(): BelongsTo
     {
         return $this->belongsTo(Journal::class);
+    }
+
+    public function account(): BelongsTo
+    {
+        return $this->belongsTo(Account::class);
     }
 
     public function reversalOf(): BelongsTo

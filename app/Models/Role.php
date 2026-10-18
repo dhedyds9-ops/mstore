@@ -30,6 +30,24 @@ class Role extends Model
 
 
 
+    public const SUPER_ADMIN = 'super-admin';
+    public const ADMIN = 'admin';
+    public const DIREKTUR = 'direktur';
+    public const LEADER = 'leader';
+    public const NOC = 'noc';
+    public const NOC_LEGACY = 'network-operations-center';
+    public const TECHNICIAN = 'technician';
+    public const COORDINATOR = 'coordinator';
+    public const FINANCE = 'finance';
+    public const HRD_MANAGER = 'hrd-manager';
+    public const CUSTOMER_SERVICE = 'customer-service';
+    public const CUSTOMER = 'customer';
+    public const RESELLER = 'reseller';
+    public const KASIR_ATK = 'kasir-atk';
+    public const KASIR_WASH = 'kasir-wash';
+    public const KARYAWAN_WASH = 'karyawan-wash';
+    public const STAFF_GUDANG = 'staff-gudang';
+
     protected $fillable = ['name', 'label', 'is_system'];
 
     protected $casts = [

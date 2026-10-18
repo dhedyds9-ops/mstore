@@ -1,209 +1,408 @@
 @extends('layouts.app')
 
-@section('title', __('Product Management'))
+@section('title', __('Manajemen Produk ATK'))
 
 @section('content')
-<div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0 text-gray-800">{{ __('Product Management') }}</h1>
-        <div class="d-flex gap-2">
-            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#importModal" title="{{ __('Import Excel') }}">
-                <i class="fa-solid fa-file-import"></i>
-                <span class="d-none d-md-inline ms-2">{{ __('Import Excel') }}</span>
+<div class="container-fluid px-3 px-md-4 py-3">
+    {{-- Header Halaman & Aksi Cepat --}}
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h1 class="h4 mb-1 fw-bold text-gray-800 d-flex align-items-center gap-2">
+                <i class="fa-solid fa-boxes-stacked text-primary"></i>
+                <span>{{ __('Katalog Produk & Stok ATK') }}</span>
+            </h1>
+            <p class="text-muted small mb-0">{{ __('Kelola master produk, harga jual, HPP modal, stok fisik, dan cetak barcode.') }}</p>
+        </div>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <button class="btn btn-sm btn-outline-info" type="button" data-bs-toggle="collapse" data-bs-target="#helpBoxContent" title="{{ __('Bantuan / Petunjuk') }}">
+                <i class="fa-solid fa-circle-question me-1"></i><span class="d-none d-sm-inline">{{ __('Petunjuk') }}</span>
             </button>
-            <a href="{{ route('atk.products.export') }}" class="btn btn-success" title="{{ __('Export Excel') }}">
-                <i class="fa-solid fa-file-export"></i>
-                <span class="d-none d-md-inline ms-2">{{ __('Export Excel') }}</span>
+
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fa-solid fa-file-excel text-success me-1"></i>
+                    <span>{{ __('Impor / Ekspor') }}</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                    <li>
+                        <a class="dropdown-item py-2" href="#" data-bs-toggle="modal" data-bs-target="#importModal">
+                            <i class="fa-solid fa-file-import text-primary me-2"></i>{{ __('Impor Produk (.xlsx / .csv)') }}
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item py-2" href="{{ route('atk.products.template') }}">
+                            <i class="fa-solid fa-download text-success me-2"></i>{{ __('Unduh Template Excel') }}
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item py-2" href="{{ route('atk.products.export') }}">
+                            <i class="fa-solid fa-file-export text-secondary me-2"></i>{{ __('Ekspor Semua Data (.xlsx)') }}
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <a href="{{ route('atk.products.barcodes') }}" class="btn btn-sm btn-outline-dark" title="{{ __('Cetak Label Barcode') }}">
+                <i class="fa-solid fa-barcode me-1"></i>
+                <span class="d-none d-sm-inline">{{ __('Cetak Barcode') }}</span>
             </a>
-            <a href="{{ route('atk.products.barcodes') }}" class="btn btn-dark" title="{{ __('Barcodes') }}">
-                <i class="fa-solid fa-barcode"></i>
-                <span class="d-none d-md-inline ms-2">{{ __('Barcodes') }}</span>
+
+            <a href="{{ route('atk.products.create') }}" class="btn btn-sm btn-primary shadow-sm" title="{{ __('Tambah Produk Baru') }}">
+                <i class="fa-solid fa-plus me-1"></i>
+                <span>{{ __('Tambah Produk') }}</span>
             </a>
-            <a href="{{ route('atk.products.create') }}" class="btn btn-primary" title="{{ __('Add Product') }}">
-                <i class="fa-solid fa-plus"></i>
-                <span class="d-none d-md-inline ms-2">{{ __('Add Product') }}</span>
-            </a>
-            <button type="button" id="btnSelectAll" class="btn btn-outline-secondary" title="Select All">
-                <i class="fa-regular fa-square-check me-1"></i><span class="d-none d-md-inline">Select All</span>
-            </button>
+
             <form id="bulkDeleteForm" action="{{ route('atk.products.bulk_destroy') }}" method="POST" class="d-inline">
                 @csrf
                 @method('DELETE')
-                <input type="hidden" name="ids[]" id="bulkIds">
-                <button type="submit" id="btnBulkDelete" class="btn btn-outline-danger" disabled title="Hapus Terpilih" onclick="return confirm('Hapus produk terpilih?')">
-                    <i class="fa-solid fa-trash-can me-1"></i><span class="d-none d-md-inline">Hapus Terpilih</span>
+                <button type="submit" id="btnBulkDelete" class="btn btn-sm btn-outline-danger" disabled title="{{ __('Hapus Terpilih') }}" onclick="return confirm('Hapus semua produk yang dipilih?')">
+                    <i class="fa-solid fa-trash-can me-1"></i>
+                    <span id="bulkDeleteCount" class="badge bg-danger text-white rounded-pill d-none">0</span>
+                    <span class="d-none d-md-inline ms-1">{{ __('Hapus') }}</span>
                 </button>
             </form>
         </div>
     </div>
 
-    @include('atk._help-box', [
-        'title' => 'Petunjuk Manajemen Produk',
-        'content' => '<p><strong>Halaman ini untuk mengelola semua produk dan jasa toko ATK!</strong></p><ul class="mb-0"><li><strong>Tambah Produk:</strong> Klik "Add Product" untuk menambah produk baru.</li><li><strong>Import/Export:</strong> Gunakan tombol import untuk menambah produk secara massal, atau export untuk mengunduh daftar produk.</li><li><strong>Barcode:</strong> Klik "Barcodes" untuk melihat dan mencetak semua barcode produk.</li><li><strong>Edit/Hapus:</strong> Gunakan tombol di kolom aksi untuk mengubah atau menghapus produk.</li><li><strong>Hapus Massal:</strong> Centang beberapa produk, lalu klik "Hapus Terpilih".</li></ul>'
-    ])
-
-    <!-- Import Modal -->
-    <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="importModalLabel">{{ __('Import Products') }}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    {{-- Collapsible Help Box --}}
+    <div class="collapse mb-4" id="helpBoxContent">
+        <div class="card border-0 shadow-sm border-start border-4 border-info">
+            <div class="card-body py-3">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="text-info fs-4 mt-1"><i class="fa-solid fa-circle-info"></i></div>
+                    <div class="flex-grow-1">
+                        <h6 class="fw-bold mb-1 text-gray-800">{{ __('Petunjuk Manajemen Produk ATK') }}</h6>
+                        <ul class="mb-0 small text-muted ps-3">
+                            <li><strong>{{ __('Tambah & Edit Produk:') }}</strong> Gunakan tombol "Tambah Produk" untuk input manual, atau klik tombol pensil di baris produk untuk mengubah harga/stok.</li>
+                            <li><strong>{{ __('Impor Excel/CSV:') }}</strong> Unduh template resmi melalui menu "Impor / Ekspor", isi data produk Anda, lalu unggah kembali untuk impor massal cepat.</li>
+                            <li><strong>{{ __('Scan Barcode Kasir:') }}</strong> Klik ikon barcode pada kolom pencarian untuk mendeteksi barang lewat kamera handphone/laptop secara langsung.</li>
+                            <li><strong>{{ __('Hapus Massal:') }}</strong> Centang kotak pilihan pada produk yang ingin dihapus, lalu klik tombol "Hapus" merah di pojok kanan atas.</li>
+                        </ul>
+                    </div>
                 </div>
-                <form action="{{ route('atk.products.import') }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    <div class="modal-body">
-                        <div class="alert alert-info">
-                            <div class="fw-bold mb-1">{{ __('Panduan Import') }}</div>
-                            <ul class="mb-2">
-                                <li>{{ __('Gunakan file format .xlsx (bukan .xls)') }}</li>
-                                <li>{{ __('Minimal kolom Nama Produk; kolom lain opsional') }}</li>
-                                <li>{{ __('Jika Code kosong, sistem akan membuat otomatis') }}</li>
-                                <li>{{ __('Urutan kolom yang didukung: Code, Name, Category, Price, Cost Price, Stock, Unit, Description') }}</li>
-                                <li>{{ __('Price/Cost Price angka; Stock bilangan bulat; Unit default pcs') }}</li>
-                            </ul>
-                            <a href="{{ route('atk.products.export') }}" class="btn btn-outline-secondary btn-sm">
-                                <i class="fa-solid fa-file-export me-1"></i> {{ __('Unduh Template (Export)') }}
-                            </a>
-                        </div>
-                        <div class="mb-3">
-                            <label for="file" class="form-label">{{ __('Choose Excel File') }}</label>
-                            <input type="file" class="form-control" id="file" name="file" accept=".xlsx" required>
-                            <small class="text-muted">{{ __('Hanya menerima .xlsx') }}</small>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Close') }}</button>
-                        <button type="submit" class="btn btn-primary">{{ __('Import') }}</button>
-                    </div>
-                </form>
             </div>
         </div>
     </div>
 
-    <div class="card shadow mb-4">
-        <div class="card-body">
-            <form method="GET" action="{{ route('atk.products.index') }}" class="row g-2 mb-3">
-                <div class="col-sm-12 col-md-4">
+    {{-- Mini Metric Stat Cards --}}
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-body p-3 d-flex align-items-center gap-3">
+                    <div class="rounded-3 p-3 bg-primary-subtle text-primary fs-5">
+                        <i class="fa-solid fa-boxes-stacked"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small fw-medium">{{ __('Total Produk') }}</div>
+                        <div class="fs-5 fw-bold text-gray-800">{{ number_format($stats['total_items'] ?? $products->total(), 0, ',', '.') }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-body p-3 d-flex align-items-center gap-3">
+                    <div class="rounded-3 p-3 bg-success-subtle text-success fs-5">
+                        <i class="fa-solid fa-cubes"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small fw-medium">{{ __('Total Stok Fisik') }}</div>
+                        <div class="fs-5 fw-bold text-success">{{ number_format($stats['total_stock'] ?? 0, 0, ',', '.') }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-body p-3 d-flex align-items-center gap-3">
+                    <div class="rounded-3 p-3 bg-warning-subtle text-warning-emphasis fs-5">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small fw-medium">{{ __('Stok Menipis (<= 5)') }}</div>
+                        <div class="fs-5 fw-bold text-warning-emphasis">{{ number_format($stats['low_stock'] ?? 0, 0, ',', '.') }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 h-100">
+                <div class="card-body p-3 d-flex align-items-center gap-3">
+                    <div class="rounded-3 p-3 bg-danger-subtle text-danger fs-5">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small fw-medium">{{ __('Stok Habis (0)') }}</div>
+                        <div class="fs-5 fw-bold text-danger">{{ number_format($stats['out_of_stock'] ?? 0, 0, ',', '.') }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Card Tabel Produk & Filter --}}
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        {{-- Filter Bar --}}
+        <div class="card-header bg-white border-bottom py-3 px-3 px-md-4">
+            <form method="GET" action="{{ route('atk.products.index') }}" class="row g-2 align-items-center">
+                <div class="col-12 col-md-5 col-lg-4">
                     <div class="input-group">
-                        <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
-                        <input type="text" name="search" id="productSearch" class="form-control" placeholder="{{ __('Cari Nama atau Barcode...') }}" value="{{ request('search') }}" autofocus>
-                        <button type="button" class="btn btn-outline-primary" id="openAtkBarcodeScan" title="Scan barcode via kamera">
+                        <span class="input-group-text bg-light border-end-0 text-muted">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </span>
+                        <input type="text" name="search" id="productSearch" class="form-control bg-light border-start-0 border-end-0" placeholder="{{ __('Cari nama produk atau barcode...') }}" value="{{ request('search') }}" autofocus>
+                        <button type="button" class="btn btn-light border border-start-0 text-primary" id="openAtkBarcodeScan" title="{{ __('Scan Barcode via Kamera') }}">
                             <i class="fa-solid fa-barcode"></i>
                         </button>
                     </div>
                 </div>
-                <div class="col-sm-12 col-md-3">
-                    <select name="category" class="form-select">
-                        <option value="">{{ __('Semua Kategori') }}</option>
-                        @php($opts = isset($categories) ? $categories : ['ATK','JASA POTOCOPY','JASA TRANSFER BANK'])
-                        @foreach($opts as $opt)
-                            <option value="{{ $opt }}" {{ request('category')===$opt ? 'selected' : '' }}>{{ $opt }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-sm-12 col-md-3">
+
+                <div class="col-6 col-md-3 col-lg-3">
                     <div class="input-group">
-                        <label class="input-group-text" for="per_page">Tampil</label>
-                        <select name="per_page" id="per_page" class="form-select" onchange="this.form.submit()">
-                            @php($pp = request('per_page','10'))
-                            <option value="10" {{ $pp=='10' ? 'selected' : '' }}>10</option>
-                            <option value="50" {{ $pp=='50' ? 'selected' : '' }}>50</option>
-                            <option value="100" {{ $pp=='100' ? 'selected' : '' }}>100</option>
-                            <option value="all" {{ $pp=='all' ? 'selected' : '' }}>All</option>
+                        <span class="input-group-text bg-light text-muted small"><i class="fa-solid fa-layer-group"></i></span>
+                        <select name="category" class="form-select bg-light" onchange="this.form.submit()">
+                            <option value="">{{ __('Semua Kategori') }}</option>
+                            @php
+                                $opts = isset($categories) ? $categories : ['ATK','JASA POTOCOPY','JASA TRANSFER BANK'];
+                            @endphp
+                            @foreach($opts as $opt)
+                                <option value="{{ $opt }}" {{ request('category')===$opt ? 'selected' : '' }}>{{ $opt }}</option>
+                            @endforeach
                         </select>
                     </div>
                 </div>
-                <div class="col-sm-12 col-md-2">
-                    <button type="submit" class="btn btn-dark w-100" title="{{ __('Filter') }}">
-                        <i class="fa-solid fa-filter"></i>
-                        <span class="d-none d-md-inline ms-1">{{ __('Filter') }}</span>
+
+                <div class="col-6 col-md-2 col-lg-2">
+                    <div class="input-group">
+                        <label class="input-group-text bg-light text-muted small" for="per_page">{{ __('Tampil') }}</label>
+                        <select name="per_page" id="per_page" class="form-select bg-light" onchange="this.form.submit()">
+                            @php
+                                $pp = request('per_page','10');
+                            @endphp
+                            <option value="10" {{ $pp=='10' ? 'selected' : '' }}>10</option>
+                            <option value="50" {{ $pp=='50' ? 'selected' : '' }}>50</option>
+                            <option value="100" {{ $pp=='100' ? 'selected' : '' }}>100</option>
+                            <option value="all" {{ $pp=='all' ? 'selected' : '' }}>Semua</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-2 col-lg-3 d-flex gap-2 justify-content-md-end">
+                    <button type="submit" class="btn btn-primary btn-sm px-3 flex-fill flex-md-grow-0" title="{{ __('Terapkan Filter') }}">
+                        <i class="fa-solid fa-filter me-1"></i>{{ __('Filter') }}
                     </button>
+                    @if(request('search') || request('category') || request('per_page'))
+                        <a href="{{ route('atk.products.index') }}" class="btn btn-outline-secondary btn-sm px-2" title="{{ __('Reset Filter') }}">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </a>
+                    @endif
                 </div>
             </form>
-            <div class="table-responsive">
-                <table class="table table-bordered align-middle" id="dataTable" width="100%" cellspacing="0">
-                    <thead>
-                        <tr>
-                            <th style="width:28px;">
-                                <input type="checkbox" id="checkAll">
-                            </th>
-                            <th>{{ __('Image') }}</th>
-                            <th>{{ __('Code') }}</th>
-                            <th>{{ __('Name') }}</th>
-                            <th>{{ __('Category') }}</th>
-                            <th>{{ __('Price') }}</th>
-                            <th>{{ __('Stock') }}</th>
-                            <th>{{ __('Action') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($products as $product)
-                        <tr>
-                            <td>
-                                <input type="checkbox" class="row-check" value="{{ $product->id }}">
-                            </td>
-                            <td>
-                                @if($product->image)
-                                    <img src="{{ Storage::url($product->image) }}" alt="{{ $product->name }}" width="50" height="50" class="img-thumbnail object-fit-cover">
-                                @else
-                                    <div class=" d-flex align-items-center justify-content-center text-muted border rounded" style="width: 50px; height: 50px;">
-                                        <i class="fa-solid fa-image"></i>
-                                    </div>
-                                @endif
-                            </td>
-                            <td>{{ $product->code }}</td>
-                            <td>{{ $product->name }}</td>
-                            <td>{{ $product->category ?? '-' }}</td>
-                            <td>Rp {{ number_format($product->price, 0, ',', '.') }}</td>
-                            <td>
-                                <span class="badge {{ $product->stock > 10 ? 'bg-success' : ($product->stock > 0 ? 'bg-warning' : 'bg-danger') }}">
-                                    {{ $product->stock }} {{ $product->unit }}
+        </div>
+
+        {{-- Table Content --}}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="dataTable" width="100%" cellspacing="0">
+                <thead class="bg-light-subtle text-secondary small text-uppercase fw-semibold border-bottom">
+                    <tr>
+                        <th style="width: 36px;" class="text-center py-3">
+                            <input type="checkbox" id="checkAll" class="form-check-input">
+                        </th>
+                        <th style="width: 60px;" class="text-center py-3">{{ __('Foto') }}</th>
+                        <th style="min-width: 130px;" class="py-3">{{ __('Kode / Barcode') }}</th>
+                        <th style="min-width: 200px;" class="py-3">{{ __('Nama Produk & Deskripsi') }}</th>
+                        <th style="min-width: 120px;" class="py-3">{{ __('Kategori') }}</th>
+                        <th style="min-width: 150px;" class="py-3 text-end">{{ __('Harga Jual / HPP') }}</th>
+                        <th style="min-width: 110px;" class="py-3 text-center">{{ __('Stok Fisik') }}</th>
+                        <th style="min-width: 100px;" class="py-3 text-center">{{ __('Aksi') }}</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y">
+                    @forelse($products as $product)
+                    <tr>
+                        <td class="text-center">
+                            <input type="checkbox" class="form-check-input row-check" value="{{ $product->id }}">
+                        </td>
+                        <td class="text-center">
+                            @if($product->image)
+                                <img src="{{ Storage::url($product->image) }}" alt="{{ $product->name }}" width="44" height="44" class="rounded-3 object-fit-cover border shadow-2xs">
+                            @else
+                                <div class="rounded-3 bg-light border d-inline-flex align-items-center justify-content-center text-muted" style="width: 44px; height: 44px;">
+                                    <i class="fa-solid fa-box text-secondary-subtle fs-5"></i>
+                                </div>
+                            @endif
+                        </td>
+                        <td>
+                            <div class="fw-semibold font-monospace text-dark">{{ $product->code }}</div>
+                            @if($product->barcode && $product->barcode !== $product->code)
+                                <div class="small text-muted font-monospace"><i class="fa-solid fa-barcode me-1"></i>{{ $product->barcode }}</div>
+                            @endif
+                        </td>
+                        <td>
+                            <div class="fw-bold text-gray-900">{{ $product->name }}</div>
+                            @if($product->description)
+                                <div class="text-muted small text-truncate" style="max-width: 280px;" title="{{ $product->description }}">
+                                    {{ $product->description }}
+                                </div>
+                            @endif
+                        </td>
+                        <td>
+                            @php
+                                $catClass = 'bg-primary-subtle text-primary border border-primary-subtle';
+                                if(str_contains(strtoupper($product->category ?? ''), 'FOTOCOPY')) {
+                                    $catClass = 'bg-info-subtle text-info-emphasis border border-info-subtle';
+                                } elseif(str_contains(strtoupper($product->category ?? ''), 'TRANSFER')) {
+                                    $catClass = 'bg-success-subtle text-success border border-success-subtle';
+                                }
+                            @endphp
+                            <span class="badge rounded-pill {{ $catClass }} fw-medium px-2 py-1">
+                                {{ $product->category ?: 'ATK' }}
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <div class="fw-bold text-dark fs-6">Rp {{ number_format($product->price, 0, ',', '.') }}</div>
+                            @if($product->cost_price > 0)
+                                <div class="text-muted small" style="font-size: 0.75rem;">
+                                    HPP: Rp {{ number_format($product->cost_price, 0, ',', '.') }}
+                                    @php
+                                        $margin = $product->price - $product->cost_price;
+                                    @endphp
+                                    @if($margin > 0)
+                                        <span class="text-success ms-1">(+Rp {{ number_format($margin, 0, ',', '.') }})</span>
+                                    @endif
+                                </div>
+                            @endif
+                        </td>
+                        <td class="text-center">
+                            @if($product->stock > 10)
+                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 fs-7">
+                                    <i class="fa-solid fa-circle-check me-1"></i>{{ $product->stock }} {{ $product->unit ?: 'Pcs' }}
                                 </span>
-                            </td>
-                            <td>
-                                <a href="{{ route('atk.products.edit', $product) }}" class="btn btn-sm btn-info">
-                                    <i class="fa-solid fa-pen"></i>
+                            @elseif($product->stock > 0)
+                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1 fs-7">
+                                    <i class="fa-solid fa-triangle-exclamation me-1"></i>{{ $product->stock }} {{ $product->unit ?: 'Pcs' }}
+                                </span>
+                            @else
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 fs-7">
+                                    <i class="fa-solid fa-circle-xmark me-1"></i>{{ __('Habis (0)') }}
+                                </span>
+                            @endif
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="{{ route('atk.products.edit', $product) }}" class="btn btn-outline-secondary" title="{{ __('Ubah Produk') }}">
+                                    <i class="fa-solid fa-pen-to-square text-primary"></i>
                                 </a>
-                                <form action="{{ route('atk.products.destroy', $product) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure?')">
+                                <form action="{{ route('atk.products.destroy', $product) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus produk {{ addslashes($product->name) }}?')">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger">
-                                        <i class="fa-solid fa-trash"></i>
+                                    <button type="submit" class="btn btn-outline-secondary text-danger" title="{{ __('Hapus Produk') }}">
+                                        <i class="fa-solid fa-trash-can"></i>
                                     </button>
                                 </form>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="7" class="text-center">{{ __('No products found.') }}</td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                            </div>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="8" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="fa-solid fa-boxes-stacked fs-1 text-secondary-subtle mb-3 d-block"></i>
+                                <h6 class="fw-bold mb-1">{{ __('Tidak ada produk ditemukan') }}</h6>
+                                <p class="small mb-3">{{ __('Coba ubah kata kunci pencarian atau tambahkan produk baru ke dalam katalog.') }}</p>
+                                <a href="{{ route('atk.products.create') }}" class="btn btn-sm btn-primary">
+                                    <i class="fa-solid fa-plus me-1"></i>{{ __('Tambah Produk Baru') }}
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        {{-- Card Footer & Paginasi --}}
+        <div class="card-footer bg-white border-top py-3 px-3 px-md-4 d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
+            <div class="text-muted small">
+                {{ __('Menampilkan') }} <span class="fw-semibold text-dark">{{ $products->firstItem() ?? 0 }}</span> - <span class="fw-semibold text-dark">{{ $products->lastItem() ?? 0 }}</span> {{ __('dari') }} <span class="fw-semibold text-dark">{{ $products->total() }}</span> {{ __('produk') }}
             </div>
-            <div class="mt-3">
+            <div>
                 {{ $products->appends(request()->query())->links() }}
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="atkBarcodeScanModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Scan Barcode Produk</h5>
+<!-- Import Modal -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-light border-bottom">
+                <h5 class="modal-title fw-bold" id="importModalLabel">
+                    <i class="fa-solid fa-file-import text-primary me-2"></i>{{ __('Import Data & Stok Produk ATK') }}
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <div id="atk-barcode-reader" class="atk-scan-reader" style="width:100%;"></div>
-                <div id="atkScanStatus" class="small text-muted mt-2">
-                    Arahkan kamera ke barcode pada produk.
+            <form action="{{ route('atk.products.import') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-body p-4">
+                    <div class="alert alert-info border-0 rounded-3 mb-3">
+                        <div class="fw-bold mb-2 d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-circle-info"></i>
+                            <span>{{ __('Panduan Import Stok & Produk ATK') }}</span>
+                        </div>
+                        <ul class="mb-2 ps-3 small">
+                            <li>{{ __('Mendukung file Excel (.xlsx, .xls) dan CSV (.csv).') }}</li>
+                            <li>{{ __('Sistem otomatis mendeteksi kolom berdasarkan baris judul (Header Kolom Dinamis).') }}</li>
+                            <li>{{ __('Kolom: Kode Barang, Nama Produk, Kategori, Harga Jual, Harga Beli/HPP, Stok Awal, Satuan, Deskripsi.') }}</li>
+                            <li>{{ __('Wajib diisi: Nama Produk. Jika Kode Barang dikosongkan, sistem akan otomatis membuat kode unik unik untuk Anda.') }}</li>
+                            <li>{{ __('Format harga/stok otomatis dibersihkan (bisa menggunakan Rp atau tanda titik/koma ribuan).') }}</li>
+                        </ul>
+                        <div class="d-flex flex-wrap gap-2 mt-3">
+                            <a href="{{ route('atk.products.template') }}" class="btn btn-primary btn-sm">
+                                <i class="fa-solid fa-download me-1"></i> {{ __('Unduh Template Resmi (.xlsx)') }}
+                            </a>
+                            <a href="{{ route('atk.products.export') }}" class="btn btn-outline-secondary btn-sm">
+                                <i class="fa-solid fa-file-export me-1"></i> {{ __('Export Data Saat Ini') }}
+                            </a>
+                        </div>
+                    </div>
+                    <div class="mb-0">
+                        <label for="file" class="form-label fw-bold">{{ __('Pilih File Excel / CSV') }} <span class="text-danger">*</span></label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".xlsx,.xls,.csv" required>
+                        <small class="text-muted">{{ __('Maksimal ukuran file: 10MB (.xlsx, .xls, .csv)') }}</small>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Batal') }}</button>
+                    <button type="submit" class="btn btn-success px-4">
+                        <i class="fa-solid fa-cloud-arrow-up me-1"></i> {{ __('Mulai Import') }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Barcode Scan Modal -->
+<div class="modal fade" id="atkBarcodeScanModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-light border-bottom">
+                <h5 class="modal-title fw-bold">
+                    <i class="fa-solid fa-barcode text-primary me-2"></i>{{ __('Scan Barcode Produk') }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <div id="atk-barcode-reader" class="atk-scan-reader mx-auto rounded-3 overflow-hidden border" style="width:100%; max-width: 320px;"></div>
+                <div id="atkScanStatus" class="small text-muted mt-3">
+                    <i class="fa-solid fa-camera me-1"></i> {{ __('Arahkan kamera ke barcode pada produk ATK.') }}
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-danger" id="stopAtkBarcodeScan">Hentikan Scan</button>
+            <div class="modal-footer bg-light border-top">
+                <button type="button" class="btn btn-outline-danger" id="stopAtkBarcodeScan">{{ __('Hentikan Scan') }}</button>
             </div>
         </div>
     </div>
@@ -228,23 +427,35 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnBulkDelete = document.getElementById('btnBulkDelete');
     const btnSelectAll = document.getElementById('btnSelectAll');
 
+    const bulkDeleteCount = document.getElementById('bulkDeleteCount');
+
     function updateBulkState() {
         const selected = rowChecks.filter(cb => cb.checked).map(cb => cb.value);
         if (bulkForm) {
-            bulkForm.querySelectorAll('input[name=\"ids[]\"]').forEach(e => e.remove());
-        }
-        selected.forEach(id => {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'ids[]';
-            input.value = id;
-            if (bulkForm) {
+            bulkForm.querySelectorAll('input[name="ids[]"]').forEach(e => e.remove());
+            selected.forEach(id => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'ids[]';
+                input.value = id;
                 bulkForm.appendChild(input);
+            });
+        }
+        if (btnBulkDelete) {
+            btnBulkDelete.disabled = selected.length === 0;
+        }
+        if (bulkDeleteCount) {
+            bulkDeleteCount.textContent = selected.length;
+            if (selected.length > 0) {
+                bulkDeleteCount.classList.remove('d-none');
+            } else {
+                bulkDeleteCount.classList.add('d-none');
             }
-        });
-        btnBulkDelete.disabled = selected.length === 0;
-        checkAll.checked = selected.length > 0 && selected.length === rowChecks.length;
-        checkAll.indeterminate = selected.length > 0 && selected.length < rowChecks.length;
+        }
+        if (checkAll) {
+            checkAll.checked = selected.length > 0 && selected.length === rowChecks.length;
+            checkAll.indeterminate = selected.length > 0 && selected.length < rowChecks.length;
+        }
     }
     if (checkAll) {
         checkAll.addEventListener('change', function() {

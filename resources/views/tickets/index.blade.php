@@ -30,6 +30,7 @@
                             <option value="open" {{ request('status') == 'open' ? 'selected' : '' }}>{{ __('Buka') }}</option>
                             <option value="assigned" {{ request('status') == 'assigned' ? 'selected' : '' }}>{{ __('Ditugaskan') }}</option>
                             <option value="in_progress" {{ request('status') == 'in_progress' ? 'selected' : '' }}>{{ __('Sedang Dikerjakan') }}</option>
+                            <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>{{ __('Tertunda') }}</option>
                             <option value="solved" {{ request('status') == 'solved' ? 'selected' : '' }}>{{ __('Selesai') }}</option>
                             <option value="closed" {{ request('status') == 'closed' ? 'selected' : '' }}>{{ __('Tutup') }}</option>
                         </select>

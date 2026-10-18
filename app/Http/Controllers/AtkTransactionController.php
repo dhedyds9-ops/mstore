@@ -46,13 +46,26 @@ class AtkTransactionController extends Controller implements HasMiddleware
         $today = now()->format('Y-m-d');
         $month = now()->format('Y-m');
         $user = Auth::user();
+        $todayAttendance = null;
+        $attendanceOverview = [
+            'role' => 'atk-cashier',
+            'total' => 0,
+            'present' => 0,
+            'not_present' => 0,
+        ];
+        $shiftSchedule = null;
+
         $todayAttendance = TechnicianAttendance::where('user_id', Auth::id())
             ->whereDate('clock_in', today())
             ->first();
         $roleUserIds = \App\Models\User::query()
             ->where('is_active', true)
-            ->whereHas('employee', function ($query) {
-                $query->where('department', 'ATK');
+            ->where(function ($query) {
+                $query->whereHas('employee', function ($q) {
+                    $q->where('department', 'ATK');
+                })->orWhereHas('role', function ($q) {
+                    $q->whereIn('name', ['atk-cashier', 'cashier']);
+                });
             })
             ->pluck('id');
         $presentCount = $roleUserIds->isEmpty()
@@ -64,7 +77,7 @@ class AtkTransactionController extends Controller implements HasMiddleware
                 ->distinct('user_id')
                 ->count('user_id');
         $attendanceOverview = [
-            'role' => 'atk-cashier',
+            'role' => 'Kasir ATK',
             'total' => $roleUserIds->count(),
             'present' => $presentCount,
             'not_present' => max($roleUserIds->count() - $presentCount, 0),
@@ -850,6 +863,13 @@ class AtkTransactionController extends Controller implements HasMiddleware
             );
 
             DB::commit();
+
+            // Real-time double-entry accounting journal sync
+            try {
+                $transaction->syncAccountingJournal();
+            } catch (\Throwable $jEx) {
+                \Illuminate\Support\Facades\Log::warning('Direct accounting sync failed for AtkTransaction '.$transaction->id.': '.$jEx->getMessage());
+            }
 
             // Dispatch OutboxEventProcessorJob
             \App\Jobs\OutboxEventProcessorJob::dispatch($outboxEvent->id);

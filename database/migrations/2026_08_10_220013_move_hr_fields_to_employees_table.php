@@ -66,6 +66,13 @@ return new class extends Migration
         foreach ($columnsToDrop as $column) {
             if (Schema::hasColumn('users', $column)) {
                 Schema::table('users', function (Blueprint $table) use ($column) {
+                    if ($column === 'attendance_card_code') {
+                        try {
+                            $table->dropUnique(['attendance_card_code']);
+                        } catch (\Throwable $e) {
+                            // ignore if index already dropped or does not exist
+                        }
+                    }
                     $table->dropColumn($column);
                 });
             }

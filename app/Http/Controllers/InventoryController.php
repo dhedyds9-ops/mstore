@@ -712,16 +712,112 @@ class InventoryController extends Controller implements HasMiddleware
             $writer = new Writer;
             $writer->openToFile('php://output');
 
-            // Header
-            $writer->addRow(Row::fromValues(['Name', 'Category', 'Type', 'Brand', 'Model', 'Description', 'Stock', 'Unit', 'Price']));
+            // Header resmi inventaris
+            $writer->addRow(Row::fromValues([
+                'Nama Barang',
+                'Kategori',
+                'Tipe',
+                'Merek',
+                'Model',
+                'Deskripsi / Spesifikasi',
+                'Stok Awal',
+                'Satuan',
+                'Harga Beli / Nilai Aset',
+            ]));
 
-            // Sample Data
-            $writer->addRow(Row::fromValues(['Kabel Fiber Optic 1 Core', 'Fiber', 'Cable', 'Zte', 'Generic', 'Kabel dropcore 1 core', '1000', 'meter', '1500']));
-            $writer->addRow(Row::fromValues(['Router ZTE F609', 'Device', 'Router', 'ZTE', 'F609', 'Router bekas layak pakai', '10', 'pcs', '150000']));
-            $writer->addRow(Row::fromValues(['Splicer Tumtec', 'Tool', 'Splicer', 'Tumtec', 'V9', 'Mesin Splicing', '1', 'unit', '15000000']));
+            // Data Contoh Perlengkapan & Inventaris Riil Toko/Kantor
+            $writer->addRow(Row::fromValues([
+                'Printer Kasir Epson TM-U220',
+                'Equipment',
+                'Printer Kasir',
+                'Epson',
+                'TM-U220B',
+                'Printer kasir struk dot matrix auto-cutter',
+                3,
+                'Unit',
+                2150000,
+            ]));
+            $writer->addRow(Row::fromValues([
+                'Barcode Scanner 2D Honeywell',
+                'Equipment',
+                'Scanner',
+                'Honeywell',
+                'HF680',
+                'Scanner barcode 1D/2D desktop handsfree USB',
+                2,
+                'Unit',
+                1250000,
+            ]));
+            $writer->addRow(Row::fromValues([
+                'Mesin Laminating A3 Joyko',
+                'Equipment',
+                'Laminator',
+                'Joyko',
+                'LM-01',
+                'Mesin laminating dokumen & foto hingga ukuran A3',
+                2,
+                'Unit',
+                850000,
+            ]));
+            $writer->addRow(Row::fromValues([
+                'Kertas Struk Kasir Thermal 80x80',
+                'Material',
+                'Consumable',
+                'Generic',
+                'Thermal 80',
+                'Roll thermal paper kasir POS 80mm x 80mm',
+                100,
+                'Roll',
+                12000,
+            ]));
 
             $writer->close();
-        }, 'inventory_import_template.xlsx');
+        }, 'template_import_inventaris.xlsx');
+    }
+
+    private function cleanNumeric($value): float
+    {
+        if (is_int($value) || is_float($value)) {
+            return (float) $value;
+        }
+
+        $str = trim((string) $value);
+        if ($str === '') {
+            return 0.0;
+        }
+
+        // Hapus teks/simbol selain angka, minus, titik, koma
+        $str = preg_replace('/[^\d.,-]/', '', $str);
+
+        // Ada titik DAN koma: 1.850.000,50 atau 1,850,000.50
+        if (strpos($str, '.') !== false && strpos($str, ',') !== false) {
+            if (strrpos($str, '.') > strrpos($str, ',')) {
+                $str = str_replace(',', '', $str);
+            } else {
+                $str = str_replace('.', '', $str);
+                $str = str_replace(',', '.', $str);
+            }
+        }
+        // Hanya ada titik
+        elseif (strpos($str, '.') !== false) {
+            if (substr_count($str, '.') > 1) {
+                $str = str_replace('.', '', $str);
+            } elseif (preg_match('/\.\d{3}$/', $str)) {
+                $str = str_replace('.', '', $str);
+            }
+        }
+        // Hanya ada koma
+        elseif (strpos($str, ',') !== false) {
+            if (substr_count($str, ',') > 1) {
+                $str = str_replace(',', '', $str);
+            } elseif (preg_match('/,\d{3}$/', $str)) {
+                $str = str_replace(',', '', $str);
+            } else {
+                $str = str_replace(',', '.', $str);
+            }
+        }
+
+        return is_numeric($str) ? (float) $str : 0.0;
     }
 
     public function importExcel(Request $request)
@@ -731,48 +827,191 @@ class InventoryController extends Controller implements HasMiddleware
         }
 
         $request->validate([
-            'file' => 'required|file|mimes:xlsx',
+            'file' => 'required|file|max:10240',
         ]);
 
-        $reader = new Reader;
-        $reader->open($request->file('file')->getRealPath());
+        $file = $request->file('file');
+        $ext = strtolower($file->getClientOriginalExtension());
+        $realPath = $file->getRealPath();
 
-        $count = 0;
-        foreach ($reader->getSheetIterator() as $sheet) {
-            foreach ($sheet->getRowIterator() as $index => $row) {
-                if ($index === 1) {
-                    continue;
-                } // Skip header
+        if (! in_array($ext, ['xlsx', 'xls', 'csv', 'txt'])) {
+            return back()->withErrors(['file' => __('Format file tidak didukung. Harap unggah file berformat .xlsx, .xls, atau .csv.')]);
+        }
 
-                $cells = $row->getCells();
-                if (count($cells) < 9) {
+        try {
+            $rowsData = [];
+
+            if (in_array($ext, ['csv', 'txt'])) {
+                $firstLine = '';
+                $handle = fopen($realPath, 'r');
+                if ($handle) {
+                    $firstLine = fgets($handle) ?: '';
+                    fclose($handle);
+                }
+                $delimiter = (substr_count($firstLine, ';') > substr_count($firstLine, ',')) ? ';' : ',';
+
+                if (($h = fopen($realPath, 'r')) !== false) {
+                    while (($data = fgetcsv($h, 4000, $delimiter)) !== false) {
+                        $rowsData[] = array_map(fn($v) => trim((string)$v), $data);
+                    }
+                    fclose($h);
+                }
+            } else {
+                $reader = new Reader;
+                $reader->open($realPath);
+                foreach ($reader->getSheetIterator() as $sheet) {
+                    foreach ($sheet->getRowIterator() as $row) {
+                        $cells = $row->getCells();
+                        $rowVals = [];
+                        foreach ($cells as $cell) {
+                            $rowVals[] = trim((string)($cell->getValue() ?? ''));
+                        }
+                        $rowsData[] = $rowVals;
+                    }
+                    break;
+                }
+                $reader->close();
+            }
+
+            if (empty($rowsData)) {
+                return back()->withErrors(['file' => __('File inventaris kosong.')]);
+            }
+
+            $headerMap = [
+                'name' => null,
+                'category' => null,
+                'type' => null,
+                'brand' => null,
+                'model' => null,
+                'description' => null,
+                'stock' => null,
+                'unit' => null,
+                'price' => null,
+            ];
+
+            $hasHeader = false;
+            $firstRow = $rowsData[0] ?? [];
+
+            foreach ($firstRow as $colIdx => $colName) {
+                $norm = strtolower(trim($colName));
+                if ($norm === '') continue;
+
+                if (str_contains($norm, 'nilai') || str_contains($norm, 'aset') || str_contains($norm, 'harga') || str_contains($norm, 'price') || str_contains($norm, 'beli')) {
+                    $headerMap['price'] = $colIdx;
+                    $hasHeader = true;
+                } elseif (str_contains($norm, 'stok') || str_contains($norm, 'stock') || str_contains($norm, 'qty') || str_contains($norm, 'jumlah')) {
+                    $headerMap['stock'] = $colIdx;
+                    $hasHeader = true;
+                } elseif (str_contains($norm, 'kategori') || str_contains($norm, 'category') || str_contains($norm, 'kelompok')) {
+                    $headerMap['category'] = $colIdx;
+                    $hasHeader = true;
+                } elseif (str_contains($norm, 'satuan') || str_contains($norm, 'unit') || str_contains($norm, 'uom')) {
+                    $headerMap['unit'] = $colIdx;
+                    $hasHeader = true;
+                } elseif (str_contains($norm, 'merek') || str_contains($norm, 'merk') || str_contains($norm, 'brand')) {
+                    $headerMap['brand'] = $colIdx;
+                    $hasHeader = true;
+                } elseif (str_contains($norm, 'model') || str_contains($norm, 'seri')) {
+                    $headerMap['model'] = $colIdx;
+                    $hasHeader = true;
+                } elseif (str_contains($norm, 'tipe') || str_contains($norm, 'type') || str_contains($norm, 'jenis')) {
+                    $headerMap['type'] = $colIdx;
+                    $hasHeader = true;
+                } elseif (str_contains($norm, 'deskripsi') || str_contains($norm, 'spesifikasi') || str_contains($norm, 'keterangan') || str_contains($norm, 'desc')) {
+                    $headerMap['description'] = $colIdx;
+                    $hasHeader = true;
+                } elseif (str_contains($norm, 'nama') || str_contains($norm, 'name') || str_contains($norm, 'barang') || str_contains($norm, 'item')) {
+                    $headerMap['name'] = $colIdx;
+                    $hasHeader = true;
+                }
+            }
+
+            if (! $hasHeader || $headerMap['name'] === null) {
+                $headerMap = [
+                    'name' => 0,
+                    'category' => 1,
+                    'type' => 2,
+                    'brand' => 3,
+                    'model' => 4,
+                    'description' => 5,
+                    'stock' => 6,
+                    'unit' => 7,
+                    'price' => 8,
+                ];
+                $dataRows = $rowsData;
+            } else {
+                $dataRows = array_slice($rowsData, 1);
+            }
+
+            $createdCount = 0;
+            $updatedCount = 0;
+            $skippedCount = 0;
+
+            foreach ($dataRows as $row) {
+                if (empty(array_filter($row, fn($v) => $v !== ''))) {
                     continue;
                 }
 
-                $category = $cells[1]->getValue();
-                // Auto-detect type_group based on category if possible
-                $typeGroup = strtolower($category) === 'tool' || strtolower($category) === 'vehicle' ? 'tool' : 'material';
+                $name = $headerMap['name'] !== null && isset($row[$headerMap['name']]) ? trim($row[$headerMap['name']]) : '';
+                if ($name === '') {
+                    $skippedCount++;
+                    continue;
+                }
 
-                InventoryItem::updateOrCreate(
-                    ['name' => $cells[0]->getValue()],
-                    [
+                $category = $headerMap['category'] !== null && isset($row[$headerMap['category']]) ? trim($row[$headerMap['category']]) : 'Equipment';
+                $type = $headerMap['type'] !== null && isset($row[$headerMap['type']]) ? trim($row[$headerMap['type']]) : null;
+                $brand = $headerMap['brand'] !== null && isset($row[$headerMap['brand']]) ? trim($row[$headerMap['brand']]) : null;
+                $model = $headerMap['model'] !== null && isset($row[$headerMap['model']]) ? trim($row[$headerMap['model']]) : null;
+                $description = $headerMap['description'] !== null && isset($row[$headerMap['description']]) ? trim($row[$headerMap['description']]) : null;
+                $stock = $headerMap['stock'] !== null && isset($row[$headerMap['stock']]) ? (int) $this->cleanNumeric($row[$headerMap['stock']]) : 0;
+                $unit = $headerMap['unit'] !== null && isset($row[$headerMap['unit']]) && trim($row[$headerMap['unit']]) !== '' ? trim($row[$headerMap['unit']]) : 'Unit';
+                $price = $headerMap['price'] !== null && isset($row[$headerMap['price']]) ? $this->cleanNumeric($row[$headerMap['price']]) : 0.0;
+
+                // Tentukan type_group: tool (aset/alat kerja) vs material (habis pakai)
+                $catLower = strtolower($category);
+                $typeGroup = (str_contains($catLower, 'tool') || str_contains($catLower, 'equipment') || str_contains($catLower, 'alat') || str_contains($catLower, 'mesin') || str_contains($catLower, 'kendaraan') || str_contains($catLower, 'vehicle') || str_contains($catLower, 'aset')) ? 'tool' : 'material';
+
+                $existing = InventoryItem::where('name', $name)->first();
+
+                if ($existing) {
+                    $existing->update([
+                        'category' => $category ?: $existing->category,
+                        'type_group' => $typeGroup,
+                        'type' => $type ?: $existing->type,
+                        'brand' => $brand ?: $existing->brand,
+                        'model' => $model ?: $existing->model,
+                        'description' => $description ?: $existing->description,
+                        'stock' => $stock,
+                        'unit' => $unit ?: $existing->unit,
+                        'price' => $price > 0 ? $price : $existing->price,
+                    ]);
+                    $updatedCount++;
+                } else {
+                    InventoryItem::create([
+                        'name' => $name,
                         'category' => $category,
                         'type_group' => $typeGroup,
-                        'type' => $cells[2]->getValue(),
-                        'brand' => $cells[3]->getValue(),
-                        'model' => $cells[4]->getValue(),
-                        'description' => $cells[5]->getValue(),
-                        'stock' => (int) $cells[6]->getValue(),
-                        'unit' => $cells[7]->getValue(),
-                        'price' => (float) $cells[8]->getValue(),
-                    ]
-                );
-                $count++;
+                        'type' => $type,
+                        'brand' => $brand,
+                        'model' => $model,
+                        'description' => $description,
+                        'stock' => $stock,
+                        'unit' => $unit,
+                        'price' => $price,
+                    ]);
+                    $createdCount++;
+                }
             }
+
+            $totalSuccess = $createdCount + $updatedCount;
+            $msg = "Import data & stok inventaris selesai: {$totalSuccess} item diproses ({$createdCount} item baru ditambahkan, {$updatedCount} item diperbarui).";
+            if ($skippedCount > 0) {
+                $msg .= " ({$skippedCount} baris kosong dilewati).";
+            }
+
+            return redirect()->route('inventory.index')->with('success', $msg);
+        } catch (\Throwable $e) {
+            return back()->withErrors(['file' => 'Import gagal: ' . $e->getMessage()]);
         }
-
-        $reader->close();
-
-        return redirect()->route('inventory.index')->with('success', "$count items imported successfully.");
     }
 }

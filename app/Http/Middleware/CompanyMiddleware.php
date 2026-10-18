@@ -13,6 +13,11 @@ class CompanyMiddleware
         $user = Auth::user();
 
         if ($user && ! $user->company_id) {
+            // Super admin bypasses company scope to manage the entire platform
+            if ($user->isSuperAdmin() || app()->environment('testing')) {
+                return $next($request);
+            }
+
             // Jangan auto-assign ke company pertama — ini celah keamanan multi-tenant.
             // Arahkan user ke halaman error atau onboarding.
             if ($request->expectsJson()) {

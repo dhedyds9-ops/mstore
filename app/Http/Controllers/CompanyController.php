@@ -38,12 +38,24 @@ class CompanyController extends Controller implements HasMiddleware
             'currency' => 'nullable|string|max:10',
             'country' => 'nullable|string|max:100',
             'address' => 'nullable|string',
+            'subscription_plan' => 'nullable|string|in:starter,service,pro,enterprise',
+            'subscription_status' => 'nullable|string|in:trial,active,expired',
+            'trial_ends_at' => 'nullable|date',
+            'subscription_ends_at' => 'nullable|date',
+            'enabled_modules' => 'nullable|array',
+            'max_branches' => 'nullable|integer|min:1',
+            'max_users' => 'nullable|integer|min:1',
         ]);
 
         // Set default values
         $validated['currency'] = $validated['currency'] ?? 'IDR';
         $validated['country'] = $validated['country'] ?? 'ID';
         $validated['is_active'] = true;
+        $validated['subscription_plan'] = $validated['subscription_plan'] ?? Company::PLAN_STARTER;
+        $validated['subscription_status'] = $validated['subscription_status'] ?? Company::STATUS_TRIAL;
+        $validated['trial_ends_at'] = $validated['trial_ends_at'] ?? now()->addDays(14);
+        $validated['max_branches'] = $validated['max_branches'] ?? 1;
+        $validated['max_users'] = $validated['max_users'] ?? 5;
 
         Company::create($validated);
 
@@ -70,14 +82,26 @@ class CompanyController extends Controller implements HasMiddleware
             'country' => 'nullable|string|max:100',
             'address' => 'nullable|string',
             'is_active' => 'nullable|boolean',
+            'subscription_plan' => 'nullable|string|in:starter,service,pro,enterprise',
+            'subscription_status' => 'nullable|string|in:trial,active,expired',
+            'trial_ends_at' => 'nullable|date',
+            'subscription_ends_at' => 'nullable|date',
+            'enabled_modules' => 'nullable|array',
+            'max_branches' => 'nullable|integer|min:1',
+            'max_users' => 'nullable|integer|min:1',
         ]);
 
         // Set is_active to false if not present
         $validated['is_active'] = $request->has('is_active');
 
+        // Jika modul custom tidak diisi/dikosongkan, set null agar mengikuti paket
+        if (!isset($validated['enabled_modules']) || empty($validated['enabled_modules'])) {
+            $validated['enabled_modules'] = null;
+        }
+
         $company->update($validated);
 
-        return redirect()->route('companies.index')->with('success', 'Perusahaan berhasil diperbarui');
+        return redirect()->route('companies.index')->with('success', 'Perusahaan & paket langganan berhasil diperbarui');
     }
 
     public function destroy(Company $company)

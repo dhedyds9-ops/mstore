@@ -153,59 +153,84 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* =============================================
-   5. CORE COMPONENTS - STAT CARDS
+   5. CORE COMPONENTS - STAT CARDS & KPI CARDS (UNIFORM)
    =============================================
 */
-.stat-card {
+.stat-card,
+.card-kpi,
+.kpi-card,
+.row.g-3.mb-4 .card,
+.row.g-3.mb-3 .card {
   background-color: var(--color-bg-primary);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-lg);
-  box-shadow: var(--shadow-md);
+  border-radius: var(--radius-md) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   transition: all 0.2s ease;
 }
 
-.stat-card:hover {
+.stat-card:hover,
+.card-kpi:hover,
+.kpi-card:hover,
+.row.g-3.mb-4 .card:hover,
+.row.g-3.mb-3 .card:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
-.stat-card-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--font-size-xl);
+.stat-card,
+.row.g-3.mb-4 .card .card-body,
+.row.g-3.mb-3 .card .card-body {
+  padding: 0.75rem 0.95rem !important;
 }
 
-.stat-card-label {
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--color-text-secondary);
-  margin-bottom: var(--spacing-xs);
+.stat-card-icon,
+.row.g-3.mb-4 .card .card-body > div:first-child[class*="rounded"],
+.row.g-3.mb-3 .card .card-body > div:first-child[class*="rounded"] {
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
+  border-radius: 10px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 1.15rem !important;
+  padding: 0 !important;
+  flex-shrink: 0;
 }
 
-.stat-card-value {
-  font-size: var(--font-size-3xl);
-  font-weight: 800;
-  line-height: var(--line-height-tight);
+.stat-card-label,
+.row.g-3.mb-4 .card .text-muted.small,
+.row.g-3.mb-3 .card .text-muted.small,
+.row.g-3.mb-3 .card [class*="text-"][class*="-emphasis"].small {
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  color: var(--color-text-secondary) !important;
+  margin-bottom: 0.2rem !important;
+}
+
+.stat-card-value,
+.row.g-3.mb-4 .card .fs-4,
+.row.g-3.mb-4 .card .fs-5,
+.row.g-3.mb-3 .card .fs-4,
+.row.g-3.mb-3 .card .fs-5 {
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
   color: var(--color-text-primary);
 }
 
 .stat-card-subtitle {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
-  margin-top: var(--spacing-xs);
+  font-size: 0.72rem !important;
+  color: var(--color-text-muted) !important;
+  margin-top: 0.2rem !important;
 }
 
 /* Stat Card Variants */
 .stat-card.primary {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
-  border-color: rgba(59, 130, 246, 0.3);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.02) 100%);
+  border-color: rgba(59, 130, 246, 0.25);
 }
 
 .stat-card.primary .stat-card-value {
@@ -213,8 +238,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .stat-card.success {
-  background: linear-gradient(135deg, rgba(22, 163, 74, 0.1) 0%, rgba(22, 163, 74, 0.05) 100%);
-  border-color: rgba(22, 163, 74, 0.3);
+  background: linear-gradient(135deg, rgba(22, 163, 74, 0.08) 0%, rgba(22, 163, 74, 0.02) 100%);
+  border-color: rgba(22, 163, 74, 0.25);
 }
 
 .stat-card.success .stat-card-value {
@@ -222,8 +247,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .stat-card.warning {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%);
-  border-color: rgba(245, 158, 11, 0.3);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(245, 158, 11, 0.02) 100%);
+  border-color: rgba(245, 158, 11, 0.25);
 }
 
 .stat-card.warning .stat-card-value {
@@ -231,8 +256,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .stat-card.danger {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%);
-  border-color: rgba(239, 68, 68, 0.3);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(239, 68, 68, 0.02) 100%);
+  border-color: rgba(239, 68, 68, 0.25);
 }
 
 .stat-card.danger .stat-card-value {
@@ -246,38 +271,72 @@ h1, h2, h3, h4, h5, h6 {
 [data-bs-theme="dark"] .stat-card.danger .stat-card-value { color: #fca5a5; }
 
 /* =============================================
-   6. CORE COMPONENTS - DATA TABLES
+   6. CORE COMPONENTS - DATA TABLES (COMPACT & UNIFORM)
    =============================================
 */
-.table {
+.table,
+.table-responsive .table,
+.table-responsive-mobile .table {
   color: var(--color-text-primary);
-  margin-bottom: 0;
+  font-size: 0.84rem !important;
+  line-height: 1.4 !important;
+  margin-bottom: 0 !important;
 }
 
-.table thead th {
-  background-color: var(--color-bg-secondary);
-  color: var(--color-text-secondary);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-size: var(--font-size-xs);
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-bottom: 1px solid var(--color-border);
-  vertical-align: middle;
+.table thead th,
+.table-responsive .table thead th,
+.table-responsive-mobile .table thead th {
+  background-color: var(--color-bg-secondary) !important;
+  color: var(--color-text-secondary) !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  font-size: 0.74rem !important;
+  padding: 0.55rem 0.65rem !important;
+  border-bottom: 1px solid var(--color-border) !important;
+  border-top: none !important;
+  vertical-align: middle !important;
+  white-space: nowrap !important;
 }
 
-.table tbody td {
-  padding: var(--spacing-md);
-  vertical-align: middle;
-  border-top: 1px solid var(--color-border);
+.table tbody td,
+.table-responsive .table tbody td,
+.table-responsive-mobile .table tbody td,
+.table > :not(caption) > * > * {
+  font-size: 0.84rem !important;
+  padding: 0.45rem 0.65rem !important;
+  vertical-align: middle !important;
+  border-bottom: 1px solid var(--color-border) !important;
+  border-top: none !important;
 }
 
 .table tbody tr {
   transition: all 0.15s ease;
 }
 
-.table tbody tr:hover {
-  background-color: var(--color-bg-secondary);
+.table tbody tr:hover,
+.table-hover tbody tr:hover {
+  background-color: rgba(79, 70, 229, 0.035) !important;
+}
+
+[data-bs-theme="dark"] .table tbody tr:hover,
+[data-bs-theme="dark"] .table-hover tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.03) !important;
+}
+
+.table td .btn,
+.table td .btn-sm {
+  padding: 0.22rem 0.45rem !important;
+  font-size: 0.78rem !important;
+  line-height: 1.25 !important;
+  border-radius: 6px !important;
+}
+
+.table td .badge {
+  font-size: 0.72rem !important;
+  font-weight: 600 !important;
+  padding: 0.25em 0.55em !important;
+  border-radius: 6px !important;
 }
 
 .table-responsive,
@@ -332,7 +391,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* =============================================
-   7. CORE COMPONENTS - FORMS
+   7. CORE COMPONENTS - FORMS & UNIFIED TABLE FILTERS
    =============================================
 */
 .form-control,
@@ -340,17 +399,41 @@ h1, h2, h3, h4, h5, h6 {
   background-color: var(--color-bg-primary);
   border: 1px solid var(--color-border);
   color: var(--color-text-primary);
-  font-size: var(--font-size-md);
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-sm);
   transition: all 0.2s ease;
+}
+
+.form-control-sm,
+.form-select-sm,
+.card-header form .form-control,
+.card-header form .form-select,
+.wash-filter-form .form-control,
+.wash-filter-form .form-select,
+.filter-form .form-control,
+.filter-form .form-select {
+  height: 34px !important;
+  min-height: 34px !important;
+  font-size: 0.835rem !important;
+  padding: 0.35rem 0.65rem !important;
+  border-radius: 8px !important;
+}
+
+.card-header form .input-group-text,
+.wash-filter-form .input-group-text,
+.filter-form .input-group-text {
+  height: 34px !important;
+  font-size: 0.82rem !important;
+  padding: 0.35rem 0.65rem !important;
+  border-radius: 8px;
 }
 
 .form-control:focus,
 .form-select:focus {
   background-color: var(--color-bg-primary);
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+  box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.15);
   color: var(--color-text-primary);
 }
 
@@ -358,31 +441,47 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--color-text-muted);
 }
 
-.form-label {
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  margin-bottom: var(--spacing-xs);
-  font-size: var(--font-size-sm);
+.form-label,
+.card-header form label,
+.wash-filter-form label,
+.wash-filter-form .col-form-label {
+  font-weight: 600 !important;
+  color: var(--color-text-secondary) !important;
+  margin-bottom: 0.15rem !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  font-size: 0.78rem !important;
 }
 
 /* =============================================
-   8. CORE COMPONENTS - BUTTONS
+   8. CORE COMPONENTS - UNIFIED BUTTONS & TOOLBARS
    =============================================
 */
 .btn {
   font-weight: 600;
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(--radius-md);
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--radius-sm);
   transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--spacing-xs);
+  font-size: var(--font-size-sm);
 }
 
-.btn-sm {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  font-size: var(--font-size-sm);
+.btn-sm,
+.card-header form .btn,
+.wash-filter-form .btn,
+.wash-filter-actions .btn,
+.wash-transactions-toolbar .btn,
+.table-toolbar .btn,
+.page-toolbar .btn {
+  height: 34px !important;
+  min-height: 34px !important;
+  padding: 0.32rem 0.75rem !important;
+  font-size: 0.835rem !important;
+  border-radius: 8px !important;
+  gap: 0.35rem !important;
 }
 
 .btn-lg {
@@ -390,14 +489,39 @@ h1, h2, h3, h4, h5, h6 {
   font-size: var(--font-size-lg);
 }
 
-.btn-primary {
-  background-color: var(--color-primary);
-  border-color: var(--color-primary);
+.btn-primary,
+.card-header form button[type="submit"]:not(.btn-danger):not(.btn-outline-danger),
+.wash-filter-form button[type="submit"] {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: #ffffff !important;
 }
 
-.btn-primary:hover {
-  background-color: var(--color-primary-dark);
-  border-color: var(--color-primary-dark);
+.btn-primary:hover,
+.card-header form button[type="submit"]:not(.btn-danger):not(.btn-outline-danger):hover,
+.wash-filter-form button[type="submit"]:hover {
+  background-color: var(--color-primary-dark) !important;
+  border-color: var(--color-primary-dark) !important;
+  color: #ffffff !important;
+}
+
+/* Reset / Clear Buttons in Filters */
+.card-header form a.btn-secondary,
+.card-header form a.btn-outline-secondary,
+.wash-filter-form a.btn-secondary,
+.wash-filter-actions a.btn-secondary {
+  background-color: transparent !important;
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text-secondary) !important;
+}
+
+.card-header form a.btn-secondary:hover,
+.card-header form a.btn-outline-secondary:hover,
+.wash-filter-form a.btn-secondary:hover,
+.wash-filter-actions a.btn-secondary:hover {
+  background-color: var(--color-bg-secondary) !important;
+  border-color: var(--color-border) !important;
+  color: var(--color-text-primary) !important;
 }
 
 /* =============================================

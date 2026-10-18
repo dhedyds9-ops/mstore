@@ -264,8 +264,8 @@ class WashTransaction extends Model
                     $this->created_at?->toDateString() ?? now()->toDateString(),
                     'Wash POS',
                     [
-                        ['account_id' => $cashAccId, 'debit' => $this->total_amount, 'credit' => 0, 'unit' => 'MSTORE'],
-                        ['account_id' => $revAccId, 'debit' => 0, 'credit' => $this->total_amount, 'unit' => 'MSTORE'],
+                        ['account_id' => $cashAccId, 'debit' => $this->total_amount, 'credit' => 0, 'unit' => 'WASH'],
+                        ['account_id' => $revAccId, 'debit' => 0, 'credit' => $this->total_amount, 'unit' => 'WASH'],
                     ],
                     null,
                     'wash_transaction',

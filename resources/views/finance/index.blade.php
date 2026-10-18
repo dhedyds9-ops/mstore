@@ -10,22 +10,22 @@
             @if(Auth::user()->hasAnyRole(['super-admin', 'manager', 'finance']) || Auth::user()->hasAnyRole(['super-admin', 'manager', 'finance']))
             <!-- PERBAIKAN: Ganti label menjadi sesuai konteks agar tidak menyesatkan auditor -->
             <div class="col">
-                <a href="{{ route('finance.manager_report') }}" class="btn btn-secondary w-100 h-100 d-flex align-items-center justify-content-center" data-bs-toggle="tooltip" title="{{ __('Laporan Manajemen') }}">
+                <a href="{{ route('finance.manager_report') }}" class="btn btn-sm btn-secondary w-100 h-100 d-flex align-items-center justify-content-center" data-bs-toggle="tooltip" title="{{ __('Laporan Manajemen') }}">
                     <i class="fa-solid fa-file-lines me-1"></i> <span>{{ __('Manajemen') }}</span>
                 </a>
             </div>
             <div class="col">
-                <a href="{{ route('finance.investor_report') }}" class="btn btn-warning text-dark w-100 h-100 d-flex align-items-center justify-content-center" data-bs-toggle="tooltip" title="{{ __('Laporan Investor') }}">
+                <a href="{{ route('finance.investor_report') }}" class="btn btn-sm btn-warning text-dark w-100 h-100 d-flex align-items-center justify-content-center" data-bs-toggle="tooltip" title="{{ __('Laporan Investor') }}">
                     <i class="fa-solid fa-hand-holding-dollar me-1"></i> <span>{{ __('Investor') }}</span>
                 </a>
             </div>
             <div class="col">
-                <a href="{{ route('finance.profit_loss') }}" class="btn btn-primary w-100 h-100 d-flex align-items-center justify-content-center" data-bs-toggle="tooltip" title="{{ __('Laba Rugi (P&L)') }}">
+                <a href="{{ route('finance.profit_loss') }}" class="btn btn-sm btn-primary w-100 h-100 d-flex align-items-center justify-content-center" data-bs-toggle="tooltip" title="{{ __('Laba Rugi (P&L)') }}">
                     <i class="fa-solid fa-chart-line me-1"></i> <span>{{ __('P&L') }}</span>
                 </a>
             </div>
             <div class="col">
-                <a href="{{ route('finance.material_report') }}" class="btn btn-info w-100 h-100 d-flex align-items-center justify-content-center" data-bs-toggle="tooltip" title="{{ __('Laporan Aset') }}">
+                <a href="{{ route('finance.material_report') }}" class="btn btn-sm btn-info w-100 h-100 d-flex align-items-center justify-content-center" data-bs-toggle="tooltip" title="{{ __('Laporan Aset') }}">
                     <i class="fa-solid fa-boxes-stacked me-1"></i> <span>{{ __('Aset') }}</span>
                 </a>
             </div>
@@ -33,7 +33,7 @@
             <!-- Integration: Accounting Reports Dropdown -->
             <div class="col">
                 <div class="dropdown w-100 h-100">
-                    <button class="btn btn-orange border dropdown-toggle w-100 h-100 d-flex align-items-center justify-content-center" type="button" id="accountingDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="{{ __('Laporan Akuntansi') }}">
+                    <button class="btn btn-sm btn-orange border dropdown-toggle w-100 h-100 d-flex align-items-center justify-content-center" type="button" id="accountingDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="{{ __('Laporan Akuntansi') }}">
                         <i class="fa-solid fa-book-open me-1"></i> <span>{{ __('Akuntansi') }}</span>
                     </button>
                     <ul class="dropdown-menu" aria-labelledby="accountingDropdown">
@@ -47,18 +47,18 @@
             </div>
 
             <div class="col">
-                <a href="{{ route('finance.export_accounting') }}" class="btn btn-success w-100 h-100 d-flex align-items-center justify-content-center" data-bs-toggle="tooltip" title="{{ __('Ekspor Jurnal') }}">
+                <a href="{{ route('finance.export_accounting') }}" class="btn btn-sm btn-success w-100 h-100 d-flex align-items-center justify-content-center" data-bs-toggle="tooltip" title="{{ __('Ekspor Jurnal') }}">
                     <i class="fa-solid fa-file-excel me-1"></i> <span>{{ __('Jurnal') }}</span>
                 </a>
             </div>
             @endif
             <div class="col">
-                <button class="btn btn-light border w-100 h-100 d-flex align-items-center justify-content-center" data-bs-toggle="modal" data-bs-target="#helpModal" title="{{ __('Panduan Audit') }}">
+                <button class="btn btn-sm btn-light border w-100 h-100 d-flex align-items-center justify-content-center" data-bs-toggle="modal" data-bs-target="#helpModal" title="{{ __('Panduan Audit') }}">
                     <i class="fa-solid fa-circle-question me-1"></i> <span>{{ __('Panduan') }}</span>
                 </button>
             </div>
             <div class="col">
-                <button class="btn btn-primary w-100 h-100 d-flex align-items-center justify-content-center" data-bs-toggle="modal" data-bs-target="#addTransactionModal" title="{{ __('Tambah Transaksi') }}">
+                <button class="btn btn-sm btn-primary w-100 h-100 d-flex align-items-center justify-content-center" data-bs-toggle="modal" data-bs-target="#addTransactionModal" title="{{ __('Tambah Transaksi') }}">
                     <i class="fa-solid fa-plus me-1"></i> <span>{{ __('Transaksi') }}</span>
                 </button>
             </div>

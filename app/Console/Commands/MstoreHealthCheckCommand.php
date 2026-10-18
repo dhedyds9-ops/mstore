@@ -2,11 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\GenieAcsServer;
-use App\Models\Router;
 use App\Models\Setting;
-use App\Services\GenieACSService;
-use Modules\Network\Services\MonitoringService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
@@ -21,11 +17,6 @@ class MstoreHealthCheckCommand extends Command
     protected $signature = 'mstore:health-check';
     protected $description = 'Health check untuk komponen inti & integrasi MStore';
 
-    public function __construct(protected MonitoringService $monitoringService)
-    {
-        parent::__construct();
-    }
-
     public function handle(): int
     {
         $checks = [
@@ -37,8 +28,6 @@ class MstoreHealthCheckCommand extends Command
             $this->checkStorage(),
             $this->checkMail(),
             $this->checkWhatsAppGateway(),
-            $this->checkGenieAcs(),
-            $this->checkMikrotik(),
             $this->checkDuitku(),
             $this->checkTelegram(),
         ];
@@ -228,49 +217,6 @@ class MstoreHealthCheckCommand extends Command
             return ['name' => 'WhatsApp Gateway', 'status' => 'warning', 'message' => 'HTTP '.$res->status()];
         } catch (\Throwable $e) {
             return ['name' => 'WhatsApp Gateway', 'status' => 'warning', 'message' => $e->getMessage()];
-        }
-    }
-
-    private function checkGenieAcs(): array
-    {
-        $server = GenieAcsServer::query()->where('is_active', true)->first();
-        $baseUrl = $server ? rtrim((string) $server->url, '/') : '';
-        if ($baseUrl === '') {
-            $baseUrl = rtrim((string) config('services.genieacs.url', ''), '/');
-        }
-
-        if ($baseUrl === '') {
-            return ['name' => 'GenieACS', 'status' => 'warning', 'message' => 'URL belum dikonfigurasi'];
-        }
-
-        try {
-            $res = Http::timeout(3)->acceptJson()->get($baseUrl.'/devices', ['limit' => 1]);
-            if ($res->successful() || $res->status() === 401 || $res->status() === 403) {
-                return ['name' => 'GenieACS', 'status' => 'ok', 'message' => 'reachable'];
-            }
-
-            return ['name' => 'GenieACS', 'status' => 'warning', 'message' => 'HTTP '.$res->status()];
-        } catch (\Throwable $e) {
-            return ['name' => 'GenieACS', 'status' => 'critical', 'message' => $e->getMessage()];
-        }
-    }
-
-    private function checkMikrotik(): array
-    {
-        $router = Router::query()->orderBy('id')->first();
-        if (! $router) {
-            return ['name' => 'MikroTik', 'status' => 'warning', 'message' => 'Belum ada router'];
-        }
-
-        try {
-            $isConnected = $this->monitoringService->isRouterConnected($router);
-            if (! $isConnected) {
-                return ['name' => 'MikroTik', 'status' => 'warning', 'message' => 'Tidak bisa konek ke '.$router->name];
-            }
-
-            return ['name' => 'MikroTik', 'status' => 'ok', 'message' => $router->name];
-        } catch (\Throwable $e) {
-            return ['name' => 'MikroTik', 'status' => 'warning', 'message' => $e->getMessage()];
         }
     }
 

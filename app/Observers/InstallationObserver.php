@@ -6,7 +6,6 @@ use App\Models\AuditLog;
 use App\Models\Installation;
 use App\Models\Ticket;
 use Illuminate\Support\Facades\Log;
-use Modules\Network\Events\Domain\CustomerActivated;
 
 class InstallationObserver
 {
@@ -83,7 +82,6 @@ class InstallationObserver
         // Auto activate customer if not active
         if ($installation->customer && $installation->customer->status !== 'active') {
             $installation->customer->update(['status' => 'active']);
-            event(new CustomerActivated($installation->customer));
             Log::info("Customer {$installation->customer_id} auto-activated after installation completion.");
         }
         

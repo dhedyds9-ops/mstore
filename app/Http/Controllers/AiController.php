@@ -21,7 +21,6 @@ class AiController extends Controller
         $data = [
             'restockSuggestions' => Cache::remember('ai_restock', 60, fn () => $this->aiService->getRestockSuggestions()),
             'salesForecast' => Cache::remember('ai_forecast', 60, fn () => $this->aiService->getSalesForecast()),
-            'networkInsights' => Cache::remember('ai_network', 5, fn () => $this->aiService->getNetworkInsights()),
             'businessInsights' => Cache::remember('ai_business', 30, fn () => $this->aiService->getBusinessInsights()),
             'systemOverview' => Cache::remember('ai_system_overview', 15, fn () => $this->aiService->getSystemOverview()),
         ];
@@ -57,44 +56,5 @@ class AiController extends Controller
             'reply' => $reply,
             'response' => $reply,
         ]);
-    }
-
-    /**
-     * Phase 11.1: AI NOC - Analyze customer offline
-     */
-    public function analyzeCustomer(Request $request)
-    {
-        $request->validate([
-            'customer_id' => 'required|integer'
-        ]);
-        return response()->json($this->aiService->analyzeCustomerOffline($request->customer_id));
-    }
-
-    /**
-     * Phase 11.2: Root Cause Analysis
-     */
-    public function rootCauseAnalysis(Request $request)
-    {
-        $request->validate([
-            'node_type' => 'required|in:olt,odc,odp,htb',
-            'node_id' => 'required|integer'
-        ]);
-        return response()->json($this->aiService->performRootCauseAnalysis($request->node_type, $request->node_id));
-    }
-
-    /**
-     * Phase 11.3: Predictive Maintenance
-     */
-    public function predictiveMaintenance()
-    {
-        return response()->json($this->aiService->getPredictiveMaintenanceAlerts());
-    }
-
-    /**
-     * Phase 11.4: Capacity Prediction
-     */
-    public function capacityPrediction()
-    {
-        return response()->json($this->aiService->getCapacityPredictions());
     }
 }

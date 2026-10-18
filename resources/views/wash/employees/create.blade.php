@@ -89,7 +89,7 @@
                     @error('user_id')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
-                    <small class="text-muted">{{ __('Mengaitkan akun memungkinkan absensi seperti teknisi.') }}</small>
+                    <small class="text-muted">{{ __('Mengaitkan karyawan dengan akun pengguna untuk login sistem.') }}</small>
                 </div>
 
                 <div class="mb-3">

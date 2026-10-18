@@ -17,6 +17,7 @@ class AccountingReportController extends Controller
     {
         $start = $request->input('start_date');
         $end = $request->input('end_date');
+        $unit = $request->input('unit');
 
         $query = JournalEntry::query()
             ->join('journals', 'journal_entries.journal_id', '=', 'journals.id')
@@ -30,18 +31,23 @@ class AccountingReportController extends Controller
         if ($end) {
             $query->whereDate('journals.date', '<=', $end);
         }
+        if ($unit) {
+            $query->where('journal_entries.unit', $unit);
+        }
 
         $rows = $query->orderBy('accounts.code')->get();
         $totalDebit = $rows->sum('debit');
         $totalCredit = $rows->sum('credit');
+        $unitOptions = ['ATK' => 'POS ATK', 'WASH' => 'GT Wash', 'EVENT' => 'Wedding & Event'];
 
-        return view('accounting.trial_balance', compact('rows', 'totalDebit', 'totalCredit', 'start', 'end'));
+        return view('accounting.trial_balance', compact('rows', 'totalDebit', 'totalCredit', 'start', 'end', 'unit', 'unitOptions'));
     }
 
     public function incomeStatement(Request $request)
     {
         $start = $request->input('start_date');
         $end = $request->input('end_date');
+        $unit = $request->input('unit');
 
         $base = JournalEntry::query()
             ->join('journals', 'journal_entries.journal_id', '=', 'journals.id')
@@ -51,6 +57,9 @@ class AccountingReportController extends Controller
         }
         if ($end) {
             $base->whereDate('journals.date', '<=', $end);
+        }
+        if ($unit) {
+            $base->where('journal_entries.unit', $unit);
         }
 
         $revenues = (clone $base)
@@ -71,8 +80,9 @@ class AccountingReportController extends Controller
         $totalExpense = $expenses->sum('amount');
         $netIncome = $totalRevenue - $totalExpense;
         $financeSummary = $this->buildFinanceSummary($start, $end);
+        $unitOptions = ['ATK' => 'POS ATK', 'WASH' => 'GT Wash', 'EVENT' => 'Wedding & Event'];
 
-        return view('accounting.income_statement', compact('revenues', 'expenses', 'totalRevenue', 'totalExpense', 'netIncome', 'start', 'end', 'financeSummary'));
+        return view('accounting.income_statement', compact('revenues', 'expenses', 'totalRevenue', 'totalExpense', 'netIncome', 'start', 'end', 'unit', 'unitOptions', 'financeSummary'));
     }
 
     public function balanceSheet(Request $request)

@@ -115,7 +115,7 @@ class CoordinatorController extends Controller implements HasMiddleware
         $users = User::orderBy('name')->get();
         $routers = Router::where('is_active', true)->orderBy('name')->get();
 
-        return view('coordinators.edit', compact('field-leader', 'regions', 'users', 'routers'));
+        return view('coordinators.edit', compact('coordinator', 'regions', 'users', 'routers'));
     }
 
     /**

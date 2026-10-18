@@ -3,58 +3,17 @@
 namespace App\Actions\WhatsApp;
 
 use App\Models\Customer;
-use App\Models\WhatsAppSession;
-use App\Services\NetworkDiagnosticService;
-use App\Services\TechnicianAssignmentService;
 use App\Models\Ticket;
+use App\Services\TechnicianAssignmentService;
 use Illuminate\Support\Facades\Log;
 
 class RunDiagnosticAction
 {
-    protected $diagnosticService;
     protected $assignmentService;
 
-    public function __construct(NetworkDiagnosticService $diagnosticService, TechnicianAssignmentService $assignmentService)
+    public function __construct(TechnicianAssignmentService $assignmentService)
     {
-        $this->diagnosticService = $diagnosticService;
         $this->assignmentService = $assignmentService;
-    }
-
-    public function execute(Customer $customer, WhatsAppSession $session = null, string $initialMessage = ''): array
-    {
-        Log::info("Starting diagnostic for customer {$customer->id}");
-
-        $diagnostic = $this->diagnosticService->runDiagnostic($customer, $initialMessage);
-
-        $response = $this->buildResponse($diagnostic, $customer);
-
-        return $response;
-    }
-
-    protected function buildResponse($diagnostic, Customer $customer): array
-    {
-        $text = "🔍 Hasil Diagnosis Otomatis:\n\n";
-
-        $text .= $diagnostic->summary . "\n\n";
-
-        if (!empty($diagnostic->recommendations)) {
-            $text .= "💡 Saran:\n";
-            foreach ($diagnostic->recommendations as $idx => $rec) {
-                $text .= ($idx + 1) . ". " . $rec . "\n";
-            }
-        }
-
-        if ($diagnostic->ticket_needed) {
-            $text .= "\nSilakan balas \"LANJUT\" untuk membuat tiket otomatis.";
-        } else {
-            $text .= "\nJika masih bermasalah, silakan balas untuk bantuan lebih lanjut.";
-        }
-
-        return [
-            'type' => 'text',
-            'text' => $text,
-            'diagnostic' => $diagnostic,
-        ];
     }
 
     public function createTicketFromDiagnostic($diagnostic, Customer $customer, string $description = ''): ?Ticket

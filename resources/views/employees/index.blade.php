@@ -56,8 +56,15 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-auto">
-                <button type="submit" class="btn btn-sm btn-dark px-3">Filter</button>
+            <div class="col-auto d-flex gap-2">
+                <button type="submit" class="btn btn-sm btn-primary px-3">
+                    <i class="fa-solid fa-filter me-1"></i>Filter
+                </button>
+                @if(request('search') || request('department') || request('status') || request('company_id'))
+                    <a href="{{ route('employees.index') }}" class="btn btn-sm btn-outline-secondary" title="Reset Filter">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </a>
+                @endif
             </div>
 
             {{-- Row 2 Right: Export Actions --}}

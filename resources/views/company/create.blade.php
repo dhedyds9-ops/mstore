@@ -75,6 +75,41 @@
                         </div>
                     </div>
 
+                    <hr class="my-4">
+
+                    <h6 class="fw-bold text-primary text-uppercase small mb-3">
+                        <i class="fa-solid fa-crown me-1"></i> {{ __('Paket Langganan Awal & Kuota') }}
+                    </h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label for="subscription_plan" class="form-label small text-muted fw-bold">{{ __('Pilihan Paket UMKM') }}</label>
+                            <select name="subscription_plan" id="subscription_plan" class="form-select @error('subscription_plan') is-invalid @enderror">
+                                <option value="starter" {{ old('subscription_plan', 'starter') == 'starter' ? 'selected' : '' }}>Toko & Retail (Starter) - POS & Barcode</option>
+                                <option value="service" {{ old('subscription_plan') == 'service' ? 'selected' : '' }}>Jasa & Layanan (Service) - Kasir Cuci & Member</option>
+                                <option value="pro" {{ old('subscription_plan') == 'pro' ? 'selected' : '' }}>Multi-Bisnis (Pro) - Toko + Jasa + Booking</option>
+                                <option value="enterprise" {{ old('subscription_plan') == 'enterprise' ? 'selected' : '' }}>Enterprise (Semua Modul & Kuota Lengkap)</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="subscription_status" class="form-label small text-muted fw-bold">{{ __('Status Langganan Awal') }}</label>
+                            <select name="subscription_status" id="subscription_status" class="form-select @error('subscription_status') is-invalid @enderror">
+                                <option value="trial" {{ old('subscription_status', 'trial') == 'trial' ? 'selected' : '' }}>Trial (Masa Uji Coba 14 Hari)</option>
+                                <option value="active" {{ old('subscription_status') == 'active' ? 'selected' : '' }}>Aktif Langsung</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="max_users" class="form-label small text-muted fw-bold">{{ __('Batas Pengguna / Staf') }}</label>
+                            <input type="number" min="1" name="max_users" id="max_users" class="form-control" value="{{ old('max_users', 5) }}">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="max_branches" class="form-label small text-muted fw-bold">{{ __('Batas Cabang') }}</label>
+                            <input type="number" min="1" name="max_branches" id="max_branches" class="form-control" value="{{ old('max_branches', 1) }}">
+                        </div>
+                    </div>
+
                     <div class="d-flex flex-column-reverse flex-md-row justify-content-end gap-2 border-top pt-4 mobile-sticky-footer">
                         <a href="{{ route('companies.index') }}" class="btn btn-outline-secondary w-100 w-md-auto">{{ __('Batal') }}</a>
                         <button type="submit" class="btn btn-primary w-100 w-md-auto px-4">{{ __('Simpan Perusahaan') }}</button>

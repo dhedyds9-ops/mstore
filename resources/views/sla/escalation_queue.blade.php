@@ -35,7 +35,7 @@
                                 <td>{{ $ticket->customer?->name ?? '-' }}</td>
                                 <td>{{ $ticket->status }}</td>
                                 <td>{{ $ticket->sla_status ?? '-' }}</td>
-                                <td>{{ $ticket->technician_id ? ('#'.$ticket->technician_id) : '-' }}</td>
+                                <td>{{ $ticket->technicians->isNotEmpty() ? $ticket->technicians->pluck('name')->join(', ') : '-' }}</td>
                                 <td>{{ $ticket->updated_at?->format('d M Y H:i') }}</td>
                             </tr>
                         @empty

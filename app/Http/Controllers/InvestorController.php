@@ -26,7 +26,7 @@ class InvestorController extends Controller implements HasMiddleware
 
     public function index(Request $request)
     {
-        $query = Investor::with('field-leader');
+        $query = Investor::with('coordinator');
 
         $month = $request->input('month');
 
@@ -185,7 +185,7 @@ class InvestorController extends Controller implements HasMiddleware
 
     public function exportPdf(Request $request)
     {
-        $query = Investor::with('field-leader');
+        $query = Investor::with('coordinator');
 
         $month = $request->input('month');
 
@@ -220,7 +220,7 @@ class InvestorController extends Controller implements HasMiddleware
 
     public function exportExcel(Request $request)
     {
-        $query = Investor::with('field-leader');
+        $query = Investor::with('coordinator');
 
         $month = $request->input('month');
 

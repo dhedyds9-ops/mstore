@@ -15,7 +15,9 @@ class PermissionSeeder extends Seeder
         $permissions = [
             // Dashboard
             ['name' => 'dashboard.view', 'label' => 'View Dashboard', 'group' => 'Dashboard'],
+            ['name' => 'admin.dashboard.view', 'label' => 'View Admin Dashboard', 'group' => 'Dashboard'],
             ['name' => 'ai.view', 'label' => 'View AI Center', 'group' => 'Dashboard'],
+            ['name' => 'audit.view', 'label' => 'View Audit Trail', 'group' => 'Security'],
 
             // User Management
             ['name' => 'user.view', 'label' => 'View Users', 'group' => 'User Management'],
@@ -195,6 +197,8 @@ class PermissionSeeder extends Seeder
             ['name' => 'wash.report', 'label' => 'View Wash Reports', 'group' => 'Car Wash'],
             ['name' => 'wash.member.view', 'label' => 'View Wash Members', 'group' => 'Car Wash'],
             ['name' => 'wash.member.manage', 'label' => 'Manage Wash Members', 'group' => 'Car Wash'],
+            ['name' => 'wash.package.view', 'label' => 'View Wash Member Packages', 'group' => 'Car Wash'],
+            ['name' => 'wash.package.manage', 'label' => 'Manage Wash Member Packages', 'group' => 'Car Wash'],
             ['name' => 'wash.loyalty.view', 'label' => 'View Wash Loyalty', 'group' => 'Car Wash'],
             ['name' => 'wash.loyalty.manage', 'label' => 'Manage Wash Loyalty', 'group' => 'Car Wash'],
             ['name' => 'wash.reward.view', 'label' => 'View Wash Reward Vouchers', 'group' => 'Car Wash'],

@@ -28,10 +28,10 @@ class LandingController extends Controller
         return view('landing.index', array_merge($data, [
             'currentServiceSlug' => null,
             'servicePage' => null,
-            'pageTitle' => $data['storeName'].' - Internet Fiber, Wedding & Event, CCTV, GT Wash, dan ATK',
-            'pageDescription' => 'Pilih layanan yang Anda butuhkan: Internet Fiber, Wedding & Event, Instalasi CCTV, GT Wash, dan ATK Store. Konsultasi cepat via WhatsApp.',
+            'pageTitle' => $data['storeName'].' - GT Wash, ATK Store, dan Wedding & Event',
+            'pageDescription' => 'Layanan terintegrasi: GT Wash Mobil & Motor, Toko ATK & Fotocopy, serta Wedding & Event Organizer.',
             'pageUrl' => route('landing'),
-            'pageImage' => asset('img/cctv-monitor.png'),
+            'pageImage' => asset('img/logo.png'),
         ]));
     }
 
@@ -453,114 +453,17 @@ class LandingController extends Controller
         $atkCount = (int) $data['atkProducts']->count();
         $defaultImage = asset('img/cctv-monitor.png');
 
-        return [
-            'internet' => [
-                'slug' => 'internet',
-                'name' => 'Internet Fiber',
-                'nav_label' => 'Internet',
-                'icon' => 'fa-wifi',
-                'url' => route('landing.services.internet'),
-                'meta_title' => 'Internet Fiber - Paket Rumah & Bisnis, Hotspot, dan Voucher',
-                'meta_description' => 'Pilih paket internet fiber untuk rumah dan bisnis, cek coverage ODP, dan jadwalkan pemasangan. Voucher hotspot juga tersedia (QRIS).',
-                'image' => $defaultImage,
-                'kicker' => 'MSTORE.NET',
-                'hero_title' => 'Internet Fiber Stabil untuk Rumah & Bisnis',
-                'hero_desc' => 'Cek coverage, pilih paket, lalu kami bantu proses registrasi dan jadwal pemasangan. Voucher hotspot juga tersedia untuk kebutuhan cepat.',
-                'summary' => 'Cek coverage, pilih paket, registrasi pemasangan, dan voucher hotspot.',
-                'stat' => $internetCount > 0 ? $internetCount.' paket aktif' : 'Paket siap ditampilkan',
-                'highlights' => ['Cek coverage ODP', 'Paket rumah & bisnis', 'Voucher hotspot QRIS'],
-                'form' => [
-                    'interest' => 'internet',
-                    'title' => 'Cek Coverage & Daftar Pasang',
-                    'description' => 'Isi alamat dan kebutuhan Anda, tim kami bantu cek coverage ODP dan konfirmasi jadwal pemasangan.',
-                    'coverage_label' => 'Alamat / Coverage Area',
-                    'coverage_placeholder' => 'Contoh: Kampung X / RT/RW / patokan rumah',
-                    'message_label' => 'Kebutuhan Internet',
-                    'message_placeholder' => 'Contoh: butuh 50 Mbps untuk rumah, pemasangan minggu ini',
-                    'details' => [
-                        ['name' => 'detail_1', 'label' => 'Paket Diminati', 'placeholder' => 'Contoh: 30 Mbps / hotspot member'],
-                        ['name' => 'detail_2', 'label' => 'Jadwal Pemasangan', 'placeholder' => 'Contoh: Sabtu pagi'],
-                        ['name' => 'detail_3', 'label' => 'Catatan Lokasi', 'placeholder' => 'Contoh: dekat masjid / gang masuk mobil'],
-                    ],
-                ],
-                'secondary_label' => 'Cek Coverage',
-                'secondary_href' => '#coverage-area',
-                'secondary_note' => ($voucherCount > 0 ? $voucherCount.' voucher' : 'Voucher').($washMemberCount > 0 ? ' · '.$washMemberCount.' paket member' : ''),
-            ],
-            'wedding-event' => [
-                'slug' => 'wedding-event',
-                'name' => 'Wedding & Event',
-                'nav_label' => 'Wedding & Event',
-                'icon' => 'fa-ring',
-                'url' => route('landing.services.wedding'),
-                'meta_title' => 'Wedding & Event - Paket Wedding, Konsultasi, dan Booking',
-                'meta_description' => 'Temukan paket wedding yang fleksibel, konsultasi detail acara, dan booking cepat via WhatsApp. Bisa custom konsep sesuai kebutuhan.',
-                'image' => $defaultImage,
-                'kicker' => 'Wedding & Event',
-                'hero_title' => 'Paket Wedding yang Fleksibel dan Mudah Dibooking',
-                'hero_desc' => 'Pilih paket, kirim detail tanggal dan lokasi acara, lalu tim kami bantu susun penawaran yang paling sesuai.',
-                'summary' => 'Paket wedding, konsultasi acara, dan galeri inspirasi.',
-                'stat' => $weddingCount > 0 ? $weddingCount.' paket wedding' : 'Konsultasi custom event',
-                'highlights' => ['Paket siap pilih', 'Bisa custom konsep', 'Booking via WhatsApp'],
-                'form' => [
-                    'interest' => 'wedding',
-                    'title' => 'Booking Konsultasi Wedding',
-                    'description' => 'Isi detail acara Anda, tim kami akan follow up via WhatsApp untuk rekomendasi paket dan penawaran.',
-                    'coverage_label' => 'Lokasi Acara',
-                    'coverage_placeholder' => 'Contoh: Gedung / rumah / kota acara',
-                    'message_label' => 'Kebutuhan Acara',
-                    'message_placeholder' => 'Contoh: akad + resepsi, butuh dokumentasi dan dekor',
-                    'details' => [
-                        ['name' => 'detail_1', 'label' => 'Tanggal Acara', 'placeholder' => 'Contoh: 15 September 2026'],
-                        ['name' => 'detail_2', 'label' => 'Jumlah Tamu', 'placeholder' => 'Contoh: 300 pax'],
-                        ['name' => 'detail_3', 'label' => 'Jenis Acara', 'placeholder' => 'Contoh: wedding / engagement / gathering'],
-                    ],
-                ],
-                'secondary_label' => 'WhatsApp',
-                'secondary_href' => 'wa:Halo, saya ingin konsultasi wedding dan minta info paket yang cocok.',
-                'secondary_note' => 'Paket bisa disesuaikan dengan konsep acara',
-            ],
-            'cctv' => [
-                'slug' => 'cctv',
-                'name' => 'Instalasi CCTV',
-                'nav_label' => 'CCTV',
-                'icon' => 'fa-video',
-                'url' => route('landing.services.cctv'),
-                'meta_title' => 'Instalasi CCTV - Survey Gratis, Paket Kamera, dan Pemasangan Rapi',
-                'meta_description' => 'Survey titik CCTV, pilih paket kamera sesuai kebutuhan, lalu jadwalkan instalasi yang rapi. Cocok untuk rumah, toko, kantor, dan gudang.',
-                'image' => $defaultImage,
-                'kicker' => 'Solusi Keamanan',
-                'hero_title' => 'Instalasi CCTV untuk Rumah, Toko, dan Kantor',
-                'hero_desc' => 'Mulai dari survey titik kamera, kami bantu rekomendasi paket, lalu jadwalkan pemasangan yang rapi dan terencana.',
-                'summary' => 'Survey gratis, paket kamera, garansi, dan booking instalasi.',
-                'stat' => $cctvCount > 0 ? $cctvCount.' paket CCTV' : 'Survey gratis tersedia',
-                'highlights' => ['Survey gratis', 'Paket kamera siap pasang', 'DP via QRIS'],
-                'form' => [
-                    'interest' => 'cctv',
-                    'title' => 'Jadwalkan Survey CCTV',
-                    'description' => 'Isi lokasi dan jumlah titik kamera, tim kami akan jadwalkan survey dan rekomendasikan paket.',
-                    'coverage_label' => 'Lokasi Pemasangan',
-                    'coverage_placeholder' => 'Contoh: ruko / rumah / kantor',
-                    'message_label' => 'Kebutuhan CCTV',
-                    'message_placeholder' => 'Contoh: butuh CCTV untuk area parkir dan pintu masuk',
-                    'details' => [
-                        ['name' => 'detail_1', 'label' => 'Jumlah Titik Kamera', 'placeholder' => 'Contoh: 4 titik'],
-                        ['name' => 'detail_2', 'label' => 'Jenis Lokasi', 'placeholder' => 'Contoh: rumah / toko / kantor'],
-                        ['name' => 'detail_3', 'label' => 'Jadwal Survey', 'placeholder' => 'Contoh: besok siang'],
-                    ],
-                ],
-                'secondary_label' => 'WhatsApp',
-                'secondary_href' => 'wa:Halo, saya ingin booking survey CCTV.',
-                'secondary_note' => 'Cocok untuk rumah, toko, dan kantor',
-            ],
-            'gt-wash' => [
+        $catalog = [];
+
+        if (\App\Support\ModuleGate::isEnabled('wash')) {
+            $catalog['gt-wash'] = [
                 'slug' => 'gt-wash',
                 'name' => 'GT Wash',
                 'nav_label' => 'GT Wash',
                 'icon' => 'fa-car-side',
                 'url' => route('landing.services.wash'),
                 'meta_title' => 'GT Wash - Cuci Mobil, Motor, Kedai Ms GT Wash, Membership, dan Loyalty',
-                'meta_description' => 'Booking GT Wash untuk mobil dan motor. Nikmati membership paket prabayar, loyalty 10x cuci gratis 1x, serta menu Kedai Ms GT Wash sambil menunggu kendaraan selesai.',
+                'meta_description' => 'Booking GT Wash untuk mobil dan motor. Nikmati membership paket prabayar, loyalty 10x cuci gratis 1x, serta menu Kedai Ms GT Wash.',
                 'image' => $defaultImage,
                 'kicker' => 'GT Wash',
                 'hero_title' => 'Booking GT Wash: Cuci Mobil & Motor + Membership Digital',
@@ -585,41 +488,154 @@ class LandingController extends Controller
                 'secondary_label' => 'WhatsApp',
                 'secondary_href' => 'wa:Halo, saya ingin booking GT Wash.',
                 'secondary_note' => 'Wash, membership, dan menu kedai dalam satu tempat',
-            ],
-            'atk-store' => [
+            ];
+        }
+
+        if (\App\Support\ModuleGate::isEnabled('atk')) {
+            $catalog['atk-store'] = [
                 'slug' => 'atk-store',
                 'name' => 'ATK Store',
-                'nav_label' => 'ATK',
+                'nav_label' => 'Toko ATK',
                 'icon' => 'fa-pen-ruler',
                 'url' => route('landing.services.atk'),
-                'meta_title' => 'ATK Store MStore - Produk Kantor, Layanan Jasa Keuangan, dan Pesan Cepat',
-                'meta_description' => 'Belanja produk ATK populer, gunakan layanan jasa keuangan (transfer, tarik tunai, topup, PPOB), dan pesan cepat via WhatsApp.',
+                'meta_title' => 'ATK Store - Produk Kantor, Fotocopy, dan Layanan Jasa Keuangan',
+                'meta_description' => 'Belanja produk ATK lengkap, jasa fotocopy, dan layanan jasa keuangan (transfer, tarik tunai, topup, PPOB).',
                 'image' => $defaultImage,
                 'kicker' => 'ATK Store',
-                'hero_title' => 'ATK & Layanan Jasa Keuangan untuk Semua Kebutuhan',
-                'hero_desc' => 'Lihat produk unggulan, gunakan layanan jasa keuangan (transfer, tarik tunai, topup, PPOB), dan kami bantu proses pesanan dengan cepat via WhatsApp.',
-                'summary' => 'Produk populer, layanan jasa keuangan, promo, pemesanan cepat, dan pengadaan rutin.',
+                'hero_title' => 'ATK & Layanan Jasa Keuangan Terlengkap',
+                'hero_desc' => 'Dapatkan produk ATK berkualitas, fotocopy cepat, dan layanan keuangan terpercaya (transfer, tarik tunai, topup, PPOB) via WhatsApp.',
+                'summary' => 'Produk ATK populer, layanan transfer/tarik tunai/PPOB, fotocopy, dan pengadaan rutin.',
                 'stat' => $atkCount > 0 ? $atkCount.' produk unggulan' : 'Pemesanan produk ATK',
-                'highlights' => ['Produk populer siap pesan', 'Layanan jasa keuangan (transfer, tarik tunai, PPOB)', 'Order via WhatsApp'],
+                'highlights' => ['Produk ATK lengkap siap pesan', 'Layanan jasa transfer, tarik tunai, PPOB', 'Order cepat via WhatsApp'],
                 'form' => [
                     'interest' => 'atk',
                     'title' => 'Kirim Kebutuhan ATK / Layanan Jasa',
-                    'description' => 'Isi item yang dibutuhkan atau layanan jasa yang ingin dipakai, tim kami akan cek stok dan bantu siapkan penawaran.',
+                    'description' => 'Isi item yang dibutuhkan atau layanan jasa yang ingin dipakai, tim kami akan cek stok dan siapkan penawaran.',
                     'coverage_label' => 'Alamat / Area',
                     'coverage_placeholder' => 'Contoh: sekolah / kantor / rumah',
                     'message_label' => 'Daftar Kebutuhan / Layanan',
                     'message_placeholder' => 'Contoh: kertas A4, pulpen / transfer bank / tarik tunai',
                     'details' => [
-                        ['name' => 'detail_1', 'label' => 'Jenis Kebutuhan', 'placeholder' => 'Contoh: pengadaan kantor / layanan jasa'],
-                        ['name' => 'detail_2', 'label' => 'Estimasi Jumlah / Nominal', 'placeholder' => 'Contoh: 10 rim, 50 pulpen / Rp 500.000'],
-                        ['name' => 'detail_3', 'label' => 'Waktu', 'placeholder' => 'Contoh: besok sore'],
+                        ['name' => 'detail_1', 'label' => 'Jenis Kebutuhan', 'placeholder' => 'Contoh: pengadaan kantor / jasa fotocopy'],
+                        ['name' => 'detail_2', 'label' => 'Estimasi Jumlah / Nominal', 'placeholder' => 'Contoh: 10 rim / Rp 500.000'],
+                        ['name' => 'detail_3', 'label' => 'Waktu', 'placeholder' => 'Contoh: hari ini'],
                     ],
                 ],
                 'secondary_label' => 'WhatsApp',
                 'secondary_href' => 'wa:Halo, saya ingin pesan ATK atau gunakan layanan jasa.',
-                'secondary_note' => 'Bisa untuk produk retail maupun layanan jasa',
-            ],
-        ];
+                'secondary_note' => 'Bisa untuk retail maupun pengadaan kantor',
+            ];
+        }
+
+        if (\App\Support\ModuleGate::isEnabled('isp')) {
+            $catalog['internet'] = [
+                'slug' => 'internet',
+                'name' => 'Internet Fiber',
+                'nav_label' => 'Internet',
+                'icon' => 'fa-wifi',
+                'url' => route('landing.services.internet'),
+                'meta_title' => 'Internet Fiber - Paket Rumah & Bisnis, Hotspot, dan Voucher',
+                'meta_description' => 'Pilih paket internet fiber untuk rumah dan bisnis, cek coverage ODP, dan jadwalkan pemasangan.',
+                'image' => $defaultImage,
+                'kicker' => 'MSTORE.NET',
+                'hero_title' => 'Internet Fiber Stabil untuk Rumah & Bisnis',
+                'hero_desc' => 'Cek coverage, pilih paket, lalu kami bantu proses registrasi dan jadwal pemasangan.',
+                'summary' => 'Cek coverage, pilih paket, registrasi pemasangan, dan voucher hotspot.',
+                'stat' => $internetCount > 0 ? $internetCount.' paket aktif' : 'Paket siap ditampilkan',
+                'highlights' => ['Cek coverage ODP', 'Paket rumah & bisnis', 'Voucher hotspot QRIS'],
+                'form' => [
+                    'interest' => 'internet',
+                    'title' => 'Cek Coverage & Daftar Pasang',
+                    'description' => 'Isi alamat dan kebutuhan Anda, tim kami bantu cek coverage ODP dan konfirmasi jadwal pemasangan.',
+                    'coverage_label' => 'Alamat / Coverage Area',
+                    'coverage_placeholder' => 'Contoh: Kampung X / RT/RW / patokan rumah',
+                    'message_label' => 'Kebutuhan Internet',
+                    'message_placeholder' => 'Contoh: butuh 50 Mbps untuk rumah, pemasangan minggu ini',
+                    'details' => [
+                        ['name' => 'detail_1', 'label' => 'Paket Diminati', 'placeholder' => 'Contoh: 30 Mbps / hotspot member'],
+                        ['name' => 'detail_2', 'label' => 'Jadwal Pemasangan', 'placeholder' => 'Contoh: Sabtu pagi'],
+                        ['name' => 'detail_3', 'label' => 'Catatan Lokasi', 'placeholder' => 'Contoh: dekat masjid'],
+                    ],
+                ],
+                'secondary_label' => 'Cek Coverage',
+                'secondary_href' => '#coverage-area',
+                'secondary_note' => ($voucherCount > 0 ? $voucherCount.' voucher' : 'Voucher').($washMemberCount > 0 ? ' · '.$washMemberCount.' paket member' : ''),
+            ];
+        }
+
+        if (\App\Support\ModuleGate::isEnabled('wedding')) {
+            $catalog['wedding-event'] = [
+                'slug' => 'wedding-event',
+                'name' => 'Wedding & Event',
+                'nav_label' => 'Wedding & Event',
+                'icon' => 'fa-ring',
+                'url' => route('landing.services.wedding'),
+                'meta_title' => 'Wedding & Event - Paket Wedding, Konsultasi, dan Booking',
+                'meta_description' => 'Temukan paket wedding yang fleksibel, konsultasi detail acara, dan booking cepat via WhatsApp.',
+                'image' => $defaultImage,
+                'kicker' => 'Wedding & Event',
+                'hero_title' => 'Paket Wedding yang Fleksibel dan Mudah Dibooking',
+                'hero_desc' => 'Pilih paket, kirim detail tanggal dan lokasi acara, lalu tim kami bantu susun penawaran.',
+                'summary' => 'Paket wedding, konsultasi acara, dan galeri inspirasi.',
+                'stat' => $weddingCount > 0 ? $weddingCount.' paket wedding' : 'Konsultasi custom event',
+                'highlights' => ['Paket siap pilih', 'Bisa custom konsep', 'Booking via WhatsApp'],
+                'form' => [
+                    'interest' => 'wedding',
+                    'title' => 'Booking Konsultasi Wedding',
+                    'description' => 'Isi detail acara Anda, tim kami akan follow up via WhatsApp untuk rekomendasi paket.',
+                    'coverage_label' => 'Lokasi Acara',
+                    'coverage_placeholder' => 'Contoh: Gedung / rumah / kota acara',
+                    'message_label' => 'Kebutuhan Acara',
+                    'message_placeholder' => 'Contoh: akad + resepsi',
+                    'details' => [
+                        ['name' => 'detail_1', 'label' => 'Tanggal Acara', 'placeholder' => 'Contoh: 15 September 2026'],
+                        ['name' => 'detail_2', 'label' => 'Jumlah Tamu', 'placeholder' => 'Contoh: 300 pax'],
+                        ['name' => 'detail_3', 'label' => 'Jenis Acara', 'placeholder' => 'Contoh: wedding / gathering'],
+                    ],
+                ],
+                'secondary_label' => 'WhatsApp',
+                'secondary_href' => 'wa:Halo, saya ingin konsultasi wedding.',
+                'secondary_note' => 'Paket bisa disesuaikan dengan konsep acara',
+            ];
+        }
+
+        if (\App\Support\ModuleGate::isEnabled('cctv')) {
+            $catalog['cctv'] = [
+                'slug' => 'cctv',
+                'name' => 'Instalasi CCTV',
+                'nav_label' => 'CCTV',
+                'icon' => 'fa-video',
+                'url' => route('landing.services.cctv'),
+                'meta_title' => 'Instalasi CCTV - Survey Gratis, Paket Kamera, dan Pemasangan Rapi',
+                'meta_description' => 'Survey titik CCTV, pilih paket kamera sesuai kebutuhan, lalu jadwalkan instalasi yang rapi.',
+                'image' => $defaultImage,
+                'kicker' => 'Solusi Keamanan',
+                'hero_title' => 'Instalasi CCTV untuk Rumah, Toko, dan Kantor',
+                'hero_desc' => 'Mulai dari survey titik kamera, kami bantu rekomendasi paket, lalu jadwalkan pemasangan yang rapi.',
+                'summary' => 'Survey gratis, paket kamera, garansi, dan booking instalasi.',
+                'stat' => $cctvCount > 0 ? $cctvCount.' paket CCTV' : 'Survey gratis tersedia',
+                'highlights' => ['Survey gratis', 'Paket kamera siap pasang', 'DP via QRIS'],
+                'form' => [
+                    'interest' => 'cctv',
+                    'title' => 'Jadwalkan Survey CCTV',
+                    'description' => 'Isi lokasi dan jumlah titik kamera, tim kami akan jadwalkan survey.',
+                    'coverage_label' => 'Lokasi Pemasangan',
+                    'coverage_placeholder' => 'Contoh: ruko / rumah / kantor',
+                    'message_label' => 'Kebutuhan CCTV',
+                    'message_placeholder' => 'Contoh: butuh CCTV untuk area parkir',
+                    'details' => [
+                        ['name' => 'detail_1', 'label' => 'Jumlah Titik Kamera', 'placeholder' => 'Contoh: 4 titik'],
+                        ['name' => 'detail_2', 'label' => 'Jenis Lokasi', 'placeholder' => 'Contoh: rumah / toko'],
+                        ['name' => 'detail_3', 'label' => 'Jadwal Survey', 'placeholder' => 'Contoh: besok siang'],
+                    ],
+                ],
+                'secondary_label' => 'WhatsApp',
+                'secondary_href' => 'wa:Halo, saya ingin booking survey CCTV.',
+                'secondary_note' => 'Cocok untuk rumah, toko, dan kantor',
+            ];
+        }
+
+        return $catalog;
     }
 
     private function normalizePhone(string $phone): string

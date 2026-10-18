@@ -77,48 +77,6 @@
 
     {{-- Main Metrics Grid --}}
     <div class="row g-4 mb-4">
-        {{-- Network Health Card --}}
-        <div class="col-md-4">
-            <div class="card h-100 border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="d-flex align-items-center">
-                            <div class="icon-shape bg-info-subtle text-info rounded-3 p-3 me-3">
-                                <i class="fa-solid fa-network-wired fa-lg"></i>
-                            </div>
-                            <h5 class="card-title mb-0">{{ __('Kesehatan Jaringan') }}</h5>
-                        </div>
-                        <span class="badge {{ $networkInsights['status'] == 'Sehat' ? 'bg-success' : ($networkInsights['status'] == 'Kritis' ? 'bg-danger' : 'bg-warning') }} rounded-pill">
-                            {{ $networkInsights['status'] }}
-                        </span>
-                    </div>
-                    
-                    <div class="row g-2 mb-3">
-                        <div class="col-6">
-                            <div class="p-2 rounded text-center">
-                                <small class="text-body-secondary d-block">{{ __('Online') }}</small>
-                                <span class="fw-bold text-body">{{ $networkInsights['devices_online'] ?? 0 }}/{{ $networkInsights['devices_total'] ?? 0 }}</span>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="p-2 rounded text-center">
-                                <small class="text-body-secondary d-block">{{ __('Router CPU') }}</small>
-                                <span class="fw-bold text-body">{{ $networkInsights['router_cpu'] !== null ? $networkInsights['router_cpu'] . '%' : 'N/A' }}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <p class="text-body-secondary small mb-3">
-                        {{ $networkInsights['message'] }}
-                    </p>
-                    
-                    <div class="alert  border-start border-4 border-info small mb-0">
-                        <i class="fa-solid fa-lightbulb text-warning me-1"></i> <strong>Saran AI:</strong> {{ $networkInsights['ai_tip'] }}
-                    </div>
-                </div>
-            </div>
-        </div>
-
         {{-- Sales Forecast Card --}}
         <div class="col-md-4">
             <div class="card h-100 border-0 shadow-sm">

@@ -114,7 +114,7 @@ class TelegramService
 
             // Support space-based commands like "/cek tiket all"
             if ($command === '/cek' && count($args) >= 1) {
-                $topic = strtolower($args[0]); // tiket|modem
+                $topic = strtolower($args[0]); // tiket
                 $second = $args[1] ?? null;
                 if (in_array($topic, ['tiket', 'ticket'])) {
                     if ($second && strtolower($second) === 'all') {
@@ -123,15 +123,6 @@ class TelegramService
                         // If next token exists and not 'all', treat as ticket number
                         $ticketNumber = $second ?? null;
                         $this->handleTicketCommand($chatId, $ticketNumber);
-                    }
-
-                    return;
-                } elseif ($topic === 'modem') {
-                    if ($second && strtolower($second) === 'all') {
-                        $this->handleModemAllCommand($chatId);
-                    } else {
-                        $lookup = $second ?? null;
-                        $this->handleModemCommand($chatId, $lookup);
                     }
 
                     return;
@@ -147,23 +138,8 @@ class TelegramService
 
                 return;
             }
-            if (in_array($cmdNormalized, ['cekmodemall', 'modemall'])) {
-                $this->handleModemAllCommand($chatId);
-
-                return;
-            }
-            if (in_array($cmdNormalized, ['rekapmodem', 'statusmodemall', 'onlinemodem'])) {
-                $this->handleModemAllCommand($chatId);
-
-                return;
-            }
             if (in_array($cmdNormalized, ['cektiket', 'tiket', 'ticket'])) {
                 $this->handleTicketCommand($chatId, $param);
-
-                return;
-            }
-            if (in_array($cmdNormalized, ['cekmodem', 'modem'])) {
-                $this->handleModemCommand($chatId, $param);
 
                 return;
             }
@@ -179,20 +155,9 @@ class TelegramService
                 case '/ticket_all':
                     $this->handleTicketAllCommand($chatId);
                     break;
-                case '/status_modem':
-                case '/modem':
-                case '/cek_modem':
-                    $this->handleModemCommand($chatId, $param);
-                    break;
-                case '/cek_modem_all':
-                case '/modem_all':
-                case '/rekap_modem':
-                case '/status_modem_all':
-                    $this->handleModemAllCommand($chatId);
-                    break;
                 case '/help':
                 case '/bantuan':
-                    $this->sendMessage($chatId, "🤖 *Bantuan Bot MStore*\n\n/cek_tiket [No. Tiket] atau /cektiket [No]\n/cek_modem [ID/SN] atau /cekmodem [ID/SN]\n/cek_tiket_all atau /cektiketall\n/cek_modem_all atau /cekmodemall\n/rekap_modem\n\nJuga bisa: /cek tiket all, /cek modem all, rekap modem");
+                    $this->sendMessage($chatId, "🤖 *Bantuan Bot MStore*\n\n/cek_tiket [No. Tiket] atau /cektiket [No]\n/cek_tiket_all atau /cektiketall\n\nJuga bisa: /cek tiket all");
                     break;
                 default:
                     $this->sendMessage($chatId, "❓ Perintah tidak dikenali.\nKetik /bantuan untuk melihat daftar perintah.");
@@ -202,7 +167,7 @@ class TelegramService
             // Plain text handlers (tanpa slash)
             $plain = preg_split('/\s+/', $rawLower);
             if (count($plain) >= 2 && $plain[0] === 'cek') {
-                $topic = $plain[1]; // tiket|modem
+                $topic = $plain[1]; // tiket
                 $third = $plain[2] ?? null;
                 if ($topic === 'tiket' || $topic === 'ticket') {
                     if ($third === 'all') {
@@ -212,22 +177,6 @@ class TelegramService
                     }
                     $ticketNumber = $third ?? null;
                     $this->handleTicketCommand($chatId, $ticketNumber);
-
-                    return;
-                }
-                if ($topic === 'modem') {
-                    if ($third === 'all') {
-                        $this->handleModemAllCommand($chatId);
-
-                        return;
-                    }
-                    $lookup = $third ?? null;
-                    $this->handleModemCommand($chatId, $lookup);
-
-                    return;
-                }
-                if ($topic === 'rekap' && $third === 'modem') {
-                    $this->handleModemAllCommand($chatId);
 
                     return;
                 }
@@ -275,68 +224,6 @@ class TelegramService
         $this->sendMessage($chatId, $message);
     }
 
-    protected function handleModemCommand($chatId, $search)
-    {
-        if (empty($search)) {
-            $this->sendMessage($chatId, "⚠️ Harap masukkan ID Pelanggan atau Serial Number.\nContoh: `/cek_modem 123`");
-
-            return;
-        }
-
-        // Try to find customer by ID first, then ONU Serial
-        $customer = \App\Models\Customer::where('id', $search)
-            ->orWhere('onu_serial', $search)
-            ->first();
-
-        if (! $customer) {
-            $this->sendMessage($chatId, "❌ Pelanggan dengan ID/Serial `{$search}` tidak ditemukan.");
-
-            return;
-        }
-
-        if (empty($customer->onu_serial)) {
-            $this->sendMessage($chatId, "⚠️ Pelanggan *{$customer->name}* tidak memiliki Serial Number ONU yang terdaftar.");
-
-            return;
-        }
-
-        $this->sendMessage($chatId, "🔍 Memeriksa status modem untuk *{$customer->name}*...");
-
-        try {
-            $genieService = app(\App\Services\GenieACSService::class);
-            $status = $genieService->getDeviceStatus($customer->onu_serial);
-
-            if (isset($status['error'])) {
-                $this->sendMessage($chatId, '⚠️ Gagal mengambil status dari GenieACS: '.$status['error']);
-
-                return;
-            }
-
-            $isOnline = $status['online'] ?? false;
-            $lastInform = $status['last_inform'] ?? 'Never';
-
-            // Format Last Inform
-            if ($lastInform !== 'Never') {
-                $lastInform = \Carbon\Carbon::parse($lastInform)->setTimezone('Asia/Jakarta')->format('d M Y H:i:s');
-            }
-
-            $emoji = $isOnline ? '🟢' : '🔴';
-            $statusText = $isOnline ? 'ONLINE' : 'OFFLINE';
-
-            $response = "📡 *Status Modem*\n\n";
-            $response .= "*Pelanggan:* ".self::escape($customer->name)."\n";
-            $response .= "*SN:* `".self::escape($customer->onu_serial)."`\n";
-            $response .= "*Status:* {$emoji} *{$statusText}*\n";
-            $response .= "*Terakhir Terlihat:* ".self::escape($lastInform);
-
-            $this->sendMessage($chatId, $response);
-
-        } catch (\Exception $e) {
-            Log::error('Telegram Modem Check Error: '.$e->getMessage());
-            $this->sendMessage($chatId, '❌ Terjadi kesalahan saat memeriksa status modem.');
-        }
-    }
-
     protected function handleTicketAllCommand($chatId)
     {
         $statuses = ['open', 'assigned', 'in_progress', 'pending', 'solved', 'closed'];
@@ -379,94 +266,6 @@ class TelegramService
             $ticketNum = self::escape($t->ticket_number);
             $subject = self::escape($t->subject);
             $msg .= "- {$emoji} `{$ticketNum}` | {$subject} | {$cust}\n";
-        }
-
-        $this->sendMessage($chatId, $msg);
-    }
-
-    protected function handleModemAllCommand($chatId)
-    {
-        $customers = \App\Models\Customer::query()
-            ->where('status', 'active')
-            ->whereNotNull('onu_serial')
-            ->get(['id', 'name', 'onu_serial']);
-        $customerIds = $customers->pluck('id');
-        $freshCutoff = \Carbon\Carbon::now()->subMinutes(15);
-        $detailLimit = (int) Setting::getValue('telegram_monitor_detail_list_limit', '20');
-        if ($detailLimit < 5) {
-            $detailLimit = 5;
-        }
-        if ($detailLimit > 100) {
-            $detailLimit = 100;
-        }
-
-        $online = \App\Models\GenieDeviceStatus::query()
-            ->whereIn('customer_id', $customerIds)
-            ->where('is_online', true)
-            ->where('updated_at', '>=', $freshCutoff)
-            ->count();
-        $offlineDirect = \App\Models\GenieDeviceStatus::query()
-            ->whereIn('customer_id', $customerIds)
-            ->where('is_online', false)
-            ->count();
-        $offlineStaleOnline = \App\Models\GenieDeviceStatus::query()
-            ->whereIn('customer_id', $customerIds)
-            ->where('is_online', true)
-            ->where('updated_at', '<', $freshCutoff)
-            ->count();
-        $offline = $offlineDirect + $offlineStaleOnline;
-        $unknown = max(0, $customers->count() - $online - $offline);
-
-        $onlineStatuses = \App\Models\GenieDeviceStatus::query()
-            ->with('customer:id,name,pppoe_user')
-            ->whereIn('customer_id', $customerIds)
-            ->where('is_online', true)
-            ->where('updated_at', '>=', $freshCutoff)
-            ->latest('updated_at')
-            ->limit($detailLimit)
-            ->get();
-        $offlineStatuses = \App\Models\GenieDeviceStatus::query()
-            ->with('customer:id,name,pppoe_user')
-            ->whereIn('customer_id', $customerIds)
-            ->where(function ($q) use ($freshCutoff) {
-                $q->where('is_online', false)
-                    ->orWhere(function ($q2) use ($freshCutoff) {
-                        $q2->where('is_online', true)
-                            ->where('updated_at', '<', $freshCutoff);
-                    });
-            })
-            ->latest('updated_at')
-            ->limit($detailLimit)
-            ->get();
-
-        $msg = "📡 *Rekap Status Modem Pelanggan (Detail Mode)*\n\n";
-        $msg .= 'Total Pelanggan: '.$customers->count()."\n";
-        $msg .= "MODE ONLINE: 🟢 {$online}\n";
-        $msg .= "MODE OFFLINE: 🔴 {$offline}\n";
-        $msg .= "BELUM SINKRON: ⚪ {$unknown}\n\n";
-        $msg .= "*{$detailLimit} ONLINE Terbaru:*\n";
-        if ($onlineStatuses->isEmpty()) {
-            $msg .= "- Tidak ada data online.\n";
-        } else {
-            foreach ($onlineStatuses as $status) {
-                $customerName = self::escape($status->customer?->name ?? '-');
-                $pppoe = self::escape($status->customer?->pppoe_user ?: '-');
-                $ip = self::escape($status->tr069_ip ?: '-');
-                $msg .= "- 🟢 {$customerName} | `{$pppoe}` | IP: `{$ip}`\n";
-            }
-        }
-
-        $msg .= "\n*{$detailLimit} OFFLINE Terbaru:*\n";
-        if ($offlineStatuses->isEmpty()) {
-            $msg .= "- Tidak ada data offline.\n";
-        } else {
-            foreach ($offlineStatuses as $status) {
-                $customerName = self::escape($status->customer?->name ?? '-');
-                $pppoe = self::escape($status->customer?->pppoe_user ?: '-');
-                $ip = self::escape($status->tr069_ip ?: '-');
-                $reason = self::escape($status->last_reason ?: '-');
-                $msg .= "- 🔴 {$customerName} | `{$pppoe}` | IP: `{$ip}` | {$reason}\n";
-            }
         }
 
         $this->sendMessage($chatId, $msg);

@@ -122,6 +122,14 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class);
     }
 
+    /**
+     * Alias for role relation (backward compatibility)
+     */
+    public function roles(): BelongsTo
+    {
+        return $this->role();
+    }
+
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);

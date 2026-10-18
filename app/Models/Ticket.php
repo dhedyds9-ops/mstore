@@ -15,7 +15,6 @@ class Ticket extends Model
         'subject',
         'customer_id',
         'manual_customer_name',
-        'technician_id',
         'type',
         'priority',
         'estimated_duration_minutes',

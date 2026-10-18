@@ -8,19 +8,6 @@
                 <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <h5 class="mb-0">{{ __('Detail Pelanggan') }}</h5>
                     <div class="btn-group flex-wrap gap-2">
-                        @if($customer->onu_serial)
-                            @can('customer.edit')
-                            <a href="{{ route('customers.settings', $customer) }}" class="btn btn-info btn-sm text-white">
-                                <i class="fa-solid fa-sliders"></i> {{ __('Pengaturan Perangkat') }}
-                            </a>
-                            <form action="{{ route('customers.notify_status', $customer) }}" method="POST" class="d-inline">
-                                @csrf
-                                <button type="submit" class="btn btn-primary btn-sm">
-                                    <i class="fa-brands fa-telegram"></i> {{ __('Kirim Status') }}
-                                </button>
-                            </form>
-                            @endcan
-                        @endif
                         @can('customer.edit')
                         <a href="{{ route('customers.edit', $customer) }}" class="btn btn-warning btn-sm text-white">
                             <i class="fa-solid fa-pen-to-square"></i> {{ __('Ubah') }}
@@ -99,17 +86,6 @@
                                     <dt class="col-sm-4">{{ __('Password SSID') }}</dt>
                                     <dd class="col-sm-8 font-monospace">{{ $customer->ssid_password ?? '-' }}</dd>
                                     
-                                    <dt class="col-sm-4 border-top pt-2 mt-2">{{ __('Modem Status') }}</dt>
-                                    <dd class="col-sm-8 border-top pt-2 mt-2">
-                                        @if(($modemStatus['online'] ?? false) === true)
-                                            <span class="badge text-bg-success">{{ __('Online') }}</span>
-                                        @else
-                                            <span class="badge text-bg-danger">{{ __('Offline') }}</span>
-                                        @endif
-                                        @if(!empty($modemStatus['last_inform']))
-                                            <div class="small text-muted mt-1">{{ __('Inform Terakhir') }}: {{ \Carbon\Carbon::parse($modemStatus['last_inform'])->diffForHumans() }}</div>
-                                        @endif
-                                    </dd>
                                 </dl>
                             </div>
                         </div>

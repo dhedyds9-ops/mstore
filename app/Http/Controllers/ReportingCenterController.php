@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\NocMetricSnapshot;
 use App\Models\SlaBreach;
 use App\Models\Ticket;
 use App\Models\WhatsAppAnalyticsEvent;
@@ -21,53 +20,11 @@ class ReportingCenterController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:report.noc.export', only: ['noc-operator', 'nocPdf', 'nocExcel']),
             new Middleware('permission:report.whatsapp.export', only: ['whatsapp', 'whatsappPdf', 'whatsappExcel']),
             new Middleware('permission:report.sla.export', only: ['sla', 'slaPdf', 'slaExcel']),
             new Middleware('permission:report.wedding.export', only: ['wedding', 'weddingPdf', 'weddingExcel']),
             new Middleware('permission:report.cctv.export', only: ['cctv', 'cctvPdf', 'cctvExcel']),
         ];
-    }
-
-    public function noc(Request $request)
-    {
-        $data = $this->buildNocData($request);
-        return view('reports.noc', $data);
-    }
-
-    public function nocPdf(Request $request)
-    {
-        $data = $this->buildNocData($request);
-        return Pdf::loadView('reports.pdf.noc', $data)->setPaper('a4', 'portrait')->download('noc_report.pdf');
-    }
-
-    public function nocExcel(Request $request)
-    {
-        $data = $this->buildNocData($request);
-
-        return response()->streamDownload(function () use ($data) {
-            $writer = new \OpenSpout\Writer\XLSX\Writer;
-            $writer->openToFile('php://output');
-            $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues(['NOC Report']));
-            $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues(['Tanggal', $data['date']]));
-            $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues([]));
-            $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues(['Captured At', 'Health', 'ONU Online', 'ONU Offline', 'LOS', 'DyingGasp', 'Weak', 'PPPoE Active', 'Outage Active', 'Ticket Open']));
-            foreach ($data['snapshots'] as $s) {
-                $writer->addRow(\OpenSpout\Common\Entity\Row::fromValues([
-                    $s->captured_at?->format('H:i:s'),
-                    $s->network_health_score,
-                    $s->onu_online,
-                    $s->onu_offline,
-                    $s->onu_los,
-                    $s->onu_dying_gasp,
-                    $s->onu_weak_signal,
-                    $s->pppoe_active_sessions,
-                    $s->outage_active,
-                    $s->ticket_open,
-                ]));
-            }
-            $writer->close();
-        }, 'noc_report.xlsx');
     }
 
     public function whatsapp(Request $request)
@@ -216,23 +173,6 @@ class ReportingCenterController extends Controller implements HasMiddleware
             }
             $writer->close();
         }, 'cctv_report.xlsx');
-    }
-
-    private function buildNocData(Request $request): array
-    {
-        $date = $request->query('date', now()->format('Y-m-d'));
-        $from = Carbon::parse($date)->startOfDay();
-        $to = Carbon::parse($date)->endOfDay();
-
-        $snapshots = NocMetricSnapshot::query()
-            ->whereBetween('captured_at', [$from, $to])
-            ->orderBy('captured_at')
-            ->get();
-
-        return [
-            'date' => $date,
-            'snapshots' => $snapshots,
-        ];
     }
 
     private function buildWhatsAppData(Request $request): array

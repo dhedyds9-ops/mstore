@@ -18,14 +18,16 @@ class TicketController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Ticket::with(['customer', 'technician']);
+        $query = Ticket::with(['customer', 'technicians']);
 
         if ($request->has('status')) {
             $query->where('status', $request->input('status'));
         }
 
         if ($request->has('technician_id')) {
-            $query->where('technician_id', $request->input('technician_id'));
+            $query->whereHas('technicians', function ($q) use ($request) {
+                $q->where('users.id', $request->input('technician_id'));
+            });
         }
 
         if ($request->has('customer_id')) {
@@ -90,7 +92,7 @@ class TicketController extends Controller
      */
     public function show(Ticket $ticket)
     {
-        return response()->json($ticket->load(['customer', 'technician', 'logs.user']));
+        return response()->json($ticket->load(['customer', 'technicians', 'logs.user']));
     }
 
     /**
@@ -112,7 +114,11 @@ class TicketController extends Controller
         ]);
 
         $oldStatus = $ticket->status;
-        $oldTechnician = $ticket->technician_id;
+        $oldTechnicianIds = $ticket->technicians->pluck('id')->map(fn ($id) => (int) $id)->all();
+
+        $technicianProvided = array_key_exists('technician_id', $validated);
+        $technicianId = $technicianProvided && $validated['technician_id'] ? (int) $validated['technician_id'] : null;
+        unset($validated['technician_id']);
 
         $ticket->update($validated);
 
@@ -156,15 +162,21 @@ class TicketController extends Controller
             }
         }
 
-        if ($ticket->wasChanged('technician_id')) {
-            TicketLog::create([
-                'ticket_id' => $ticket->id,
-                'user_id' => $request->user()->id,
-                'action' => 'assigned',
-                'description' => 'Technician assigned/changed',
-            ]);
+        if ($technicianProvided) {
+            $newTechnicianIds = $technicianId ? [$technicianId] : [];
 
-            if ($ticket->status === 'open' && $ticket->technician_id) {
+            if ($oldTechnicianIds !== $newTechnicianIds) {
+                $ticket->technicians()->sync($newTechnicianIds);
+
+                TicketLog::create([
+                    'ticket_id' => $ticket->id,
+                    'user_id' => $request->user()->id,
+                    'action' => 'assigned',
+                    'description' => 'Technician assigned/changed',
+                ]);
+            }
+
+            if ($ticket->status === 'open' && $technicianId) {
                 $ticket->update(['status' => 'assigned']);
             }
         }

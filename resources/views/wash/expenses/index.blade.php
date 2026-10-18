@@ -15,8 +15,10 @@
 @endphp
 <div class="container-fluid py-3 wash-expenses-page">
     <div class="d-flex justify-content-between align-items-center mb-3 expenses-header">
-        <h5 class="m-0">Pengeluaran Wash</h5>
-        <a href="{{ route('wash.expenses.create') }}" class="btn btn-primary">Tambah Pengeluaran</a>
+        <h5 class="m-0 fw-bold">{{ __('Pengeluaran Wash') }}</h5>
+        <a href="{{ route('wash.expenses.create') }}" class="btn btn-sm btn-primary shadow-sm">
+            <i class="fa-solid fa-plus me-1"></i>{{ __('Tambah Pengeluaran') }}
+        </a>
     </div>
     @if(session('success'))
     <div class="alert alert-success">{{ session('success') }}</div>
@@ -44,8 +46,13 @@
                         <option value="lainnya" {{ ($category ?? '') === 'lainnya' ? 'selected' : '' }}>Lainnya</option>
                     </select>
                 </div>
-                <div class="col-auto">
-                    <button class="btn btn-dark btn-sm"><i class="fa-solid fa-filter me-1"></i>Filter</button>
+                <div class="col-auto d-flex gap-2">
+                    <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-filter me-1"></i>{{ __('Filter') }}</button>
+                    @if(request('category'))
+                        <a href="{{ route('wash.expenses.index') }}" class="btn btn-outline-secondary btn-sm" title="{{ __('Reset Filter') }}">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </a>
+                    @endif
                 </div>
                 <div class="col ms-auto text-md-end">
                     @if(($hasStockTables ?? false) && ($lowStockCount ?? 0) > 0)

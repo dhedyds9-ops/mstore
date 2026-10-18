@@ -527,18 +527,19 @@ class WashLoyaltyService
         $totalAmount = (float) ($transaction->total_amount ?? 0);
         $discountAmount = (float) ($transaction->discount_amount ?? 0);
 
-        // 🔥 Pengecualian AUTO-REDEEM: ini adalah transaksi ke-N (target) yang menyebabkan voucher
-        // terbit & langsung dipakai. Counter tetap harus dihitung (increment+reset), jadi TIDAK BOLEH
-        // dianggap sebagai redemption biasa. Ditandai dengan prefix "auto_reward_voucher:"
-        if (str_starts_with($notes, 'auto_reward_voucher')) {
+        // 🔥 Pengecualian AUTO-REDEEM & SAVED FOR LATER: ini adalah transaksi ke-N (target) yang menyebabkan voucher
+        // terbit (baik langsung dipakai atau disimpan untuk kunjungan berikutnya). Counter tetap harus dihitung (increment+reset).
+        if (str_starts_with($notes, 'auto_reward_voucher') ||
+            str_starts_with($notes, 'reward_voucher_saved') ||
+            str_starts_with($notes, 'instant_bonus_saved')) {
             return false;
         }
 
-        // 1. Transaction notes indicate reward voucher / bonus wash / instant bonus
-        if (str_starts_with($notes, 'reward_voucher')) {
+        // 1. Transaction notes indicate reward voucher redemption / bonus wash / instant bonus
+        if (str_starts_with($notes, 'reward_voucher:') || str_starts_with($notes, 'reward_voucher_redeemed:')) {
             return true;
         }
-        if (str_starts_with($notes, 'bonus_cuci') || str_starts_with($notes, 'voucher_free') || str_starts_with($notes, 'instant_bonus')) {
+        if (str_starts_with($notes, 'bonus_cuci') || str_starts_with($notes, 'voucher_free') || str_starts_with($notes, 'instant_bonus:')) {
             return true;
         }
 
@@ -593,17 +594,18 @@ class WashLoyaltyService
         }
 
         $notes = strtolower(trim((string) ($transaction->notes ?? '')));
-        $isInstantBonusNote = str_starts_with($notes, 'instant_bonus_');
+        $isInstantBonusNote = str_starts_with($notes, 'instant_bonus_') || str_starts_with($notes, 'auto_reward_voucher:');
+        $isCycleCloser = $autoRedeemCreatedVoucher || $isInstantBonusNote || str_starts_with($notes, 'reward_voucher_saved') || str_starts_with($notes, 'instant_bonus_saved');
 
-        if (((float) $transaction->total_amount) <= 0 && ! $isInstantBonusNote) {
+        if (((float) $transaction->total_amount) <= 0 && ! $isCycleCloser) {
             return ['created_voucher' => null, 'progress' => null, 'instant_bonus_applied' => false, 'redeemed_voucher_code' => null];
         }
 
         // Never count redemptions/bonus transactions toward the bonus!
-        // EXCEPTION: instant_bonus_* notes — this visit is the TARGET visit (cycle closer).
+        // EXCEPTION: instant_bonus_* and auto_reward_voucher notes — this visit is the TARGET visit (cycle closer).
         // It must be counted (increment + reset) so the cycle closes correctly (no double-free).
         // This applies even when $forceCount = true (they are NOT visits!).
-        if (! $isInstantBonusNote && $this->isRedemptionTransaction($transaction)) {
+        if (! $isCycleCloser && $this->isRedemptionTransaction($transaction)) {
             $counter = $this->getOrCreateCounter($transaction->washCustomer, $plate);
             return [
                 'created_voucher' => null,

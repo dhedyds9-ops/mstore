@@ -2,19 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\NetworkMonitorJob;
 use App\Models\Coordinator;
 use App\Models\Customer;
-use App\Models\GenieDeviceStatus;
 use App\Models\Htb;
 use App\Models\Odp;
 use App\Models\Role;
-use App\Models\Setting;
 use App\Models\User;
-use App\Services\GenieACSService;
-use App\Services\RadiusService;
-use App\Services\TelegramService;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -28,24 +21,13 @@ use OpenSpout\Writer\XLSX\Writer;
 
 class CustomerWebController extends Controller implements HasMiddleware
 {
-    protected $genieService;
-
-    protected $radiusService;
-
-    public function __construct(GenieACSService $genieService, RadiusService $radiusService)
-    {
-        $this->genieService = $genieService;
-        $this->radiusService = $radiusService;
-    }
-
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:customer.view', only: ['index', 'show', 'import', 'export']),
+            new Middleware('permission:customer.view', only: ['index', 'show', 'export']),
             new Middleware('permission:customer.create', only: ['create', 'store', 'importFile']),
-            new Middleware('permission:customer.edit', only: ['edit', 'update', 'notifyStatus', 'settings', 'updateWan', 'updateWlan', 'updateOdp']),
+            new Middleware('permission:customer.edit', only: ['edit', 'update']),
             new Middleware('permission:customer.delete', only: ['destroy', 'bulkDestroy']),
-            new Middleware('permission:customer.view', only: ['getGenieDevice']),
         ];
     }
 
@@ -101,43 +83,9 @@ class CustomerWebController extends Controller implements HasMiddleware
             $customers = $query->latest()->paginate((int) $perPage)->withQueryString();
         }
 
-        $modemStatuses = [];
-        $customerIds = collect($customers->items())->pluck('id')->all();
-        $serials = collect($customers->items())
-            ->pluck('onu_serial')
-            ->filter(fn ($value) => is_string($value) && trim($value) !== '')
-            ->values()
-            ->all();
-
-        $statusesByCustomer = GenieDeviceStatus::query()
-            ->whereIn('customer_id', $customerIds)
-            ->get()
-            ->keyBy('customer_id');
-
-        $statusesBySerial = GenieDeviceStatus::query()
-            ->whereNull('customer_id')
-            ->whereIn('onu_serial', $serials)
-            ->get()
-            ->keyBy('onu_serial');
-
-        foreach ($customers as $customer) {
-            $status = $statusesByCustomer->get($customer->id);
-            if (! $status && $customer->onu_serial) {
-                $status = $statusesBySerial->get($customer->onu_serial);
-            }
-
-            $modemStatuses[$customer->id] = [
-                'online' => $status ? (bool) $status->is_online : false,
-                'last_inform' => $status?->last_inform,
-                'tr069_ip' => $status?->tr069_ip,
-                'reason' => $status?->last_reason,
-                'has_data' => (bool) $status,
-            ];
-        }
-
         $htbs = Htb::orderBy('name')->get();
 
-        return view('customers.index', compact('customers', 'modemStatuses', 'htbs'));
+        return view('customers.index', compact('customers', 'htbs'));
     }
 
     public function export(Request $request)
@@ -416,172 +364,6 @@ class CustomerWebController extends Controller implements HasMiddleware
     }
 
     /**
-     * Show Import Form
-     */
-    public function import(Request $request)
-    {
-        $search = $request->query('search');
-
-        // 1. Get all devices from GenieACS
-        $devices = $this->genieService->getDevices(100, 0, $search);
-
-        // 2. Get existing ONU Serials
-        $existingSerials = Customer::whereNotNull('onu_serial')->pluck('onu_serial')->toArray();
-
-        // 3. Filter and Map devices
-        $newDevices = collect($devices)->filter(function ($device) use ($existingSerials) {
-            $serial = $device['_deviceId']['_SerialNumber'] ?? null;
-
-            return $serial && ! in_array($serial, $existingSerials);
-        })->map(function ($device) {
-            $getValue = function ($node) {
-                if (is_array($node)) {
-                    return $node['_value'] ?? '';
-                }
-
-                return (string) $node;
-            };
-
-            $serial = $device['_deviceId']['_SerialNumber'] ?? 'Unknown';
-
-            // Extract IP (prefer VirtualParameters, then TR-098, then TR-181)
-            $ipNode = $device['VirtualParameters']['AddressWanIP']
-                     ?? $device['VirtualParameters']['IPTR069']
-                     ?? $device['VirtualParameters']['AddressWanPPP']
-                     ?? $device['VirtualParameters']['pppoeIP']
-                     ?? $device['InternetGatewayDevice']['WANDevice'][1]['WANConnectionDevice'][1]['WANIPConnection'][1]['ExternalIPAddress']
-                     ?? $device['Device']['IP']['Interface'][1]['IPv4Address'][1]['IPAddress']
-                     ?? 'N/A';
-            $ip = $getValue($ipNode);
-
-            // Extract Model
-            $modelNode = $device['InternetGatewayDevice']['DeviceInfo']['ModelName']
-                     ?? $device['Device']['DeviceInfo']['ModelName']
-                     ?? 'N/A';
-            $model = $getValue($modelNode);
-
-            // Extract SSID (WLAN)
-            $ssidNode = $device['InternetGatewayDevice']['LANDevice'][1]['WLANConfiguration'][1]['SSID']
-                     ?? $device['Device']['WiFi']['SSID'][1]['SSID']
-                     ?? '';
-            $ssid = $getValue($ssidNode);
-
-            // Extract Wifi Password
-            $passNode = $device['InternetGatewayDevice']['LANDevice'][1]['WLANConfiguration'][1]['PreSharedKey'][1]['KeyPassphrase']
-                     ?? $device['Device']['WiFi']['AccessPoint'][1]['Security']['KeyPassphrase']
-                     ?? '';
-            $wifiPass = $getValue($passNode);
-
-            // Extract Last Inform
-            $lastInformRaw = $device['_lastInform'] ?? null;
-            $lastInform = $lastInformRaw ? \Carbon\Carbon::parse($lastInformRaw)->format('d M Y H:i') : 'N/A';
-
-            return (object) [
-                'serial' => $serial,
-                'ip' => $ip,
-                'lastInform' => $lastInform,
-                'name' => $ssid ? $ssid : $serial, // Use SSID as name if available
-                'device_model' => $model,
-                'ssid_name' => $ssid,
-                'ssid_password' => $wifiPass,
-            ];
-        });
-
-        return view('customers.import', compact('newDevices', 'search'));
-    }
-
-    /**
-     * Get GenieACS Device Details by Serial
-     */
-    public function getGenieDevice(Request $request)
-    {
-        $serial = $request->query('serial');
-        if (! $serial) {
-            return response()->json(['error' => 'Serial number required'], 400);
-        }
-
-        $device = $this->genieService->findDeviceBySerial($serial);
-
-        if (! $device) {
-            return response()->json(['error' => 'Device not found'], 404);
-        }
-
-        $getValue = function ($node) {
-            if (is_array($node)) {
-                return $node['_value'] ?? '';
-            }
-
-            return (string) $node;
-        };
-
-        // Extract fields
-        $ipNode = $device['VirtualParameters']['AddressWanIP']
-                 ?? $device['VirtualParameters']['IPTR069']
-                 ?? $device['VirtualParameters']['AddressWanPPP']
-                 ?? $device['VirtualParameters']['pppoeIP']
-                 ?? $device['InternetGatewayDevice']['WANDevice'][1]['WANConnectionDevice'][1]['WANIPConnection'][1]['ExternalIPAddress']
-                 ?? $device['Device']['IP']['Interface'][1]['IPv4Address'][1]['IPAddress']
-                 ?? '';
-        $ip = $getValue($ipNode);
-
-        $vlanNode = $device['InternetGatewayDevice']['WANDevice'][1]['WANConnectionDevice'][1]['WANIPConnection'][1]['X_HW_VLAN']
-                 ?? '';
-        $vlan = $getValue($vlanNode);
-
-        $wanMacNode = $device['VirtualParameters']['pppoeMac']
-                 ?? $device['InternetGatewayDevice']['WANDevice'][1]['WANConnectionDevice'][1]['WANIPConnection'][1]['MACAddress']
-                 ?? '';
-        $wanMac = $getValue($wanMacNode);
-
-        $modelNode = $device['_deviceId']['_ProductClass']
-                 ?? ($device['Device']['DeviceInfo']['ModelName']['_value'] ?? 'Unknown');
-        $model = $getValue($modelNode);
-
-        $deviceIdNode = $device['_id']
-                 ?? $device['_deviceId']['_SerialNumber']
-                 ?? '';
-        $deviceId = $getValue($deviceIdNode);
-
-        $pppoeUserNode = $device['VirtualParameters']['pppoeUsername']
-                 ?? $device['VirtualParameters']['PPPUsername']
-                 ?? $device['InternetGatewayDevice']['WANDevice'][1]['WANConnectionDevice'][1]['WANPPPConnection'][1]['Username']
-                 ?? '';
-        $pppoeUser = $getValue($pppoeUserNode);
-
-        $pppoePassNode = $device['VirtualParameters']['pppoePassword']
-                 ?? $device['VirtualParameters']['PPPPassword']
-                 ?? $device['InternetGatewayDevice']['WANDevice'][1]['WANConnectionDevice'][1]['WANPPPConnection'][1]['Password']
-                 ?? '';
-        $pppoePass = $getValue($pppoePassNode);
-
-        $ssidNode = $device['InternetGatewayDevice']['LANDevice'][1]['WLANConfiguration'][1]['SSID']
-                 ?? $device['Device']['WiFi']['SSID'][1]['SSID']
-                 ?? '';
-        $ssid = $getValue($ssidNode);
-
-        $passNode = $device['InternetGatewayDevice']['LANDevice'][1]['WLANConfiguration'][1]['PreSharedKey'][1]['KeyPassphrase']
-                 ?? $device['InternetGatewayDevice']['LANDevice'][1]['WLANConfiguration'][1]['PreSharedKey'][1]['PreSharedKey']
-                 ?? $device['InternetGatewayDevice']['LANDevice'][1]['WLANConfiguration'][1]['KeyPassphrase']
-                 ?? $device['Device']['WiFi']['AccessPoint'][1]['Security']['KeyPassphrase']
-                 ?? '';
-        $wifiPass = $getValue($passNode);
-
-        return response()->json([
-            'onu_serial' => $serial,
-            'genieacs_device_id' => $deviceId,
-            'ip_address' => $ip,
-            'vlan' => $vlan,
-            'wan_mac' => $wanMac,
-            'device_model' => $model,
-            'pppoe_user' => $pppoeUser,
-            'pppoe_password' => $pppoePass,
-            'name' => $pppoeUser !== '' ? strtoupper($pppoeUser) : '',
-            'ssid_name' => $ssid,
-            'ssid_password' => $wifiPass,
-        ]);
-    }
-
-    /**
      * Show the form for creating a new resource.
      */
     public function create(Request $request)
@@ -601,24 +383,9 @@ class CustomerWebController extends Controller implements HasMiddleware
         $olts = \App\Models\OLT::where('is_active', true)->get();
         $closures = \App\Models\Closure::with('odc')->get();
 
-        // Fetch GenieACS devices
-        try {
-            $genieDevices = $this->genieService->getDevices(200);
-            $onuDevices = collect($genieDevices)->map(function ($d) {
-                return [
-                    'serial' => $d['_deviceId']['_SerialNumber'] ?? '',
-                    'model' => $d['_deviceId']['_ProductClass'] ?? ($d['Device']['DeviceInfo']['ModelName']['_value'] ?? 'Unknown'),
-                ];
-            })->filter(function ($d) {
-                return ! empty($d['serial']);
-            })->values();
-        } catch (\Exception $e) {
-            $onuDevices = [];
-        }
-
         $packages = \App\Models\Package::where('is_active', true)->orderBy('name')->get();
 
-        return view('customers.create', compact('prefill', 'coordinators', 'odps', 'htbs', 'olts', 'onuDevices', 'packages', 'closures'));
+        return view('customers.create', compact('prefill', 'coordinators', 'odps', 'htbs', 'olts', 'packages', 'closures'));
     }
 
     /**
@@ -709,11 +476,7 @@ class CustomerWebController extends Controller implements HasMiddleware
                 $validated['user_id'] = $user->id;
             }
 
-            $customer = Customer::create($validated);
-            $radiusWarning = $this->syncRadiusCredential($customer, null, null);
-            if ($customer->status === 'active' && is_string($customer->onu_serial) && trim($customer->onu_serial) !== '') {
-                NetworkMonitorJob::dispatch();
-            }
+            Customer::create($validated);
 
             DB::commit();
         } catch (\Exception $e) {
@@ -723,12 +486,7 @@ class CustomerWebController extends Controller implements HasMiddleware
             return back()->withInput()->withErrors(['error' => __('Failed to create customer: :message', ['message' => $e->getMessage()])]);
         }
 
-        $redirect = redirect()->route('customers.index')->with('success', __('Customer created successfully.'));
-        if ($radiusWarning !== null) {
-            $redirect->with('warning', $radiusWarning);
-        }
-
-        return $redirect;
+        return redirect()->route('customers.index')->with('success', __('Customer created successfully.'));
     }
 
     /**
@@ -738,118 +496,7 @@ class CustomerWebController extends Controller implements HasMiddleware
     {
         $customer->load(['tickets', 'installations', 'olt', 'odp', 'htb']);
 
-        $genieDeviceId = $customer->genieacs_device_id ?: null;
-        $modemStatus = ['online' => false, 'last_inform' => null];
-        if ($customer->onu_serial && ! $genieDeviceId) {
-            $status = $this->genieService->getDeviceStatus($customer->onu_serial);
-            if (isset($status['id'])) {
-                $genieDeviceId = $status['id'];
-            }
-            $modemStatus['online'] = (bool) ($status['online'] ?? false);
-            $modemStatus['last_inform'] = $status['last_inform'] ?? null;
-        }
-
-        return view('customers.show', compact('customer', 'genieDeviceId', 'modemStatus'));
-    }
-
-    public function notifyStatus(Customer $customer, TelegramService $telegramService)
-    {
-        if (! $customer->onu_serial) {
-            return redirect()->route('customers.show', $customer)->with('error', __('Customer tidak memiliki ONU Serial.'));
-        }
-
-        $status = $this->genieService->getDeviceStatus($customer->onu_serial);
-        if (isset($status['error'])) {
-            return redirect()->route('customers.show', $customer)->with('error', __('Gagal mengambil status dari GenieACS: :msg', ['msg' => $status['error']]));
-        }
-
-        $isOnline = (bool) ($status['online'] ?? false);
-        $tr069Ip = (string) ($status['tr069_ip'] ?? '-');
-        $connectionRequestUrl = (string) ($status['connection_request_url'] ?? '-');
-        $lastInform = $status['last_inform'] ?? null;
-        $reason = $isOnline ? 'ONU online' : 'ONU offline';
-
-        $statusRecord = GenieDeviceStatus::firstOrNew(['customer_id' => $customer->id]);
-        $statusRecord->onu_serial = (string) $customer->onu_serial;
-        $statusRecord->is_online = $isOnline;
-        $statusRecord->last_inform = is_string($lastInform) && trim($lastInform) !== '' ? $lastInform : null;
-        $statusRecord->tr069_ip = $tr069Ip !== '' ? $tr069Ip : null;
-        $statusRecord->connection_request_url = $connectionRequestUrl !== '' ? $connectionRequestUrl : null;
-        $statusRecord->last_reason = $reason;
-        $statusRecord->save();
-
-        $defaultDownTemplate = "🚨 *ALERT MONITORING GENIEACS*\n\n".
-            "*Pelanggan:* {customer_name}\n".
-            "*Customer ID:* `{customer_id}`\n".
-            "*No HP:* {customer_phone}\n".
-            "*Alamat:* {customer_address}\n".
-            "*Paket:* {customer_package}\n".
-            "*PPPoE User:* `{customer_pppoe_user}`\n".
-            "*Status Pelanggan:* {customer_status}\n".
-            "*SN ONU:* `{onu_serial}`\n".
-            "*Status:* 🔴 OFFLINE\n".
-            "*IP TR069:* {tr069_ip}\n".
-            "*ConnectionRequestURL:* {connection_request_url}\n".
-            "*Terakhir Inform:* {last_inform}\n".
-            '*Reason:* {reason}';
-
-        $defaultUpTemplate = "✅ *RECOVERY MONITORING GENIEACS*\n\n".
-            "*Pelanggan:* {customer_name}\n".
-            "*Customer ID:* `{customer_id}`\n".
-            "*No HP:* {customer_phone}\n".
-            "*Alamat:* {customer_address}\n".
-            "*Paket:* {customer_package}\n".
-            "*PPPoE User:* `{customer_pppoe_user}`\n".
-            "*Status Pelanggan:* {customer_status}\n".
-            "*SN ONU:* `{onu_serial}`\n".
-            "*Status:* 🟢 ONLINE\n".
-            "*IP TR069:* {tr069_ip}\n".
-            "*ConnectionRequestURL:* {connection_request_url}\n".
-            "*Terakhir Inform:* {last_inform}\n".
-            '*Reason:* {reason}';
-
-        $template = $isOnline
-            ? (string) Setting::getValue('telegram_ip_up_template', $defaultUpTemplate)
-            : (string) Setting::getValue('telegram_ip_down_template', $defaultDownTemplate);
-        $notifyEnabled = $isOnline
-            ? Setting::getValue('telegram_notify_ip_up', '1') === '1'
-            : Setting::getValue('telegram_notify_ip_down', '1') === '1';
-
-        if (! $notifyEnabled) {
-            return redirect()->route('customers.show', $customer)->with('warning', __('Notifikasi Telegram status :status sedang nonaktif.', ['status' => $isOnline ? 'ONLINE' : 'OFFLINE']));
-        }
-
-        $payload = [
-            'customer_name' => $customer->name,
-            'customer_id' => (string) $customer->id,
-            'customer_phone' => (string) ($customer->phone ?: '-'),
-            'customer_address' => (string) ($customer->address ?: '-'),
-            'customer_package' => (string) ($customer->package ?: '-'),
-            'customer_pppoe_user' => (string) ($customer->pppoe_user ?: '-'),
-            'customer_status' => (string) ($customer->status ?: '-'),
-            'onu_serial' => (string) $customer->onu_serial,
-            'status' => $isOnline ? '🟢 ONLINE' : '🔴 OFFLINE',
-            'tr069_ip' => $tr069Ip,
-            'connection_request_url' => $connectionRequestUrl,
-            'last_inform' => $this->formatLastInformValue($lastInform),
-            'reason' => $reason,
-        ];
-
-        $message = $this->renderTemplateText(trim($template) !== '' ? $template : ($isOnline ? $defaultUpTemplate : $defaultDownTemplate), $payload, true);
-        $sent = $telegramService->sendToTechnicianGroup($message);
-
-        if ($sent) {
-            if ($isOnline) {
-                $statusRecord->last_notified_up_at = now();
-            } else {
-                $statusRecord->last_notified_down_at = now();
-            }
-            $statusRecord->save();
-
-            return redirect()->route('customers.show', $customer)->with('success', __('Notifikasi Telegram status :status berhasil dikirim.', ['status' => $isOnline ? 'ONLINE' : 'OFFLINE']));
-        }
-
-        return redirect()->route('customers.show', $customer)->with('error', __('Gagal mengirim notifikasi Telegram.'));
+        return view('customers.show', compact('customer'));
     }
 
     /**
@@ -863,24 +510,9 @@ class CustomerWebController extends Controller implements HasMiddleware
         $olts = \App\Models\OLT::where('is_active', true)->get();
         $closures = \App\Models\Closure::with('odc')->get();
 
-        // Fetch GenieACS devices
-        try {
-            $genieDevices = $this->genieService->getDevices(200);
-            $onuDevices = collect($genieDevices)->map(function ($d) {
-                return [
-                    'serial' => $d['_deviceId']['_SerialNumber'] ?? '',
-                    'model' => $d['_deviceId']['_ProductClass'] ?? ($d['Device']['DeviceInfo']['ModelName']['_value'] ?? 'Unknown'),
-                ];
-            })->filter(function ($d) {
-                return ! empty($d['serial']);
-            })->values();
-        } catch (\Exception $e) {
-            $onuDevices = [];
-        }
-
         $packages = \App\Models\Package::where('is_active', true)->orderBy('name')->get();
 
-        return view('customers.edit', compact('customer', 'coordinators', 'odps', 'htbs', 'olts', 'onuDevices', 'packages', 'closures'));
+        return view('customers.edit', compact('customer', 'coordinators', 'odps', 'htbs', 'olts', 'packages', 'closures'));
     }
 
     /**
@@ -1005,12 +637,7 @@ class CustomerWebController extends Controller implements HasMiddleware
                 }
             }
 
-            $oldPppoeUser = $customer->pppoe_user;
             $customer->update($validated);
-            $radiusWarning = $this->syncRadiusCredential($customer, $oldPppoeUser, null);
-            if ($customer->status === 'active' && is_string($customer->onu_serial) && trim($customer->onu_serial) !== '') {
-                NetworkMonitorJob::dispatch();
-            }
 
             DB::commit();
         } catch (\Exception $e) {
@@ -1028,83 +655,14 @@ class CustomerWebController extends Controller implements HasMiddleware
         }
 
         if ($request->wantsJson()) {
-            $payload = [
+            return response()->json([
                 'success' => true,
                 'message' => __('Customer updated successfully.'),
                 'data' => $customer,
-            ];
-            if ($radiusWarning !== null) {
-                $payload['warning'] = $radiusWarning;
-            }
-
-            return response()->json($payload);
-        }
-
-        $redirect = redirect()->route('customers.index')->with('success', __('Customer updated successfully.'));
-        if ($radiusWarning !== null) {
-            $redirect->with('warning', $radiusWarning);
-        }
-
-        return $redirect;
-    }
-
-    /**
-     * Update ODP assignment for Customer (JSON endpoint from GenieACS view).
-     * Dedicated endpoint to avoid full customer.update() validation + permission mismatch.
-     */
-    public function updateOdp(Request $request, Customer $customer)
-    {
-        $request->validate([
-            'odp_id' => 'nullable|exists:odps,id',
-        ]);
-
-        $newOdpId = $request->input('odp_id');
-        if (empty($newOdpId)) {
-            $newOdpId = null;
-        }
-
-        $newHtbId = null;
-        $newOdpName = null;
-
-        if ($newOdpId !== null) {
-            $newOdp = Odp::find($newOdpId);
-            if ($newOdp && $newOdp->isFull() && (int) $newOdp->id !== (int) $customer->odp_id) {
-                return response()->json([
-                    'success' => false,
-                    'message' => __('Selected ODP is full.'),
-                    'errors' => ['odp_id' => [__('Selected ODP is full.')]],
-                ], 422);
-            }
-            if ($newOdp) {
-                $newOdpName = $newOdp->name;
-            }
-        }
-
-        try {
-            $customer->timestamps = false;
-            $customer->update([
-                'htb_id' => $newHtbId,
-                'odp_id' => $newOdpId,
-                'odp' => $newOdpName,
             ]);
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Customer updateOdp error: ' . $e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'message' => __('Failed to update ODP: :message', ['message' => $e->getMessage()]),
-            ], 500);
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => __('Customer ODP updated successfully.'),
-            'data' => [
-                'id' => $customer->id,
-                'odp_id' => $customer->odp_id,
-                'odp' => $customer->odp,
-            ],
-        ]);
+        return redirect()->route('customers.index')->with('success', __('Customer updated successfully.'));
     }
 
     /**
@@ -1115,101 +673,10 @@ class CustomerWebController extends Controller implements HasMiddleware
         DB::transaction(function () use ($customer) {
             DB::table('modem_data_records')->where('customer_id', $customer->id)->delete();
             DB::table('installations')->where('customer_id', $customer->id)->delete();
-            GenieDeviceStatus::where('customer_id', $customer->id)->delete();
             $customer->delete();
         });
 
         return redirect()->route('customers.index')->with('success', __('Customer deleted successfully.'));
-    }
-
-    public function settings(Request $request, Customer $customer)
-    {
-        // Resolve device ID: prefer stored GenieACS ID, fallback to lookup by serial
-        $deviceId = $customer->genieacs_device_id;
-        if (! $deviceId) {
-            if (! $customer->onu_serial) {
-                return redirect()->back()->withErrors(['error' => __('Customer has no GenieACS Device ID or ONU Serial assigned.')]);
-            }
-            $status = $this->genieService->getDeviceStatus($customer->onu_serial);
-            if (! isset($status['id'])) {
-                return redirect()->back()->withErrors(['error' => __('Device not found in GenieACS.')]);
-            }
-            $deviceId = $status['id'];
-        }
-
-        // Optimize: Fetch device details once
-        $deviceData = $this->genieService->getDeviceDetails($deviceId);
-
-        $wanConnections = $this->genieService->getWanConnections($deviceId, $deviceData);
-        $selectedWanPath = $request->query('wan_path');
-        $wanSettings = $this->genieService->getWanSettings($deviceId, $selectedWanPath, $deviceData);
-
-        $wlanSettings1 = $this->genieService->getWlanSettings($deviceId, 1, $deviceData);
-        $wlanSettings2 = $this->genieService->getWlanSettings($deviceId, 2, $deviceData);
-        $wlanSettings3 = $this->genieService->getWlanSettings($deviceId, 3, $deviceData);
-        $wlanSettings4 = $this->genieService->getWlanSettings($deviceId, 4, $deviceData);
-
-        return view('customers.settings', compact('customer', 'wanSettings', 'wanConnections', 'selectedWanPath', 'wlanSettings1', 'wlanSettings2', 'wlanSettings3', 'wlanSettings4', 'deviceId'));
-    }
-
-    public function updateWan(Request $request, Customer $customer)
-    {
-        $deviceId = $request->input('device_id');
-        if (! $deviceId) {
-            return back()->withErrors(['error' => 'Device ID missing']);
-        }
-
-        $data = $request->only(['enable', 'conn_name', 'vlan', 'conn_type', 'service', 'username', 'password', 'nat', 'lan_bind']);
-
-        $data['enable'] = $request->has('enable');
-        $data['nat'] = $request->has('nat');
-
-        $bindingsInput = $request->input('bindings', []);
-        if (is_array($bindingsInput)) {
-            $bindings = [];
-            $keys = ['Lan1', 'Lan2', 'Lan3', 'Lan4', 'SSID1', 'SSID2', 'SSID3', 'SSID4'];
-            foreach ($keys as $k) {
-                $bindings[$k] = isset($bindingsInput[$k]) && ($bindingsInput[$k] === '1' || $bindingsInput[$k] === 'on' || $bindingsInput[$k] === 1 || $bindingsInput[$k] === true);
-            }
-            $data['bindings'] = $bindings;
-        }
-
-        $path = $request->input('wan_path');
-
-        if ($this->genieService->updateWanAdvanced($deviceId, $data, $path)) {
-            return redirect()->back()->with('success', __('WAN Settings updated successfully.'));
-        }
-
-        return redirect()->back()->withErrors(['error' => __('Failed to update WAN Settings.')]);
-    }
-
-    public function updateWlan(Request $request, Customer $customer)
-    {
-        $deviceId = $request->input('device_id');
-        if (! $deviceId) {
-            return back()->withErrors(['error' => 'Device ID missing']);
-        }
-
-        $index = $request->input('index', 1);
-        $data = $request->only(['enable', 'ssid', 'password', 'security', 'channel', 'auto_channel', 'power']);
-
-        $data['enable'] = $request->has('enable');
-        $data['auto_channel'] = $request->has('auto_channel');
-
-        if ($this->genieService->updateWlanAdvanced($deviceId, $data, $index)) {
-            // Only update local DB if it's the primary SSID (Index 1)
-            if ($index == 1) {
-                $customer->update([
-                    'ssid_name' => $data['ssid'],
-                    'ssid_password' => $data['password'],
-                ]);
-            }
-            $this->genieService->refreshObject($deviceId);
-
-            return redirect()->back()->with('success', __('WLAN Settings (SSID '.$index.') updated successfully.'));
-        }
-
-        return redirect()->back()->withErrors(['error' => __('Failed to update WLAN Settings.')]);
     }
 
     public function bulkDestroy(Request $request)
@@ -1222,60 +689,9 @@ class CustomerWebController extends Controller implements HasMiddleware
         DB::transaction(function () use ($ids) {
             DB::table('modem_data_records')->whereIn('customer_id', $ids)->delete();
             DB::table('installations')->whereIn('customer_id', $ids)->delete();
-            GenieDeviceStatus::whereIn('customer_id', $ids)->delete();
             Customer::whereIn('id', $ids)->delete();
         });
 
         return redirect()->back()->with('success', count($ids).' customers deleted successfully.');
-    }
-
-    protected function syncRadiusCredential(Customer $customer, ?string $oldUsername = null, ?string $passwordOverride = null): ?string
-    {
-        $username = trim((string) ($customer->pppoe_user ?? ''));
-        if ($username === '') {
-            return null;
-        }
-
-        $password = $passwordOverride ?? (string) ($customer->pppoe_password ?? '');
-        if ($password === '') {
-            return null;
-        }
-
-        if ($oldUsername && $oldUsername !== $username) {
-            $this->radiusService->deleteUser($oldUsername);
-        }
-
-        if (! $this->radiusService->addUser($username, $password)) {
-            return __('Customer tersimpan, tetapi sinkronisasi RADIUS gagal. Periksa koneksi database RADIUS.');
-        }
-
-        return null;
-    }
-
-    protected function renderTemplateText(string $template, array $data, bool $escape = false): string
-    {
-        $result = $template;
-        foreach ($data as $key => $value) {
-            $val = (string) $value;
-            if ($escape) {
-                $val = \App\Services\TelegramService::escape($val);
-            }
-            $result = str_replace('{'.$key.'}', $val, $result);
-        }
-
-        return $result;
-    }
-
-    protected function formatLastInformValue(?string $value): string
-    {
-        if (! is_string($value) || trim($value) === '') {
-            return '-';
-        }
-
-        try {
-            return Carbon::parse($value)->format('d M Y H:i:s');
-        } catch (\Throwable $e) {
-            return $value;
-        }
     }
 }

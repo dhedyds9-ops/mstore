@@ -53,18 +53,27 @@
 <div id="wrapper">
     <!-- Sidebar -->
     <div id="sidebar-wrapper">
-        <div class="sidebar-heading py-3 position-relative d-flex align-items-center justify-content-center">
-            <div class="sidebar-brand-icon">
-                <img src="{{ app()->environment('production') ? secure_asset('img/logo.png') : asset('img/logo.png') }}" alt="MSTORE.NET" class="img-fluid">
+        <div class="sidebar-heading py-3 px-3 position-relative d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <div class="sidebar-brand-icon">
+                    <img src="{{ app()->environment('production') ? secure_asset('img/logo.png') : asset('img/logo.png') }}" alt="MSTORE.NET" class="img-fluid" style="max-height: 28px;">
+                </div>
+                <span class="sidebar-brand-text ms-2 fw-bold" style="font-size: 1.15rem; color: var(--text-main);">MStore</span>
             </div>
-            <span class="sidebar-brand-text ms-2"></span>
-            <!-- Close Button for Mobile -->
-            <button class="btn btn-link position-absolute top-0 end-0 me-2 d-lg-none" id="sidebarClose" style="z-index: 1051;" aria-label="Tutup Sidebar">
-                <i class="fa-solid fa-times fa-lg"></i>
-            </button>
+            <div class="d-flex align-items-center gap-1">
+                <a href="{{ route('dashboard') }}" class="btn btn-sm btn-link text-muted p-1" title="Dashboard Utama">
+                    <i class="fa-solid fa-table-cells-large fa-lg"></i>
+                </a>
+                <!-- Close Button for Mobile -->
+                <button class="btn btn-link text-muted d-lg-none p-1" id="sidebarClose" aria-label="Tutup Sidebar">
+                    <i class="fa-solid fa-times fa-lg"></i>
+                </button>
+            </div>
         </div>
         <div class="px-3 pb-2">
-            <input type="text" class="form-control form-control-sm" id="sidebarSearch" placeholder="Cari menu..." autocomplete="off">
+            <div class="position-relative">
+                <input type="text" class="form-control form-control-sm" id="sidebarSearch" placeholder="Cari menu..." autocomplete="off">
+            </div>
         </div>
         <div class="list-group list-group-flush pb-2">
             @php
@@ -168,21 +177,52 @@
                         $label = (string) ($node['label'] ?? '');
                         $active = $nodeActive($node);
                         $icon = trim((string) ($node['icon'] ?? ''));
-                        $iconHtml = $icon !== '' ? '<i class="'.e($icon).'"></i>' : '';
+                        $iconHtml = $icon !== '' ? '<i class="'.e($icon).' menu-icon"></i>' : '<i class="fa-regular fa-circle menu-icon"></i>';
 
                         if ($type === 'link') {
                             $routeName = (string) ($node['route'] ?? '');
                             $routeParams = $node['route_params'] ?? [];
                             $href = \Illuminate\Support\Facades\Route::has($routeName) ? route($routeName, $routeParams) : '#';
-                            $html .= '<a href="'.e($href).'" class="sidebar-item'.($active ? ' active' : '').'">'.$iconHtml.'<span>'.e($label).'</span></a>';
+                            $html .= '<a href="'.e($href).'" class="sidebar-item'.($active ? ' active' : '').'">';
+                            $html .= $iconHtml.'<span>'.e($label).'</span>';
+                            $html .= '</a>';
                             continue;
                         }
 
                         if ($type === 'group') {
                             $id = (string) ($node['id'] ?? uniqid('grp_', false));
                             $collapseId = 'sidebarCollapse_'.$id;
-                            $html .= '<a class="sidebar-item'.($active ? ' active' : '').'" data-bs-toggle="collapse" href="#'.e($collapseId).'" role="button" aria-expanded="'.($active ? 'true' : 'false').'" aria-controls="'.e($collapseId).'">'.$iconHtml.'<span>'.e($label).'</span><i class="fa-solid fa-chevron-down ms-auto" style="font-size: 0.8em;"></i></a>';
-                            $html .= '<div class="collapse'.($active ? ' show' : '').'" id="'.e($collapseId).'"><div class="ps-3">'.$renderNodes($node['children'] ?? []).'</div></div>';
+                            
+                            $html .= '<a class="sidebar-item sidebar-group-btn'.($active ? ' active' : '').'" data-bs-toggle="collapse" href="#'.e($collapseId).'" role="button" aria-expanded="'.($active ? 'true' : 'false').'" aria-controls="'.e($collapseId).'">';
+                            $html .= '<div class="d-flex align-items-center flex-grow-1 overflow-hidden me-2">'.$iconHtml.'<span class="text-truncate">'.e($label).'</span></div>';
+                            $html .= '<i class="fa-solid fa-chevron-right group-chevron-icon ms-auto"></i>';
+                            $html .= '</a>';
+                            
+                            $html .= '<div class="collapse'.($active ? ' show' : '').'" id="'.e($collapseId).'">';
+                            $html .= '<div class="sidebar-tree-container">';
+                            $html .= '<ul class="sidebar-tree-list">';
+                            
+                            foreach (($node['children'] ?? []) as $child) {
+                                if (! is_array($child) || ! $nodeVisible($child)) {
+                                    continue;
+                                }
+                                $childActive = $nodeActive($child);
+                                $childRoute = (string) ($child['route'] ?? '');
+                                $childParams = $child['route_params'] ?? [];
+                                $childHref = \Illuminate\Support\Facades\Route::has($childRoute) ? route($childRoute, $childParams) : '#';
+                                $childLabel = (string) ($child['label'] ?? '');
+                                
+                                $html .= '<li class="sidebar-tree-item'.($childActive ? ' active' : '').'">';
+                                $html .= '<a href="'.e($childHref).'" class="sidebar-tree-link'.($childActive ? ' active' : '').'">';
+                                $html .= '<span class="tree-bullet"></span>';
+                                $html .= '<span class="tree-label">'.e($childLabel).'</span>';
+                                $html .= '</a>';
+                                $html .= '</li>';
+                            }
+                            
+                            $html .= '</ul>';
+                            $html .= '</div>';
+                            $html .= '</div>';
                         }
                     }
 
@@ -214,10 +254,34 @@
                         }
                         $sectionVisible = $sectionVisible && $hasAnyItem;
                     }
+
+                    $sectionActive = false;
+                    if ($sectionVisible) {
+                        foreach (($section['items'] ?? []) as $it) {
+                            if ($nodeActive($it)) {
+                                $sectionActive = true;
+                                break;
+                            }
+                        }
+                    }
+                    $secId = (string) ($section['id'] ?? uniqid('sec_', false));
+                    $secCollapseId = 'secCollapse_' . $secId;
                 @endphp
                 @if($sectionVisible)
-                    <div class="sidebar-header mt-2">{{ __($section['label'] ?? '') }}</div>
-                    {!! $renderNodes($section['items'] ?? []) !!}
+                    <div class="sidebar-category-card">
+                        <a class="sidebar-category-header{{ $sectionActive ? ' active' : '' }}" data-bs-toggle="collapse" href="#{{ $secCollapseId }}" role="button" aria-expanded="{{ $sectionActive ? 'true' : 'false' }}" aria-controls="{{ $secCollapseId }}">
+                            <span class="category-title">{{ __($section['label'] ?? '') }}</span>
+                            <span class="category-toggle-icon">
+                                <i class="fa-solid fa-plus icon-collapsed"></i>
+                                <i class="fa-solid fa-minus icon-expanded"></i>
+                            </span>
+                        </a>
+                        <div class="collapse{{ $sectionActive ? ' show' : '' }}" id="{{ $secCollapseId }}">
+                            <div class="sidebar-category-body">
+                                {!! $renderNodes($section['items'] ?? []) !!}
+                            </div>
+                        </div>
+                    </div>
                 @endif
             @endforeach
 
@@ -323,7 +387,7 @@
             </div>
         </nav>
 
-        <div class="container-fluid px-3 py-3 pb-3 flex-grow-1">
+        <div class="container-fluid px-3 pt-1 pb-3 flex-grow-1">
             <!-- Flash Messages (Handled by SweetAlert2 now) -->
             {{-- 
             @if(session('success'))
@@ -339,7 +403,41 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             @endif
-            --}}
+            @auth
+                @php
+                    $tenantCompany = auth()->user()->company;
+                @endphp
+                @if($tenantCompany && !auth()->user()->hasRole(\App\Models\Role::SUPER_ADMIN) && !request()->routeIs('subscription.*'))
+                    @if(!$tenantCompany->hasActiveSubscription())
+                        <div class="alert alert-danger border-0 shadow-sm d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3 py-2 px-3" role="alert">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-triangle-exclamation fs-5 flex-shrink-0"></i>
+                                <div>
+                                    <strong>Masa Aktif Berlangganan Telah Berakhir.</strong> Akses operasional dibatasi. Silakan perpanjang paket usaha Anda.
+                                </div>
+                            </div>
+                            <a href="{{ route('subscription.index') }}" class="btn btn-sm btn-danger shadow-sm flex-shrink-0">
+                                <i class="fa-solid fa-crown me-1"></i> Perpanjang Sekarang
+                            </a>
+                        </div>
+                    @elseif($tenantCompany->subscription_status === \App\Models\Company::STATUS_TRIAL)
+                        @php
+                            $trialDaysLeft = $tenantCompany->trial_ends_at ? max(0, now()->diffInDays($tenantCompany->trial_ends_at, false)) : 0;
+                        @endphp
+                        <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3 py-2 px-3" role="alert">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-hourglass-half text-dark flex-shrink-0"></i>
+                                <div class="text-dark small">
+                                    Anda sedang menggunakan <strong>Masa Uji Coba Gratis (Trial)</strong>. Sisa waktu: <strong>{{ $trialDaysLeft }} hari lagi</strong>.
+                                </div>
+                            </div>
+                            <a href="{{ route('subscription.index') }}" class="btn btn-sm btn-dark shadow-sm flex-shrink-0">
+                                <i class="fa-solid fa-crown me-1 text-warning"></i> Pilih Paket Berlangganan
+                            </a>
+                        </div>
+                    @endif
+                @endif
+            @endauth
 
             @yield('content')
         </div>
@@ -385,7 +483,8 @@
             return;
         }
 
-        const items = Array.from(sidebar.querySelectorAll('a.sidebar-item'));
+        const items = Array.from(sidebar.querySelectorAll('a.sidebar-item, a.sidebar-tree-link'));
+        const categoryCards = Array.from(sidebar.querySelectorAll('.sidebar-category-card'));
         const headers = Array.from(sidebar.querySelectorAll('.sidebar-header'));
         const collapses = Array.from(sidebar.querySelectorAll('.collapse'));
         collapses.forEach(function (el) {
@@ -418,30 +517,13 @@
             return label.includes(q);
         };
 
-        const updateHeaders = function () {
-            headers.forEach(function (header) {
-                let sibling = header.nextElementSibling;
-                let hasVisibleItem = false;
-                while (sibling && !sibling.classList.contains('sidebar-header')) {
-                    const visibleLink = sibling.querySelector && sibling.querySelector('a.sidebar-item:not(.d-none)');
-                    if (visibleLink) {
-                        hasVisibleItem = true;
-                        break;
-                    }
-                    if (sibling.matches && sibling.matches('a.sidebar-item') && !sibling.classList.contains('d-none')) {
-                        hasVisibleItem = true;
-                        break;
-                    }
-                    sibling = sibling.nextElementSibling;
-                }
-                header.classList.toggle('d-none', !hasVisibleItem);
-            });
-        };
-
         const applyFilter = function () {
             const q = normalize(input.value);
             if (q === '') {
                 items.forEach(function (el) {
+                    el.classList.remove('d-none');
+                });
+                categoryCards.forEach(function (el) {
                     el.classList.remove('d-none');
                 });
                 headers.forEach(function (el) {
@@ -453,27 +535,26 @@
                 return;
             }
 
+            // Expand all when filtering
             collapses.forEach(function (el) {
                 setCollapseState(el, true);
             });
 
-            const leafItems = items.filter(function (el) {
+            // Filter leaf links
+            const leafLinks = items.filter(function (el) {
                 return !el.hasAttribute('data-bs-toggle');
             });
-            const toggleItems = items.filter(function (el) {
+            const toggleButtons = items.filter(function (el) {
                 return el.getAttribute('data-bs-toggle') === 'collapse';
             });
 
-            const leafVisible = new Set();
-            leafItems.forEach(function (el) {
+            leafLinks.forEach(function (el) {
                 const match = leafMatchesQuery(el, q);
-                if (match) {
-                    leafVisible.add(el);
-                }
                 el.classList.toggle('d-none', !match);
             });
 
-            toggleItems.forEach(function (toggle) {
+            // Check group toggles
+            toggleButtons.forEach(function (toggle) {
                 const matchSelf = leafMatchesQuery(toggle, q);
                 let matchChild = false;
 
@@ -481,7 +562,7 @@
                 if (href.startsWith('#')) {
                     const target = sidebar.querySelector(href);
                     if (target) {
-                        const descendant = Array.from(target.querySelectorAll('a.sidebar-item')).find(function (a) {
+                        const descendant = Array.from(target.querySelectorAll('a.sidebar-item, a.sidebar-tree-link')).find(function (a) {
                             return !a.hasAttribute('data-bs-toggle') && !a.classList.contains('d-none');
                         });
                         matchChild = Boolean(descendant);
@@ -491,7 +572,13 @@
                 toggle.classList.toggle('d-none', !matchSelf && !matchChild);
             });
 
-            updateHeaders();
+            // Filter category cards
+            categoryCards.forEach(function (card) {
+                const header = card.querySelector('.sidebar-category-header');
+                const matchHeader = header ? leafMatchesQuery(header, q) : false;
+                const visibleChild = card.querySelector('a.sidebar-item:not(.d-none), a.sidebar-tree-link:not(.d-none)');
+                card.classList.toggle('d-none', !matchHeader && !visibleChild);
+            });
         };
 
         input.addEventListener('input', applyFilter);

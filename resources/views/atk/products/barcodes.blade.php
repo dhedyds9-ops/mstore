@@ -3,27 +3,37 @@
 @section('title', __('Product Barcodes'))
 
 @section('content')
-<div class="container-fluid">
+<div class="container-fluid px-3 px-md-4 py-3">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3 no-print">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill small fw-semibold">
+                    <i class="fa-solid fa-barcode me-1"></i>{{ __('Label & Barcode') }}
+                </span>
+            </div>
+            <h1 class="h3 fw-bold text-gray-800 mb-0">{{ __('Cetak Label Barcode Produk ATK') }}</h1>
+            <p class="text-muted small mb-0">{{ __('Cetak barcode produk dalam format lembar stiker A4 untuk ditempel pada rak atau barang.') }}</p>
+        </div>
 
-    <div class="d-flex justify-content-between align-items-center mb-3 no-print">
-        <h1 class="h4 mb-0">{{ __('Product Barcodes') }}</h1>
-        <div class="d-flex gap-2 mb-3">
+        <div class="d-flex flex-wrap align-items-center gap-2">
             <form action="{{ route('atk.products.barcodes') }}" method="GET" class="d-flex gap-2">
-                <input type="text" name="search" class="form-control form-control-sm" placeholder="Cari..." value="{{ request('search') }}" autofocus>
-                <button type="submit" class="btn btn-dark btn-sm"><i class="fa-solid fa-magnifying-glass"></i></button>
+                <div class="input-group input-group-sm">
+                    <input type="text" name="search" class="form-control bg-light" placeholder="Cari nama / barcode..." value="{{ request('search') }}" autofocus>
+                    <button type="submit" class="btn btn-dark"><i class="fa-solid fa-magnifying-glass"></i></button>
+                </div>
             </form>
             <a href="{{ route('atk.products.barcodes.pdf', ['paper'=>'a4','mode'=>'preview', 'search' => request('search')]) }}"
                target="_blank"
-               class="btn btn-primary btn-sm">
-                Preview A4
+               class="btn btn-primary btn-sm shadow-sm">
+                <i class="fa-solid fa-file-pdf me-1"></i>{{ __('Preview A4') }}
             </a>
             <a href="{{ route('atk.products.barcodes.pdf', ['paper'=>'a4','mode'=>'print', 'search' => request('search')]) }}"
                target="_blank"
-               class="btn btn-warning btn-sm">
-                Print A4
+               class="btn btn-warning text-dark btn-sm shadow-sm">
+                <i class="fa-solid fa-print me-1"></i>{{ __('Cetak A4') }}
             </a>
-            <a href="{{ route('atk.products.index') }}" class="btn btn-secondary btn-sm" title="{{ __('Back') }}">
-                <i class="fa-solid fa-arrow-left"></i>
+            <a href="{{ route('atk.products.index') }}" class="btn btn-outline-secondary btn-sm shadow-2xs" title="{{ __('Kembali ke Katalog') }}">
+                <i class="fa-solid fa-arrow-left me-1"></i>{{ __('Kembali') }}
             </a>
         </div>
     </div>

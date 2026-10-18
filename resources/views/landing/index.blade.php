@@ -7,25 +7,24 @@
         $services = collect($serviceCatalog ?? [])->values();
         $featuredServices = $services->take(3);
         $serviceCount = $services->count();
-        $coverageCount = collect($odps ?? [])->count();
     @endphp
 
     <section id="beranda" class="hero home-hero">
         <div class="container">
             <div class="row align-items-center g-5 home-hero-grid">
                 <div class="col-lg-6 fade-up">
-                    <span class="home-kicker">{{ $siteName }} • Multi Layanan Terintegrasi</span>
-                    <h1 class="hero-title home-hero-title">Solusi Internet, CCTV, Event, Car Wash, dan Retail dalam Satu Layanan Terpercaya</h1>
-                    <p class="hero-desc home-hero-desc">Kami menyediakan berbagai solusi untuk kebutuhan rumah, bisnis, dan event. Dapatkan informasi lengkap, konsultasi gratis, dan pelayanan profesional dalam satu platform terintegrasi.</p>
+                    <span class="home-kicker">{{ $siteName }} • Aplikasi Kasir & Operasional Bisnis Terpadu</span>
+                    <h1 class="hero-title home-hero-title">Aplikasi Kasir POS & Manajemen Usaha Terlengkap untuk Semua UMKM</h1>
+                    <p class="hero-desc home-hero-desc">Solusi cerdas terintegrasi untuk Toko Jualan & Retail, Usaha Jasa & Perawatan, serta Booking & Reservasi. Lengkap dengan kasir POS cepat, scan barcode, cetak & kirim struk WhatsApp, shift kasir, hitung komisi pegawai, dan pembukuan akuntansi otomatis.</p>
                     <div class="home-cta-row">
-                        <a href="#services" class="btn btn-primary track-service-action" data-track-service="umbrella" data-track-action="choose_service">
-                            <i class="fas fa-layer-group me-2"></i> Lihat Semua Layanan
+                        <a href="{{ route('tenant.register.create') }}" class="btn btn-primary track-service-action">
+                            <i class="fas fa-rocket me-2"></i> Coba Gratis 14 Hari
                         </a>
-                        <a href="#quick-consult" class="btn btn-outline-primary track-service-action" data-track-service="umbrella" data-track-action="quick_consult">
-                            <i class="fas fa-clipboard-list me-2"></i> Konsultasi Gratis
+                        <a href="#services" class="btn btn-outline-primary track-service-action">
+                            <i class="fas fa-layer-group me-2"></i> Solusi Bisnis
                         </a>
-                        <a href="{{ $waUrlBase }}?text={{ urlencode('Halo, saya ingin konsultasi layanan MStore.') }}" class="btn btn-green track-service-action" data-track-service="umbrella" data-track-action="whatsapp">
-                            <i class="fab fa-whatsapp me-2"></i> Chat WhatsApp Sekarang
+                        <a href="{{ route('login') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-sign-in-alt me-2"></i> Masuk Toko
                         </a>
                     </div>
 
@@ -35,12 +34,12 @@
                             <span>Unit Layanan</span>
                         </div>
                         <div class="home-metric-card">
-                            <strong>{{ $coverageCount > 0 ? $coverageCount : 'Live' }}</strong>
-                            <span>{{ $coverageCount > 0 ? 'Titik Coverage' : 'Peta Coverage' }}</span>
+                            <strong>100%</strong>
+                            <span>Pelayanan Prima</span>
                         </div>
                         <div class="home-metric-card">
                             <strong>Cepat</strong>
-                            <span>Respon Cepat</span>
+                            <span>Respon Cepat CS</span>
                         </div>
                     </div>
 
@@ -100,78 +99,275 @@
         </div>
     </section>
 
-    <section id="services" class="py-2 home-section">
+    <!-- 4 Pilar Solusi Bisnis UMKM -->
+    <section id="services" class="py-5 home-section">
         <div class="container py-2">
             <div class="section-header text-center mb-5 fade-up home-section-header">
-                <h6 class="text-primary fw-bold text-uppercase">Pilih Layanan</h6>
-                <h2 class="display-6 fw-800">Pilih Solusi yang Sesuai dengan Kebutuhan Anda</h2>
-                <p class="text-muted mb-0">Temukan layanan terbaik untuk rumah, bisnis, dan event Anda. Setiap layanan dilengkapi informasi lengkap dan konsultasi langsung dengan tim kami.</p>
+                <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill fw-semibold mb-2">Solusi Lengkap</span>
+                <h2 class="display-6 fw-800">Satu Platform untuk Berbagai Jenis Usaha</h2>
+                <p class="text-muted mb-0">Dirancang khusus untuk mempermudah operasional kasir, manajemen stok, komisi staf, dan pembukuan keuangan toko Anda.</p>
             </div>
 
             <div class="row g-4">
-                @foreach($serviceCatalog as $index => $service)
-                    <div class="col-lg-4 col-md-6 fade-up">
-                        <div class="landing-service-card home-service-card h-100">
-                            <div class="home-service-card-top">
-                                @if($index === 0)
-                                    <span class="badge bg-success text-white position-absolute top-0 start-0 m-2">Best Seller</span>
-                                @elseif($index === 1)
-                                    <span class="badge bg-primary text-white position-absolute top-0 start-0 m-2">Recommended</span>
-                                @elseif($index === 2)
-                                    <span class="badge bg-warning text-dark position-absolute top-0 start-0 m-2">Popular</span>
-                                @endif
-                                <div class="landing-service-icon home-service-card-icon">
-                                    <i class="fas {{ $service['icon'] }}"></i>
-                                </div>
-                                <div class="landing-service-stat home-service-stat">{{ $service['stat'] }}</div>
+                <!-- Solusi 1: Toko & Retail -->
+                <div class="col-lg-3 col-md-6 fade-up">
+                    <div class="landing-service-card home-service-card h-100 border shadow-sm">
+                        <div class="home-service-card-top">
+                            <span class="badge bg-primary text-white position-absolute top-0 start-0 m-2">Retail POS</span>
+                            <div class="landing-service-icon home-service-card-icon text-primary">
+                                <i class="fas fa-store"></i>
                             </div>
-                            <h3 class="landing-service-title">{{ $service['name'] }}</h3>
-                            <p class="landing-service-desc">{{ $service['summary'] }}</p>
-                            <ul class="landing-service-points">
-                                @foreach($service['highlights'] as $highlight)
-                                    <li><i class="fas fa-check-circle text-primary"></i> {{ $highlight }}</li>
-                                @endforeach
+                            <div class="landing-service-stat home-service-stat">Kasir & Barcode</div>
+                        </div>
+                        <h3 class="landing-service-title">Toko & Retail Modern</h3>
+                        <p class="landing-service-desc">Sembako, kelontong, distro, ATK, swalayan, minimarket, dan toko grosir.</p>
+                        <ul class="landing-service-points">
+                            <li><i class="fas fa-check-circle text-primary"></i> Kasir POS cepat & scan barcode</li>
+                            <li><i class="fas fa-check-circle text-primary"></i> Cetak struk thermal & struk WhatsApp</li>
+                            <li><i class="fas fa-check-circle text-primary"></i> Shift kasir & kontrol mutasi laci uang</li>
+                            <li><i class="fas fa-check-circle text-primary"></i> Pantau stok produk & peringatan habis</li>
+                        </ul>
+                        <div class="home-service-card-actions mt-auto">
+                            <a href="{{ route('tenant.register.create', ['plan' => 'starter']) }}" class="btn btn-primary w-100">
+                                Coba Kasir Toko <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Solusi 2: Jasa & Servis -->
+                <div class="col-lg-3 col-md-6 fade-up">
+                    <div class="landing-service-card home-service-card h-100 border shadow-sm">
+                        <div class="home-service-card-top">
+                            <span class="badge bg-info text-white position-absolute top-0 start-0 m-2">Jasa & Servis</span>
+                            <div class="landing-service-icon home-service-card-icon text-info">
+                                <i class="fas fa-hand-sparkles"></i>
+                            </div>
+                            <div class="landing-service-stat home-service-stat">Komisi & Member</div>
+                        </div>
+                        <h3 class="landing-service-title">Jasa & Layanan</h3>
+                        <p class="landing-service-desc">Car wash / cuci kendaraan, salon kecantikan, barbershop, laundry, dan bengkel servis.</p>
+                        <ul class="landing-service-points">
+                            <li><i class="fas fa-check-circle text-info"></i> Kasir pengerjaan layanan cepat</li>
+                            <li><i class="fas fa-check-circle text-info"></i> Hitung otomatis komisi per pegawai</li>
+                            <li><i class="fas fa-check-circle text-info"></i> Paket langganan member prabayar</li>
+                            <li><i class="fas fa-check-circle text-info"></i> Loyalty points & otomatis reward kunjungan</li>
+                        </ul>
+                        <div class="home-service-card-actions mt-auto">
+                            <a href="{{ route('tenant.register.create', ['plan' => 'service']) }}" class="btn btn-outline-info w-100">
+                                Coba Kasir Jasa <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Solusi 3: Booking & Reservasi -->
+                <div class="col-lg-3 col-md-6 fade-up">
+                    <div class="landing-service-card home-service-card h-100 border shadow-sm">
+                        <div class="home-service-card-top">
+                            <span class="badge bg-success text-white position-absolute top-0 start-0 m-2">Booking & Sewa</span>
+                            <div class="landing-service-icon home-service-card-icon text-success">
+                                <i class="fas fa-calendar-check"></i>
+                            </div>
+                            <div class="landing-service-stat home-service-stat">Jadwal & DP</div>
+                        </div>
+                        <h3 class="landing-service-title">Booking & Reservasi</h3>
+                        <p class="landing-service-desc">Penyewaan alat/gedung, event organizer, wedding planner, studio foto, dan reservasi jasa.</p>
+                        <ul class="landing-service-points">
+                            <li><i class="fas fa-check-circle text-success"></i> Kelola paket layanan & varian sewa</li>
+                            <li><i class="fas fa-check-circle text-success"></i> Kalender jadwal acara & booking</li>
+                            <li><i class="fas fa-check-circle text-success"></i> Pembayaran DP & pelunasan bertahap</li>
+                            <li><i class="fas fa-check-circle text-success"></i> Galeri portofolio & approval klien</li>
+                        </ul>
+                        <div class="home-service-card-actions mt-auto">
+                            <a href="{{ route('tenant.register.create', ['plan' => 'pro']) }}" class="btn btn-outline-success w-100">
+                                Coba Reservasi <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Solusi 4: Keuangan & Akuntansi -->
+                <div class="col-lg-3 col-md-6 fade-up">
+                    <div class="landing-service-card home-service-card h-100 border shadow-sm">
+                        <div class="home-service-card-top">
+                            <span class="badge bg-dark text-white position-absolute top-0 start-0 m-2">PSAK Standar</span>
+                            <div class="landing-service-icon home-service-card-icon text-dark">
+                                <i class="fas fa-book-journal-whills"></i>
+                            </div>
+                            <div class="landing-service-stat home-service-stat">Laba Rugi Riil</div>
+                        </div>
+                        <h3 class="landing-service-title">Keuangan & Akuntansi</h3>
+                        <p class="landing-service-desc">Pembukuan standar akuntansi tanpa perlu ahli akuntan manual.</p>
+                        <ul class="landing-service-points">
+                            <li><i class="fas fa-check-circle text-dark"></i> Bagan Akun (COA) otomatis</li>
+                            <li><i class="fas fa-check-circle text-dark"></i> Jurnal umum otomatis dari transaksi kasir</li>
+                            <li><i class="fas fa-check-circle text-dark"></i> Neraca saldo, arus kas, & buku besar</li>
+                            <li><i class="fas fa-check-circle text-dark"></i> Laba rugi segmented & laporan bagi hasil</li>
+                        </ul>
+                        <div class="home-service-card-actions mt-auto">
+                            <a href="{{ route('tenant.register.create', ['plan' => 'pro']) }}" class="btn btn-outline-dark w-100">
+                                Coba Akuntansi <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section (Paket Langganan UMKM) -->
+    <section id="pricing" class="py-5 home-section bg-light">
+        <div class="container py-3">
+            <div class="section-header text-center mb-5 fade-up">
+                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold mb-2">
+                    <i class="fas fa-tag me-1"></i> Transparan & Terjangkau
+                </span>
+                <h2 class="display-6 fw-800">Paket Langganan Sesuai Skala Bisnis Anda</h2>
+                <p class="text-muted mb-0">Nikmati fitur lengkap tanpa biaya tersembunyi. Mulai gratis 14 hari sekarang!</p>
+            </div>
+
+            <div class="row g-4 align-items-stretch">
+                <!-- Paket Starter -->
+                <div class="col-lg-3 col-md-6 fade-up">
+                    <div class="card h-100 border shadow-sm rounded-4 p-3 bg-white">
+                        <div class="card-body d-flex flex-column">
+                            <div class="text-center mb-3">
+                                <span class="badge bg-primary-subtle text-primary fw-bold text-uppercase px-3 py-1 rounded-pill">Starter</span>
+                                <h4 class="fw-bold mt-2 mb-1">Toko & Retail</h4>
+                                <p class="text-muted small">Untuk toko sembako, kelontong, distro & warung.</p>
+                            </div>
+                            <div class="text-center py-2 mb-3 bg-light rounded-3">
+                                <span class="fs-3 fw-bold">Rp 99.000</span><span class="text-muted small">/bln</span>
+                            </div>
+                            <ul class="list-unstyled small mb-4 flex-grow-1">
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Kasir POS & Scan Barcode</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Struk Thermal & Struk WA</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Shift Kasir & Laci Uang</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Manajemen Stok Produk</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Maksimal 5 Staf Kasir</li>
                             </ul>
-                            <div class="home-service-card-actions mt-auto">
-                                <a href="{{ $service['url'] }}" class="btn btn-primary w-100 track-service-action" data-track-service="{{ $service['slug'] }}" data-track-action="open_service_page" data-track-label="{{ $service['name'] }}">
-                                    Buka Halaman
-                                </a>
-                                <div class="home-service-note">{{ $service['secondary_note'] ?? 'Halaman khusus siap dipakai' }}</div>
-                            </div>
+                            <a href="{{ route('tenant.register.create', ['plan' => 'starter']) }}" class="btn btn-outline-primary w-100">
+                                Mulai Coba Gratis
+                            </a>
                         </div>
                     </div>
-                @endforeach
+                </div>
+
+                <!-- Paket Service -->
+                <div class="col-lg-3 col-md-6 fade-up">
+                    <div class="card h-100 border shadow-sm rounded-4 p-3 bg-white">
+                        <div class="card-body d-flex flex-column">
+                            <div class="text-center mb-3">
+                                <span class="badge bg-info-subtle text-info fw-bold text-uppercase px-3 py-1 rounded-pill">Service</span>
+                                <h4 class="fw-bold mt-2 mb-1">Jasa & Layanan</h4>
+                                <p class="text-muted small">Untuk car wash, salon, bengkel, laundry.</p>
+                            </div>
+                            <div class="text-center py-2 mb-3 bg-light rounded-3">
+                                <span class="fs-3 fw-bold">Rp 129.000</span><span class="text-muted small">/bln</span>
+                            </div>
+                            <ul class="list-unstyled small mb-4 flex-grow-1">
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Kasir Antrean Layanan Cepat</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Hitung Otomatis Komisi Pegawai</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Paket Member & Loyalty Reward</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Shift Kerja & Laci Uang</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Maksimal 5 Staf</li>
+                            </ul>
+                            <a href="{{ route('tenant.register.create', ['plan' => 'service']) }}" class="btn btn-outline-info w-100">
+                                Mulai Coba Gratis
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Paket Pro (Paling Diminati) -->
+                <div class="col-lg-3 col-md-6 fade-up">
+                    <div class="card h-100 border-primary border-2 shadow rounded-4 p-3 bg-white position-relative">
+                        <div class="position-absolute top-0 start-50 translate-middle">
+                            <span class="badge bg-primary text-white px-3 py-1 rounded-pill shadow-sm">
+                                <i class="fas fa-fire me-1"></i> Paling Diminati
+                            </span>
+                        </div>
+                        <div class="card-body d-flex flex-column">
+                            <div class="text-center mb-3 mt-1">
+                                <span class="badge bg-success-subtle text-success fw-bold text-uppercase px-3 py-1 rounded-pill">Pro Usaha</span>
+                                <h4 class="fw-bold mt-2 mb-1">Multi-Bisnis</h4>
+                                <p class="text-muted small">Ritel + Jasa + Reservasi + Akuntansi.</p>
+                            </div>
+                            <div class="text-center py-2 mb-3 bg-primary bg-opacity-10 rounded-3">
+                                <span class="fs-3 fw-bold text-primary">Rp 199.000</span><span class="text-muted small">/bln</span>
+                            </div>
+                            <ul class="list-unstyled small mb-4 flex-grow-1">
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> SEMUA Fitur Toko & Retail</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> SEMUA Fitur Jasa & Komisi</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Modul Booking & Reservasi</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Akuntansi PSAK Lengkap</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Maksimal 15 Staf & Multi-Cabang</li>
+                            </ul>
+                            <a href="{{ route('tenant.register.create', ['plan' => 'pro']) }}" class="btn btn-primary w-100 fw-bold">
+                                Mulai Coba Gratis 14 Hari
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Paket Enterprise -->
+                <div class="col-lg-3 col-md-6 fade-up">
+                    <div class="card h-100 border shadow-sm rounded-4 p-3 bg-white">
+                        <div class="card-body d-flex flex-column">
+                            <div class="text-center mb-3">
+                                <span class="badge bg-dark text-white fw-bold text-uppercase px-3 py-1 rounded-pill">Enterprise</span>
+                                <h4 class="fw-bold mt-2 mb-1">Franchise & Jaringan</h4>
+                                <p class="text-muted small">Bisnis berkembang dengan banyak cabang.</p>
+                            </div>
+                            <div class="text-center py-2 mb-3 bg-light rounded-3">
+                                <span class="fs-3 fw-bold">Rp 399.000</span><span class="text-muted small">/bln</span>
+                            </div>
+                            <ul class="list-unstyled small mb-4 flex-grow-1">
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Semua Fitur Pro Tanpa Batas</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Unlimited Cabang & Outlet</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Unlimited Staf & Pengguna</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Integrasi CCTV Keamanan</li>
+                                <li class="mb-2"><i class="fas fa-check text-success me-2"></i> Akses API & Prioritas CS</li>
+                            </ul>
+                            <a href="{{ route('tenant.register.create', ['plan' => 'enterprise']) }}" class="btn btn-outline-dark w-100">
+                                Mulai Coba Gratis
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
-    <section class="py-2 home-benefit-band">
+    <!-- Social Proof / Benefit Section -->
+    <section class="py-5 home-benefit-band">
         <div class="container py-2">
             <div class="row g-4">
                 <div class="col-lg-4 fade-up">
                     <div class="landing-mini-card h-100 home-mini-card">
-                        <i class="fas fa-info-circle"></i>
+                        <i class="fas fa-mobile-screen-button text-primary fs-3"></i>
                         <div>
-                            <div class="fw-bold">Informasi Lengkap</div>
-                            <div class="text-muted small">Semua informasi layanan disajikan secara jelas dan mudah dipahami.</div>
+                            <div class="fw-bold">Bisa Diakses Dari Mana Saja</div>
+                            <div class="text-muted small">Gunakan dari HP, tablet kasir, atau laptop tanpa perlu instalasi rumit.</div>
                         </div>
                     </div>
                 </div>
                 <div class="col-lg-4 fade-up">
                     <div class="landing-mini-card h-100 home-mini-card">
-                        <i class="fas fa-comments"></i>
+                        <i class="fab fa-whatsapp text-success fs-3"></i>
                         <div>
-                            <div class="fw-bold">Konsultasi Gratis</div>
-                            <div class="text-muted small">Tim kami siap membantu memberikan rekomendasi terbaik sesuai kebutuhan Anda.</div>
+                            <div class="fw-bold">Kirim Struk WhatsApp Instan</div>
+                            <div class="text-muted small">Pelanggan menerima nota digital langsung di WhatsApp dengan logo & nama toko Anda.</div>
                         </div>
                     </div>
                 </div>
                 <div class="col-lg-4 fade-up">
                     <div class="landing-mini-card h-100 home-mini-card">
-                        <i class="fas fa-briefcase"></i>
+                        <i class="fas fa-shield-halved text-info fs-3"></i>
                         <div>
-                            <div class="fw-bold">Layanan Profesional</div>
-                            <div class="text-muted small">Didukung proses kerja yang terstruktur untuk memastikan pelayanan yang cepat dan tepat.</div>
+                            <div class="fw-bold">Data Aman & Terbackup Otomatis</div>
+                            <div class="text-muted small">Didukung enkripsi cloud modern dan audit trail aktivitas staf kasir.</div>
                         </div>
                     </div>
                 </div>
@@ -179,98 +375,34 @@
         </div>
     </section>
 
-    <section id="coverage-area" class="py-2 home-section">
-        <div class="container py-2">
-            <div class="row align-items-center g-5">
-                <div class="col-lg-6 fade-up">
-                    <div class="home-map-shell">
-                        <div id="coverageMap"></div>
-                    </div>
-                </div>
-                <div class="col-lg-6 fade-up">
-                    <div class="home-coverage-copy">
-                        <span class="home-kicker">Coverage Internet</span>
-                        <h2 class="display-6 fw-800 mb-4">Cek Ketersediaan Jaringan di Lokasi Anda</h2>
-                        <p class="text-secondary mb-4">Periksa ketersediaan jaringan fiber optik di area Anda sebelum memilih paket internet yang sesuai.</p>
-
-                        <div class="home-coverage-list mb-4">
-                            <div class="home-coverage-item">
-                                <div class="home-coverage-icon">
-                                    <i class="fas fa-check-circle fa-lg text-success"></i>
-                                </div>
-                                <div>
-                                    <h6 class="mb-1">Coverage Aktif</h6>
-                                </div>
-                            </div>
-                            <div class="home-coverage-item">
-                                <div class="home-coverage-icon">
-                                    <i class="fas fa-check-circle fa-lg text-success"></i>
-                                </div>
-                                <div>
-                                    <h6 class="mb-1">Survey Lokasi Gratis</h6>
-                                </div>
-                            </div>
-                            <div class="home-coverage-item">
-                                <div class="home-coverage-icon">
-                                    <i class="fas fa-check-circle fa-lg text-success"></i>
-                                </div>
-                                <div>
-                                    <h6 class="mb-1">Dukungan Teknisi</h6>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="home-coverage-actions">
-                            <a href="{{ route('landing.services.internet') }}" class="btn btn-primary track-service-action" data-track-service="internet" data-track-action="from_home_coverage">
-                                <i class="fas fa-wifi me-2"></i> Lihat Paket Internet
-                            </a>
-                            <a href="{{ $waUrlBase }}?text={{ urlencode('Halo, saya ingin cek coverage area internet.') }}" class="btn btn-green track-service-action" data-track-service="internet" data-track-action="coverage_whatsapp">
-                                <i class="fab fa-whatsapp me-2"></i> Kirim Alamat
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="quick-consult" class="py-2 home-consult-section">
+    <!-- Quick Consult Form Section -->
+    <section id="quick-consult" class="py-5 home-consult-section">
         <div class="container py-2">
             <div class="row g-4 align-items-start home-consult-shell">
                 <div class="col-lg-5 fade-up">
                     <div class="section-header mb-3 home-consult-copy">
-                        <h6 class="text-primary fw-bold text-uppercase">Quick Consult</h6>
-                        <h2 class="display-6 fw-800 mb-2">Belum Yakin Layanan Mana yang Cocok?</h2>
-                        <p class="text-muted mb-0">Sampaikan kebutuhan Anda melalui form berikut. Tim kami akan menghubungi Anda dan memberikan solusi yang paling sesuai.</p>
+                        <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill fw-semibold mb-2">Bantuan Konsultasi</span>
+                        <h2 class="display-6 fw-800 mb-2">Punya Kebutuhan Khusus untuk Usaha Anda?</h2>
+                        <p class="text-muted mb-0">Tim kami siap membantu merekomendasikan alur kasir, perangkat printer barcode, atau migrasi data toko Anda secara gratis.</p>
                     </div>
 
-                    <div class="home-consult-points">
-                        <div class="home-consult-point">
-                            <i class="fas fa-check-circle text-success"></i>
+                    <div class="home-consult-points mt-4">
+                        <div class="home-consult-point mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
                             <span>Respon Cepat via WhatsApp</span>
                         </div>
-                        <div class="home-consult-point">
-                            <i class="fas fa-check-circle text-success"></i>
-                            <span>Tim Profesional dan Berpengalaman</span>
+                        <div class="home-consult-point mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            <span>Bantuan Setup & Panduan Penggunaan</span>
                         </div>
-                        <div class="home-consult-point">
-                            <i class="fas fa-check-circle text-success"></i>
-                            <span>Dukungan Pelanggan Responsif</span>
+                        <div class="home-consult-point mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            <span>Mendukung Printer Thermal & Scanner Barcode</span>
                         </div>
-                        <div class="home-consult-point">
-                            <i class="fas fa-check-circle text-success"></i>
-                            <span>Solusi untuk Rumah, Bisnis, dan Event</span>
-                        </div>
-                    </div>
-
-                    <div class="home-consult-service-tags">
-                        @foreach($services as $service)
-                            <span>{{ $service['name'] }}</span>
-                        @endforeach
                     </div>
 
                     @if(session('success'))
-                        <div class="alert alert-success">
+                        <div class="alert alert-success mt-3">
                             <div class="fw-bold">{{ session('success') }}</div>
                             @if(session('lead_whatsapp_url'))
                                 <div class="mt-2">
@@ -284,53 +416,45 @@
                 </div>
 
                 <div class="col-lg-7 fade-up">
-                    <div class="lead-card home-lead-card">
-                        <form method="POST" action="{{ route('landing.leads.store') }}" class="lead-form" data-track-service-form="umbrella" data-track-label="home quick consult">
+                    <div class="lead-card home-lead-card p-4 rounded-4 shadow-sm bg-white border">
+                        <form method="POST" action="{{ route('landing.leads.store') }}" class="lead-form">
                             @csrf
                             <input type="hidden" name="landing_page" value="home">
-                            <input type="hidden" name="utm_source" value="{{ request('utm_source') }}">
-                            <input type="hidden" name="utm_medium" value="{{ request('utm_medium') }}">
-                            <input type="hidden" name="utm_campaign" value="{{ request('utm_campaign') }}">
-                            <input type="hidden" name="utm_term" value="{{ request('utm_term') }}">
-                            <input type="hidden" name="utm_content" value="{{ request('utm_content', 'home') }}">
 
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label">Nama</label>
-                                    <input name="name" value="{{ old('name') }}" class="form-control home-form-control @error('name') is-invalid @enderror" required placeholder="Masukkan nama lengkap">
+                                    <label class="form-label small fw-bold text-muted">Nama Lengkap</label>
+                                    <input name="name" value="{{ old('name') }}" class="form-control home-form-control @error('name') is-invalid @enderror" required placeholder="Nama Anda">
                                     @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">WhatsApp</label>
+                                    <label class="form-label small fw-bold text-muted">Nomor WhatsApp</label>
                                     <input name="phone" value="{{ old('phone') }}" class="form-control home-form-control @error('phone') is-invalid @enderror" required placeholder="08xxxxxxxxxx">
                                     @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">Minat Layanan</label>
+                                    <label class="form-label small fw-bold text-muted">Jenis Bisnis</label>
                                     <select name="service_interest" class="form-select home-form-control @error('service_interest') is-invalid @enderror">
-                                        <option value="">Pilih</option>
-                                        @foreach($serviceCatalog as $service)
-                                            <option value="{{ $service['form']['interest'] }}" @selected(old('service_interest') === $service['form']['interest'])>{{ $service['name'] }}</option>
-                                        @endforeach
+                                        <option value="retail">Toko Jualan / Retail / Sembako</option>
+                                        <option value="service">Jasa / Cuci Mobil / Salon / Bengkel</option>
+                                        <option value="booking">Sewa / Event / Reservasi</option>
+                                        <option value="enterprise">Multi Cabang / Grosir</option>
                                     </select>
-                                    @error('service_interest')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">Area / Lokasi</label>
-                                    <input name="coverage_area" value="{{ old('coverage_area') }}" class="form-control home-form-control @error('coverage_area') is-invalid @enderror" placeholder="Contoh: Perumahan Griya Asri">
-                                    @error('coverage_area')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    <label class="form-label small fw-bold text-muted">Kota / Wilayah Usaha</label>
+                                    <input name="coverage_area" value="{{ old('coverage_area') }}" class="form-control home-form-control" placeholder="Contoh: Jakarta / Surabaya / Medan">
                                 </div>
                                 <div class="col-12">
-                                    <label class="form-label">Kebutuhan Singkat</label>
-                                    <textarea name="message" rows="4" class="form-control home-form-control home-form-textarea @error('message') is-invalid @enderror" placeholder="Jelaskan kebutuhan Anda secara singkat">{{ old('message') }}</textarea>
-                                    @error('message')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    <label class="form-label small fw-bold text-muted">Pertanyaan / Kebutuhan</label>
+                                    <textarea name="message" rows="3" class="form-control home-form-control @error('message') is-invalid @enderror" placeholder="Ceritakan jenis usaha atau kebutuhan kasir Anda...">{{ old('message') }}</textarea>
                                 </div>
-                                <div class="col-12 d-flex flex-wrap gap-2">
-                                    <button class="btn btn-primary track-service-action" type="submit" data-track-service="umbrella" data-track-action="quick_consult_submit">
-                                        Kirim
+                                <div class="col-12 d-flex flex-wrap gap-2 pt-2">
+                                    <button class="btn btn-primary px-4" type="submit">
+                                        <i class="fas fa-paper-plane me-1"></i> Kirim Pesan
                                     </button>
-                                    <a class="btn btn-green track-service-action" data-track-service="umbrella" data-track-action="quick_consult_whatsapp" href="{{ $waUrlBase }}?text={{ urlencode('Halo, saya ingin konsultasi memilih layanan MStore.') }}">
-                                        WhatsApp
+                                    <a class="btn btn-green" href="{{ $waUrlBase }}?text={{ urlencode('Halo, saya ingin konsultasi software kasir UMKM.') }}">
+                                        <i class="fab fa-whatsapp me-1"></i> Chat WhatsApp
                                     </a>
                                 </div>
                             </div>
@@ -341,78 +465,17 @@
         </div>
     </section>
 
-    <section class="py-2 home-section">
-        <div class="container py-2">
-            <div class="row g-4 align-items-center">
-                <div class="col-lg-6 fade-up">
-                    <span class="home-kicker">Tentang {{ $siteName }}</span>
-                    <h2 class="display-6 fw-800 mb-3">Partner Terpercaya untuk Kebutuhan Internet dan Teknologi Anda</h2>
-                    <p class="text-muted mb-3">Kami menghadirkan berbagai layanan terintegrasi mulai dari Internet Fiber Optik, CCTV & Security System, Event WiFi, Car Wash, hingga solusi Retail Digital untuk membantu kebutuhan rumah maupun bisnis Anda.</p>
-                    <div class="d-flex flex-wrap gap-2">
-                        <a class="btn btn-primary" href="#services">Lihat Semua Layanan</a>
-                        <a class="btn btn-outline-primary" href="#kontak">Lihat Kontak</a>
-                    </div>
-                </div>
-                <div class="col-lg-6 fade-up">
-                    <div class="about-card home-about-card">
-                        @foreach($serviceCatalog as $service)
-                            <div class="about-item home-about-item">
-                                <i class="fas {{ $service['icon'] }}"></i>
-                                <div>
-                                    <div class="fw-bold">{{ $service['name'] }}</div>
-                                    <div class="text-muted small">{{ $service['summary'] }}</div>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Social Proof Section -->
-    <section class="py-2 home-section">
-        <div class="container py-2">
-            <div class="section-header text-center mb-5 fade-up">
-                <h6 class="text-primary fw-bold text-uppercase">Mengapa Memilih Kami</h6>
-            </div>
-            <div class="row g-4">
-                <div class="col-lg-3 col-md-6 fade-up">
-                    <div class="landing-mini-card h-100 home-mini-card text-center">
-                        <i class="fas fa-users fa-2x mb-3 text-primary"></i>
-                        <div class="fw-bold">Tim Berpengalaman</div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6 fade-up">
-                    <div class="landing-mini-card h-100 home-mini-card text-center">
-                        <i class="fas fa-headset fa-2x mb-3 text-primary"></i>
-                        <div class="fw-bold">Dukungan Cepat</div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6 fade-up">
-                    <div class="landing-mini-card h-100 home-mini-card text-center">
-                        <i class="fas fa-puzzle-piece fa-2x mb-3 text-primary"></i>
-                        <div class="fw-bold">Solusi Terintegrasi</div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6 fade-up">
-                    <div class="landing-mini-card h-100 home-mini-card text-center">
-                        <i class="fas fa-briefcase fa-2x mb-3 text-primary"></i>
-                        <div class="fw-bold">Layanan Profesional</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Final CTA Section -->
-    <section class="py-5 home-section bg-primary bg-opacity-10">
-        <div class="container py-5">
-            <div class="text-center fade-up">
-                <h2 class="display-5 fw-800 mb-4">Siap Mendapatkan Solusi Terbaik untuk Kebutuhan Anda?</h2>
-                <p class="text-muted mb-6">Hubungi tim kami sekarang untuk konsultasi gratis dan dapatkan penawaran terbaik.</p>
-                <a href="{{ $waUrlBase }}?text={{ urlencode('Halo, saya ingin konsultasi layanan MStore.') }}" class="btn btn-primary btn-lg track-service-action" data-track-service="umbrella" data-track-action="final_cta_whatsapp">
-                    <i class="fab fa-whatsapp me-2"></i> Hubungi Kami Sekarang
+    <!-- Final CTA Banner -->
+    <section class="py-5 bg-primary text-white text-center">
+        <div class="container py-4 fade-up">
+            <h2 class="display-6 fw-800 mb-3 text-white">Siap Mengembangkan Usaha Anda dengan Sistem Modern?</h2>
+            <p class="lead mb-4 opacity-90" style="max-width: 650px; margin: 0 auto;">Daftarkan toko Anda sekarang dalam 1 menit. Dapatkan masa uji coba gratis 14 hari tanpa biaya komitmen.</p>
+            <div class="d-flex justify-content-center flex-wrap gap-3">
+                <a href="{{ route('tenant.register.create') }}" class="btn btn-light btn-lg text-primary fw-bold px-4 shadow">
+                    <i class="fas fa-rocket me-2"></i> Daftar & Coba Gratis 14 Hari
+                </a>
+                <a href="{{ $waUrlBase }}?text={{ urlencode('Halo, saya ingin bertanya tentang fitur MStore.') }}" class="btn btn-outline-light btn-lg px-4">
+                    <i class="fab fa-whatsapp me-2"></i> Hubungi Tim Sales
                 </a>
             </div>
         </div>

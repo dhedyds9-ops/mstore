@@ -1,42 +1,26 @@
 <?php
 
-use App\Http\Controllers\CalculatorController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\CustomerPublicRegisterController;
 use App\Http\Controllers\CustomerWebController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\FinanceController;
-use App\Http\Controllers\GenieACSController;
-use App\Http\Controllers\GenieAcsServerController;
-use App\Http\Controllers\HotspotController;
-use App\Http\Controllers\PppoeController;
-use App\Http\Controllers\InstallationWebController;
 use App\Http\Controllers\InvestorController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\LoginController;
-use App\Http\Controllers\MapController;
-use App\Http\Controllers\ModemDataController;
-use App\Http\Controllers\NetworkAnalyzerController;
 use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\OLTController;
-use App\Http\Controllers\OnuController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PresenceController;
 use App\Http\Controllers\RoleController;
-use App\Http\Controllers\RouterController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\TechnicianAttendanceController;
 use App\Http\Controllers\TicketWebController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\VoucherController;
-use App\Http\Controllers\VpnServerController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\TenantRegisterController;
 use App\Http\Controllers\ConsolidationController;
-use App\Http\Controllers\Client\OnuWifiController;
-use App\Models\Router as RouterModel;
-use App\Models\VpnAccount;
-use App\Services\VpnBridgeService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
@@ -133,15 +117,6 @@ if (app()->environment('local')) {
     });
 }
 
-// Voucher Payment Routes (Public)
-Route::get('/voucher-payment', [\App\Http\Controllers\VoucherPaymentController::class, 'index'])->name('voucher.payment.index');
-Route::post('/voucher-payment/select-payment', [\App\Http\Controllers\VoucherPaymentController::class, 'selectPaymentMethod'])->name('voucher.payment.select_payment');
-Route::post('/voucher-payment/create', [\App\Http\Controllers\VoucherPaymentController::class, 'createPayment'])->name('voucher.payment.create');
-Route::post('/voucher-payment/callback', [\App\Http\Controllers\VoucherPaymentController::class, 'callback'])->name('voucher.payment.callback');
-Route::get('/voucher-payment/return', [\App\Http\Controllers\VoucherPaymentController::class, 'return'])->name('voucher.payment.return');
-Route::get('/voucher-payment/{referenceId}', [\App\Http\Controllers\VoucherPaymentController::class, 'show'])->name('voucher.payment.show');
-Route::get('/voucher-payment/{referenceId}/check-status', [\App\Http\Controllers\VoucherPaymentController::class, 'checkStatus'])->name('voucher.payment.check_status');
-
 // Debug Route for Duitku Credentials (development only)
 if (app()->environment('local')) {
 Route::get('/debug-duitku', function () {
@@ -193,63 +168,7 @@ Route::get('/debug-duitku', function () {
     }
     
     echo "<hr><p>Generated at: " . now() . "</p>";
-    echo "<p><a href='/voucher-payment'>Test Voucher Payment</a></p>";
 });
-}
-
-// Test Route for Duitku (Hanya untuk development!)
-if (app()->environment('local')) {
-    Route::get('/test-duitku', function () {
-        // Cek apakah sudah ada template voucher
-        $template = \App\Models\VoucherTemplate::first();
-        if (! $template) {
-            return 'Silakan buat template voucher terlebih dahulu di halaman voucher!';
-        }
-
-        // Buat test payment
-        $referenceId = 'TEST-' . time();
-        $payment = \App\Models\VoucherPayment::create([
-            'reference_id' => $referenceId,
-            'voucher_template_id' => $template->id,
-            'amount' => 10000,
-            'phone_number' => '6281234567890', // Ganti dengan nomor WhatsApp Anda untuk testing
-            'customer_name' => 'Test Customer',
-            'status' => 'pending',
-        ]);
-
-        // Hitung signature (mirip Duitku)
-        $merchantCode = \App\Models\Setting::getValue('duitku_merchant_code', config('services.duitku.merchant_code'));
-        $apiKey = \App\Models\Setting::getValue('duitku_api_key', config('services.duitku.api_key'));
-        $signature = md5($merchantCode . $referenceId . '00' . $apiKey);
-
-        // Simulasikan callback success
-        $callbackData = [
-            'merchantCode' => $merchantCode,
-            'merchantOrderId' => $referenceId,
-            'statusCode' => '00',
-            'statusMessage' => 'Success',
-            'amount' => '10000',
-            'paymentCode' => 'QRIS',
-            'reference' => 'D1234567890',
-            'signature' => $signature,
-        ];
-
-        // Panggil method callback secara manual
-        $controller = new \App\Http\Controllers\VoucherPaymentController(
-            app(\App\Services\Payment\PaymentManager::class),
-            app(\App\Services\VoucherService::class),
-            app(\App\Services\WhatsAppService::class)
-        );
-
-        $request = new \Illuminate\Http\Request($callbackData);
-        $response = $controller->callback($request);
-
-        return response()->json([
-            'message' => 'Test callback berhasil dijalankan!',
-            'payment' => $payment->refresh(),
-            'response' => $response->getContent(),
-        ]);
-    });
 }
 
 // Route /test dan /test-livewire telah dihapus — tidak digunakan di production.
@@ -286,6 +205,12 @@ Route::get('/login', [LoginController::class, 'create'])->name('login');
 Route::get('/login/pelanggan', [LoginController::class, 'createCustomer'])->name('login.customer');
 Route::post('/login', [LoginController::class, 'store'])->middleware('throttle:10,1');
 Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
+
+// SaaS Self-service Store Registration (Tenant Onboarding)
+Route::get('/register', [TenantRegisterController::class, 'create'])->name('tenant.register.create');
+Route::post('/register', [TenantRegisterController::class, 'store'])
+    ->middleware('throttle:10,1')
+    ->name('tenant.register.store');
 Route::get('/forgot-password', [\App\Http\Controllers\PasswordResetController::class, 'showForgotForm'])->name('password.forgot');
 Route::post('/forgot-password', [\App\Http\Controllers\PasswordResetController::class, 'sendOtp'])
     ->middleware('throttle:5,1')
@@ -296,23 +221,12 @@ Route::post('/reset-password', [\App\Http\Controllers\PasswordResetController::c
     ->name('password.reset');
 
 Route::middleware('auth')->group(function () {
-        // PPPoE Users Routes
-        Route::prefix('isp/pppoe-users')->name('isp.pppoe-users.')->group(function () {
-            Route::get('/', \App\Livewire\ISP\PPPoEUser\Index::class)->name('index');
-            Route::get('/create', \App\Livewire\ISP\PPPoEUser\Create::class)->name('create');
-            Route::get('/{customer}/edit', \App\Livewire\ISP\PPPoEUser\Edit::class)->name('edit');
-            Route::get('/{customer}', \App\Livewire\ISP\PPPoEUser\Show::class)->name('show');
-        });
-
         Route::get('admin/dashboard', [\App\Http\Controllers\AdminDashboardController::class, 'index'])
             ->middleware('permission:admin.dashboard.view')
             ->name('admin.dashboard');
         Route::get('admin/audit-trail', [\App\Http\Controllers\AdminDashboardController::class, 'auditTrail'])
             ->middleware('permission:dashboard.view')
             ->name('admin.audit-trail');
-    
-    Route::get('modem-data', [ModemDataController::class, 'index'])->name('modem-data.index')->middleware('permission:modem-data.view');
-    Route::post('modem-data', [ModemDataController::class, 'store'])->name('modem-data.store')->middleware('permission:modem-data.create|modem-data.view');
     
     // AI Center
     Route::get('/ai-center', [\App\Http\Controllers\AiController::class, 'index'])
@@ -327,42 +241,6 @@ Route::middleware('auth')->group(function () {
         ->middleware('permission:dashboard.view')
         ->name('dashboard');
     Route::post('/presence/ping', [PresenceController::class, 'ping'])->name('presence.ping');
-    Route::get('/dashboard/monitor-logs', [DashboardController::class, 'monitorLogs'])
-        ->middleware('permission:dashboard.view')
-        ->name('dashboard.monitor_logs');
-    Route::get('/health/network', function (\Modules\Network\Services\MonitoringService $monitoring) {
-        return response()->json($monitoring->health());
-    })->name('health.network');
-    Route::get('/health/mixradius', function (\Modules\Network\Services\MonitoringService $monitoring) {
-        return response()->json($monitoring->health());
-    })->name('health.mixradius');
-
-    Route::get('/noc/dashboard', [\App\Http\Controllers\NocDashboardController::class, 'index'])
-        ->middleware('permission:noc.dashboard.view')
-        ->name('noc.dashboard');
-    Route::get('/noc/dashboard/data', [\App\Http\Controllers\NocDashboardController::class, 'data'])
-        ->middleware('permission:noc.dashboard.view')
-        ->name('noc.dashboard.data');
-    Route::prefix('noc/operasional')->name('noc.operational.')->group(function () {
-        Route::get('/area-outage', [\App\Http\Controllers\NocOperationalController::class, 'areaOutage'])
-            ->middleware('permission:noc.operational.view')
-            ->name('area_outage');
-        Route::get('/network-incident', [\App\Http\Controllers\NocOperationalController::class, 'incidents'])
-            ->middleware('permission:noc.operational.view')
-            ->name('network_incident');
-        Route::get('/network-diagnostic', [\App\Http\Controllers\NocOperationalController::class, 'diagnostics'])
-            ->middleware('permission:noc.operational.view')
-            ->name('network_diagnostic');
-        Route::get('/diagnostic-logs', [\App\Http\Controllers\NocOperationalController::class, 'diagnosticLogs'])
-            ->middleware('permission:noc.diagnostic_logs.view')
-            ->name('diagnostic_logs');
-        Route::get('/olt-monitoring', [\App\Http\Controllers\NocOperationalController::class, 'oltMonitoring'])
-            ->middleware('permission:noc.olt_monitoring.view')
-            ->name('olt_monitoring');
-        Route::get('/fiber-monitoring', [\App\Http\Controllers\NocOperationalController::class, 'fiberMonitoring'])
-            ->middleware('permission:noc.fiber_monitoring.view')
-            ->name('fiber_monitoring');
-    });
 
     Route::get('/whatsapp/analytics', [\App\Http\Controllers\WhatsAppAnalyticsController::class, 'index'])
         ->middleware('permission:whatsapp.analytics.view')
@@ -403,16 +281,6 @@ Route::middleware('auth')->group(function () {
         ->name('sla.escalation-queue');
 
     Route::prefix('reports')->name('reports.')->group(function () {
-        Route::get('/noc', [\App\Http\Controllers\ReportingCenterController::class, 'noc-operator'])
-            ->middleware('permission:report.noc.export')
-            ->name('noc-operator');
-        Route::get('/noc/pdf', [\App\Http\Controllers\ReportingCenterController::class, 'nocPdf'])
-            ->middleware('permission:report.noc.export')
-            ->name('noc.pdf');
-        Route::get('/noc/excel', [\App\Http\Controllers\ReportingCenterController::class, 'nocExcel'])
-            ->middleware('permission:report.noc.export')
-            ->name('noc.excel');
-
         Route::get('/whatsapp', [\App\Http\Controllers\ReportingCenterController::class, 'whatsapp'])
             ->middleware('permission:report.whatsapp.export')
             ->name('whatsapp');
@@ -458,13 +326,6 @@ Route::middleware('auth')->group(function () {
         ->middleware('permission:security.monitoring.view')
         ->name('security.monitoring');
 
-    // Client Portal
-    Route::prefix('client')->name('client.')->group(function () {
-        Route::get('/onu-wifi', [OnuWifiController::class, 'show'])->name('onu-wifi.show');
-        Route::post('/onu-wifi/send-otp', [OnuWifiController::class, 'sendOtp'])->middleware('throttle:ganti-wifi-otp')->name('onu-wifi.send_otp');
-        Route::post('/onu-wifi', [OnuWifiController::class, 'update'])->middleware('throttle:ganti-wifi-update')->name('onu-wifi.update');
-    });
-
     // WhatsApp Webhook
     Route::get('/webhooks/whatsapp', [\App\Http\Controllers\WhatsApp\WhatsAppWebhookController::class, 'verify'])->name('webhooks.whatsapp.verify');
     Route::post('/webhooks/whatsapp', [\App\Http\Controllers\WhatsApp\WhatsAppWebhookController::class, 'handle'])
@@ -506,6 +367,10 @@ Route::get('/webhooks/payment/return', [\App\Http\Controllers\PaymentController:
     Route::get('/settings/wash', [SettingController::class, 'wash'])->name('settings.wash.index');
     Route::post('/settings/wash', [SettingController::class, 'update'])->name('settings.wash.update');
 
+    // SaaS Tenant Subscription & Billing
+    Route::get('/subscription', [SubscriptionController::class, 'index'])->name('subscription.index');
+    Route::post('/subscription/upgrade', [SubscriptionController::class, 'upgrade'])->name('subscription.upgrade');
+
     // Payment Gateway Management
     Route::middleware(['permission:payment.view'])->prefix('payment-gateway')->group(function () {
         Route::get('/', [\App\Http\Controllers\PaymentGatewayController::class, 'dashboard'])->name('payment.dashboard');
@@ -526,14 +391,7 @@ Route::get('/webhooks/payment/return', [\App\Http\Controllers\PaymentController:
 
     Route::get('customers/export', [CustomerWebController::class, 'export'])->name('customers.export');
     Route::post('customers/import-file', [CustomerWebController::class, 'importFile'])->name('customers.importFile');
-    Route::get('customers/import', [CustomerWebController::class, 'import'])->name('customers.import');
-    Route::get('customers/genie-device', [CustomerWebController::class, 'getGenieDevice'])->name('customers.genie_device');
-    Route::get('customers/{customer}/settings', [CustomerWebController::class, 'settings'])->name('customers.settings');
-    Route::post('customers/{customer}/notify-status', [CustomerWebController::class, 'notifyStatus'])->name('customers.notify_status');
-    Route::post('customers/{customer}/settings/wan', [CustomerWebController::class, 'updateWan'])->name('customers.settings.wan');
-    Route::post('customers/{customer}/settings/wlan', [CustomerWebController::class, 'updateWlan'])->name('customers.settings.wlan');
     Route::delete('customers/bulk-destroy', [CustomerWebController::class, 'bulkDestroy'])->name('customers.bulkDestroy');
-    Route::post('customers/{customer}/update-odp', [CustomerWebController::class, 'updateOdp'])->name('customers.update_odp');
     Route::resource('companies', CompanyController::class);
     Route::get('consolidation', [ConsolidationController::class, 'index'])->name('consolidation.index');
     Route::post('consolidation/generate', [ConsolidationController::class, 'generate'])->name('consolidation.generate');
@@ -546,8 +404,6 @@ Route::get('/webhooks/payment/return', [\App\Http\Controllers\PaymentController:
     Route::patch('tickets/{ticket}/customer', [TicketWebController::class, 'updateCustomer'])->name('tickets.updateCustomer');
     Route::resource('tickets', TicketWebController::class);
 
-    Route::resource('installations', InstallationWebController::class);
-    
     // Technician Attendance & Kasbon (PLACE BEFORE CATCH-ALL)
     Route::get('kasbon', [\App\Http\Controllers\SalaryAdjustmentController::class, 'index'])->name('technicians.kasbon.index');
     Route::post('salary-adjustments', [\App\Http\Controllers\SalaryAdjustmentController::class, 'store'])->name('salary-adjustments.store');
@@ -597,96 +453,10 @@ Route::get('/webhooks/payment/return', [\App\Http\Controllers\PaymentController:
     Route::put('leave-requests/{leaveRequest}/update-request', [\App\Http\Controllers\LeaveRequestController::class, 'updateRequest'])->name('leave-requests.update-request');
     Route::resource('leave-requests', \App\Http\Controllers\LeaveRequestController::class)->except(['create', 'show', 'edit', 'destroy', 'index']);
 
-    // Network & Infrastructure
-    Route::prefix('olt')->name('olt.')->group(function () {
-
-        // ===== CRUD =====
-        Route::get('/', [OLTController::class, 'index'])->middleware('permission:olt.view')->name('index');
-        Route::get('/create', [OLTController::class, 'create'])->name('create');
-        Route::post('/', [OLTController::class, 'store'])->name('store');
-        Route::get('/{olt}', [OLTController::class, 'show'])->name('show');
-        Route::get('/{olt}/edit', [OLTController::class, 'edit'])->name('edit');
-        Route::put('/{olt}', [OLTController::class, 'update'])->name('update');
-        Route::delete('/{olt}', [OLTController::class, 'destroy'])->name('destroy');
-
-        // ===== Status & Connection =====
-        Route::post('/batch-check-status', [OLTController::class, 'batchCheckStatus'])->name('batch_check_status');
-        Route::post('/test-connection', [OLTController::class, 'testConnection'])->name('test_connection');
-        Route::get('/{olt}/check-status', [OLTController::class, 'checkStatus'])->name('check_status');
-        Route::get('/{olt}/system-info', [OLTController::class, 'systemInfo'])->name('system_info');
-        // Route poll tunggal — duplikat dengan OltController (invalid) telah dihapus
-        Route::post('/{olt}/poll', [OLTController::class, 'poll'])->name('poll');
-
-        // ===== ONU Operations =====
-        Route::get('/{olt}/onus', [OLTController::class, 'filterOnus'])->name('onts');
-        Route::get('/{olt}/onus/filter', [OLTController::class, 'filterOnus'])->name('onus.filter');
-        Route::post('/{olt}/onus/sync', [OLTController::class, 'syncOnus'])->name('onus.sync');
-        Route::put('/onu/{onu}', [OLTController::class, 'updateOnu'])->name('onu.update');
-        Route::delete('/onu/{onu}', [OLTController::class, 'destroyOnu'])->name('onu.destroy');
-        Route::get('/onu/{onu}/detail', function ($onu) {
-            $ont = \App\Models\ONT::with(['olt', 'port'])->findOrFail($onu);
-            return view('olt.onus.show', compact('ont'));
-        })->name('onu.detail');
-        Route::get('/ont/{onu}', function ($onu) {
-            $ont = \App\Models\ONT::findOrFail($onu);
-            return redirect()->route('olt.show', $ont->olt_id);
-        })->name('ont.detail');
-        Route::post('/ont/{onu}/reboot', function ($onu) {
-            return response()->json(['success' => true, 'message' => 'Reboot ONT not implemented yet']);
-        })->name('ont.reboot');
-    });
-    // ... kode router lainnya ...
-    Route::post('routers/{router}/pppoe/disconnect', [RouterController::class, 'disconnectPppoe'])->name('routers.pppoe.disconnect');
-
-    // Route untuk test koneksi router (Explicitly defined)
-    Route::post('routers/{router}/test-connection', [RouterController::class, 'testConnection'])->name('routers.test-connection');
-
-    Route::post('routers/{router}/pppoe/toggle-secret', [RouterController::class, 'togglePppoeSecret'])->name('routers.pppoe.toggle-secret');
-
-    // Route for sessions view
-    Route::get('routers/{router}/sessions', [RouterController::class, 'sessions'])->name('routers.sessions');
-
-    Route::post('routers/{router}/hotspot/disconnect', [RouterController::class, 'disconnectHotspot'])->name('routers.hotspot.disconnect');
-
-    // Simple Queue Management Routes
-    Route::post('routers/{router}/simple-queues', [RouterController::class, 'createSimpleQueue'])->name('routers.simple-queues.store');
-    Route::put('routers/{router}/simple-queues', [RouterController::class, 'updateSimpleQueue'])->name('routers.simple-queues.update');
-    Route::delete('routers/{router}/simple-queues', [RouterController::class, 'deleteSimpleQueue'])->name('routers.simple-queues.destroy');
-    Route::post('routers/{router}/simple-queues/toggle', [RouterController::class, 'toggleSimpleQueue'])->name('routers.simple-queues.toggle');
-    Route::post('routers/{router}/simple-queues/move', [RouterController::class, 'moveSimpleQueue'])->name('routers.simple-queues.move');
-    Route::get('hotspot/online', [RouterController::class, 'sessions'])->name('hotspot.online');
-    Route::get('hotspot', [HotspotController::class, 'index'])->name('hotspot.index')->middleware('permission:hotspot.view');
-
-    // Hotspot Profiles (Voucher & Rumahan packages)
-    Route::prefix('hotspot')->name('hotspot.')->group(function () {
-        Route::resource('profiles', \App\Http\Controllers\HotspotProfileController::class)->except(['show']);
-        Route::resource('banners', \App\Http\Controllers\HotspotBannerController::class)->except(['show']);
-        Route::post('banners/{banner}/toggle', [\App\Http\Controllers\HotspotBannerController::class, 'toggle'])->name('banners.toggle');
-    });
-
     // Wash Member Packages (Member subscriptions)
     Route::prefix('wash')->name('wash.')->group(function () {
         Route::resource('member-packages', \App\Http\Controllers\WashMemberPackageController::class)->except(['show']);
     });
-
-    Route::get('pppoe', [PppoeController::class, 'index'])->middleware('permission:pppoe.view')->name('pppoe.index');
-    Route::post('pppoe/{router}/disconnect', [PppoeController::class, 'disconnect'])->name('pppoe.disconnect');
-    Route::resource('routers', RouterController::class);
-
-    Route::prefix('vpn')->name('vpn.')->group(function () {
-        Route::resource('servers', VpnServerController::class)->except(['show']);
-    });
-    Route::view('/vpn/guide', 'vpn.guide')->middleware('permission:router.view')->name('vpn.guide');
-
-    Route::get('/routers/{router}/vpn/script', function (RouterModel $router) {
-        abort_unless($router->vpn_account_id, 404);
-        $account = VpnAccount::findOrFail($router->vpn_account_id);
-        $protocol = request('protocol', 'l2tp');
-        $service = app(VpnBridgeService::class);
-        $script = $service->generateScript($account, $protocol);
-
-        return response()->view('routers.vpn_script', compact('router', 'account', 'script', 'protocol'));
-    })->name('routers.vpn.script');
 
     // Business & Operations
     Route::get('finance/material-report', [FinanceController::class, 'materialReport'])->name('finance.material_report');
@@ -708,63 +478,14 @@ Route::get('/webhooks/payment/return', [\App\Http\Controllers\PaymentController:
     Route::delete('finance/bulk-destroy', [FinanceController::class, 'bulkDestroy'])->name('finance.bulkDestroy');
     Route::resource('finance', FinanceController::class)->parameters(['finance' => 'transaction']);
 
-    Route::put('map/location/{type}/{id}', [MapController::class, 'updateLocation'])
-        ->middleware('permission:map.view')
-        ->name('map.update_location');
-    Route::put('map/path/{type}/{id}', [MapController::class, 'updatePath'])
-        ->middleware('permission:map.view')
-        ->name('map.update_path');
-    Route::post('map/connections/save', [\App\Http\Controllers\MapConnectionController::class, 'save'])
-        ->middleware('permission:map.view')
-        ->name('map.connections.save');
-    Route::get('map/connections', [\App\Http\Controllers\MapConnectionController::class, 'index'])
-        ->middleware('permission:map.view')
-        ->name('map.connections.index');
-    Route::get('map/wlan-status/{customer}', [MapController::class, 'getCustomerWlanStatus'])
-        ->middleware('permission:map.view')
-        ->name('map.wlan_status');
-    Route::post('map/wlan-update/{customer}', [MapController::class, 'updateCustomerWlan'])
-        ->middleware('permission:map.view')
-        ->name('map.wlan_update');
-    Route::post('map/ping', [MapController::class, 'ping'])
-        ->middleware('permission:map.view')
-        ->name('map.ping');
     Route::get('dashboard/consolidated', [\App\Http\Controllers\ConsolidatedDashboardController::class, 'index'])
         ->middleware('permission:finance.view')
         ->name('dashboard.consolidated');
     Route::post('dashboard/consolidated/generate', [\App\Http\Controllers\ConsolidatedDashboardController::class, 'generateSummary'])
         ->middleware('permission:finance.view')
         ->name('dashboard.consolidated.generate');
-    Route::resource('map', MapController::class);
 
     // Tools
-    Route::get('/calculator/pon', [CalculatorController::class, 'index'])
-        ->middleware('permission:calculator.view')
-        ->name('calculator.pon');
-    Route::get('/network/analyzer', [NetworkAnalyzerController::class, 'index'])
-        ->middleware('permission:router.view')
-        ->name('network.analyzer');
-    Route::get('/network/analyzer/ping', [NetworkAnalyzerController::class, 'ping'])
-        ->middleware('permission:router.view')
-        ->name('network.analyzer.ping');
-    Route::get('/network/analyzer/info', [NetworkAnalyzerController::class, 'networkInfo'])
-        ->middleware('permission:router.view')
-        ->name('network.analyzer.info');
-    Route::get('/network/analyzer/speed/download', [NetworkAnalyzerController::class, 'speedDownload'])
-        ->middleware('permission:router.view')
-        ->name('network.analyzer.speed.download');
-    Route::post('/network/analyzer/speed/upload', [NetworkAnalyzerController::class, 'speedUpload'])
-        ->middleware('permission:router.view')
-        ->name('network.analyzer.speed.upload');
-    // [DEPRECATED] Ganti Paket Internet (HotspotProfile) — route packages lama dinonaktifkan
-    // Route::resource('packages', \App\Http\Controllers\PackageController::class)->except(['show']);
-    Route::get('odps/next-sequence/{odc}', [\App\Http\Controllers\OdpController::class, 'getNextSequence'])->name('odps.next_sequence');
-    Route::get('odps/export/excel', [\App\Http\Controllers\OdpController::class, 'exportExcel'])->name('odps.export.excel');
-    Route::resource('odps', \App\Http\Controllers\OdpController::class);
-    Route::resource('htbs', \App\Http\Controllers\HtbController::class);
-    Route::get('odcs/export/excel', [\App\Http\Controllers\OdcController::class, 'exportExcel'])->name('odcs.export.excel');
-    Route::resource('odcs', \App\Http\Controllers\OdcController::class);
-    Route::resource('closures', \App\Http\Controllers\ClosureController::class);
     Route::resource('regions', \App\Http\Controllers\RegionController::class);
     Route::resource('coordinators', \App\Http\Controllers\CoordinatorController::class);
     Route::get('employees-export/csv', [EmployeeController::class, 'exportCsv'])->name('employees.export.csv');
@@ -775,17 +496,6 @@ Route::get('/webhooks/payment/return', [\App\Http\Controllers\PaymentController:
     Route::get('employees/{employee}/id-card', [EmployeeController::class, 'idCard'])->name('employees.id-card');
     Route::resource('employees', EmployeeController::class)->except(['show']);
 
-    Route::get('/voucher/list', [VoucherController::class, 'index'])->name('vouchers.index');
-    Route::post('/voucher/generate', [VoucherController::class, 'generate'])->name('vouchers.generate');
-    Route::post('/voucher/disconnect', [VoucherController::class, 'disconnect'])->name('vouchers.disconnect');
-    // [DEPRECATED] Master Paket Voucher pindah ke HotspotProfile Paket Internet tab Voucher
-    // Route::post('/voucher/template', [VoucherController::class, 'storeTemplate'])->name('vouchers.templates.store');
-    // Route::get('/voucher/template/{voucherTemplate}/edit', [VoucherController::class, 'editTemplate'])->name('vouchers.templates.edit');
-    // Route::put('/voucher/template/{voucherTemplate}', [VoucherController::class, 'updateTemplate'])->name('vouchers.templates.update');
-    // Route::delete('/voucher/template/{voucherTemplate}', [VoucherController::class, 'deleteTemplate'])->name('vouchers.templates.delete');
-    Route::get('/voucher/export/csv', [VoucherController::class, 'exportCsv'])->name('vouchers.export.csv');
-    Route::get('/voucher/export/excel', [VoucherController::class, 'exportExcel'])->name('vouchers.export.excel');
-    Route::get('/voucher/export/pdf', [VoucherController::class, 'exportPdf'])->name('vouchers.export.pdf');
     Route::get('investors/export/pdf', [InvestorController::class, 'exportPdf'])->name('investors.export.pdf');
     Route::get('investors/export/excel', [InvestorController::class, 'exportExcel'])->name('investors.export.excel');
     Route::resource('investors', InvestorController::class);
@@ -901,6 +611,18 @@ Route::get('/webhooks/payment/return', [\App\Http\Controllers\PaymentController:
         Route::get('/cash-flow/pdf', [\App\Http\Controllers\AccountingReportController::class, 'exportCashFlowPdf'])->name('cash_flow.pdf');
         Route::get('/cash-flow/excel', [\App\Http\Controllers\AccountingReportController::class, 'exportCashFlowExcel'])->name('cash_flow.excel');
 
+        // Chart of Accounts (COA) / Bagan Akun
+        Route::get('/accounts', [\App\Http\Controllers\AccountController::class, 'index'])->name('accounts.index');
+        Route::post('/accounts', [\App\Http\Controllers\AccountController::class, 'store'])->name('accounts.store');
+        Route::put('/accounts/{account}', [\App\Http\Controllers\AccountController::class, 'update'])->name('accounts.update');
+        Route::delete('/accounts/{account}', [\App\Http\Controllers\AccountController::class, 'destroy'])->name('accounts.destroy');
+
+        // General Journal / Jurnal Umum
+        Route::get('/journals', [\App\Http\Controllers\JournalController::class, 'index'])->name('journals.index');
+        Route::get('/journals/create', [\App\Http\Controllers\JournalController::class, 'create'])->name('journals.create');
+        Route::post('/journals', [\App\Http\Controllers\JournalController::class, 'store'])->name('journals.store');
+        Route::get('/journals/{journal}', [\App\Http\Controllers\JournalController::class, 'show'])->name('journals.show');
+
         // Period management
         Route::get('/periods', [\App\Http\Controllers\PeriodController::class, 'index'])->name('periods.index');
         Route::get('/periods/create', [\App\Http\Controllers\PeriodController::class, 'create'])->name('periods.create');
@@ -908,23 +630,6 @@ Route::get('/webhooks/payment/return', [\App\Http\Controllers\PaymentController:
         Route::get('/periods/{period}/opening', [\App\Http\Controllers\PeriodController::class, 'openingForm'])->name('periods.opening');
         Route::post('/periods/{period}/opening', [\App\Http\Controllers\PeriodController::class, 'postOpening'])->name('periods.opening.post');
         Route::post('/periods/{period}/close', [\App\Http\Controllers\PeriodController::class, 'close'])->name('periods.close');
-    });
-
-    // GenieACS / Network Monitor Routes
-    Route::prefix('genieacs')->name('genieacs.')->group(function () {
-        // Server Management
-        Route::resource('servers', GenieAcsServerController::class);
-
-        Route::get('/', [GenieACSController::class, 'index'])->name('index');
-        Route::get('/device/{id}', [GenieACSController::class, 'show'])->name('show'); // Changed param to avoid conflict if any, though {id} is safe
-        Route::post('/assign-odp', [GenieACSController::class, 'assignOdp'])->name('assign_odp');
-        Route::post('/device/{id}/refresh', [GenieACSController::class, 'refresh'])->name('refresh');
-        Route::post('/device/{id}/reboot', [GenieACSController::class, 'reboot'])->name('reboot');
-        Route::post('/device/{id}/ping', [GenieACSController::class, 'ping'])->name('ping');
-        Route::post('/device/{id}/alias', [GenieACSController::class, 'updateAlias'])->name('updateAlias');
-        Route::post('/device/{id}/wan', [GenieACSController::class, 'updateWan'])->name('updateWan');
-        Route::post('/device/{id}/wlan', [GenieACSController::class, 'updateWlan'])->name('updateWlan');
-        Route::post('/device/{id}/param', [GenieACSController::class, 'updateParam'])->name('updateParam');
     });
 
     // Wash Service Routes
@@ -1211,6 +916,7 @@ Route::get('/webhooks/payment/return', [\App\Http\Controllers\PaymentController:
         Route::get('/transactions/{transaction}/receipt', [\App\Http\Controllers\AtkTransactionController::class, 'receipt'])->name('transactions.receipt');
         Route::delete('/transactions/bulk-destroy', [\App\Http\Controllers\AtkTransactionController::class, 'bulkDestroy'])->name('transactions.bulkDestroy');
         Route::get('products/export', [\App\Http\Controllers\AtkProductController::class, 'export'])->name('products.export');
+        Route::get('products/template', [\App\Http\Controllers\AtkProductController::class, 'downloadTemplate'])->name('products.template');
         Route::get('products/barcodes', [\App\Http\Controllers\AtkProductController::class, 'barcodes'])->name('products.barcodes');
         Route::get('products/barcodes/pdf', [\App\Http\Controllers\AtkProductController::class, 'barcodesPdf'])->name('products.barcodes.pdf');
         Route::post('products/import', [\App\Http\Controllers\AtkProductController::class, 'import'])->name('products.import');
@@ -1316,6 +1022,9 @@ Route::get('/webhooks/payment/return', [\App\Http\Controllers\PaymentController:
         Route::get('/payments/{payment}', [\App\Http\Controllers\WeddingPaymentController::class, 'show'])
             ->middleware('permission:wedding.payment')
             ->name('payments.show');
+        Route::post('/payments/{payment}/mark-paid', [\App\Http\Controllers\WeddingPaymentController::class, 'markPaidManual'])
+            ->middleware('permission:wedding.payment')
+            ->name('payments.mark_paid');
     });
 
     Route::prefix('cctv')->name('cctv.')->group(function () {
@@ -1393,46 +1102,3 @@ Route::get('/webhooks/payment/return', [\App\Http\Controllers\PaymentController:
 Route::get('/wash/member/verify/{token}', [\App\Http\Controllers\WashMemberController::class, 'verify'])
     ->name('wash.members.verify');
 
-Route::get('/reset-atk-danger-xxx', function() {
-    try {
-        $driver = \Illuminate\Support\Facades\DB::connection()->getDriverName();
-        if ($driver === 'mysql') {
-            \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        } elseif ($driver === 'sqlite') {
-            \Illuminate\Support\Facades\DB::statement('PRAGMA foreign_keys = OFF;');
-        } elseif ($driver === 'pgsql') {
-            \Illuminate\Support\Facades\DB::statement('SET session_replication_role = replica;');
-        }
-
-        $tables = [
-            'atk_transactions', 'atk_transaction_items', 'atk_products',
-            'atk_customers', 'atk_suppliers', 'atk_categories', 'atk_services',
-            'atk_stock_movements', 'atk_expense_categories', 'atk_expenses',
-            'atk_float_accounts', 'atk_float_transactions', 'atk_cash_movements'
-        ];
-
-        $schema = \Illuminate\Support\Facades\Schema::connection(null);
-
-        foreach ($tables as $table) {
-            if ($schema->hasTable($table)) {
-                if ($driver === 'pgsql') {
-                    \Illuminate\Support\Facades\DB::statement('TRUNCATE TABLE ' . $table . ' CASCADE;');
-                } else {
-                    \Illuminate\Support\Facades\DB::table($table)->truncate();
-                }
-            }
-        }
-
-        if ($driver === 'mysql') {
-            \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1;');
-        } elseif ($driver === 'sqlite') {
-            \Illuminate\Support\Facades\DB::statement('PRAGMA foreign_keys = ON;');
-        } elseif ($driver === 'pgsql') {
-            \Illuminate\Support\Facades\DB::statement('SET session_replication_role = DEFAULT;');
-        }
-
-        return 'Semua Data ATK Berhasil Dihapus! Silakan hapus URL ini dari routes/web.php';
-    } catch (\Throwable $e) {
-        return 'Error: ' . $e->getMessage();
-    }
-});

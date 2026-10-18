@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', __('Kasir Jasa & Layanan'))
+
 @section('content')
 <div class="wash-pos-page">
     <div class="wash-pos-shell">
@@ -1772,7 +1774,7 @@ document.addEventListener('DOMContentLoaded', function () {
     .wash-pos-shell {
         max-width: 1440px;
         margin: 0 auto;
-        padding: 1.5rem 1rem;
+        padding: 0 0.5rem 1rem 0.5rem;
     }
 
     .wash-pos-header {
@@ -1780,7 +1782,7 @@ document.addEventListener('DOMContentLoaded', function () {
         align-items: flex-start;
         justify-content: flex-end;
         gap: 1rem;
-        margin-bottom: 1.1rem;
+        margin-bottom: 0.6rem;
     }
 
     .wash-pos-title {
@@ -2338,7 +2340,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     @media (max-width: 767.98px) {
         .wash-pos-shell {
-            padding: 0.7rem 0.35rem 0.8rem;
+            padding: 0.25rem 0.35rem 0.8rem;
         }
 
         .wash-pos-header {

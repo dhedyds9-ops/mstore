@@ -85,9 +85,7 @@
         $primaryCtaLabel = !empty($servicePage) ? ($servicePage['form']['title'] ?? 'Konsultasi') : 'Pilih Layanan';
         $authHref = auth()->check() ? route('dashboard') : route('login');
         $authLabel = auth()->check() ? 'Dashboard' : 'Masuk';
-        $customerAuthHref = auth()->check()
-            ? route('client.onu-wifi.show')
-            : route('login.customer');
+        $customerAuthHref = route('login.customer');
         $navLinks = $isWeddingPage
             ? [
                 ['href' => '#beranda', 'label' => 'Beranda'],
@@ -107,8 +105,7 @@
                     ];
                 })->values()->all(),
                 [
-                    ['href' => route('landing').'#coverage-area', 'label' => 'Coverage', 'active' => false],
-                    ['href' => '#kontak', 'label' => 'Kontak', 'active' => false],
+                    ['href' => '#kontak', 'label' => 'Kontak & Lokasi', 'active' => false],
                 ]
             );
     @endphp
@@ -118,8 +115,8 @@
             <div class="nav-inner">
                 <div class="nav-left">
                     <a class="nav-brand" href="{{ route('landing') }}">
-                        <img class="nav-logo" src="{{ $logoUrl }}" width="26" height="26" alt="{{ $siteName }}" decoding="async">
-                        <span class="d-none d-sm-inline">{{ $isWeddingPage ? $siteName.' Decoration' : $siteName }}</span>
+                        <img class="nav-logo" src="{{ $logoUrl }}" width="28" height="28" alt="{{ $siteName }}" decoding="async">
+                        <span>{{ $isWeddingPage ? $siteName.' Decoration' : $siteName }}</span>
                     </a>
                 </div>
 
@@ -132,25 +129,25 @@
                 </div>
 
                 <div class="nav-actions">
-                    <button class="btn-icon" id="themeToggle" type="button" aria-label="Toggle tema">
+                    <button class="btn-icon" id="themeToggle" type="button" aria-label="Toggle tema" title="Ganti Mode Gelap/Terang">
                         <i class="fas fa-moon"></i>
                     </button>
-                    <a href="{{ $customerAuthHref }}" class="btn btn-primary btn-full-mobile nav-desktop-action" title="Portal Pelanggan FTTH / Rumahan">
-                        <i class="fas fa-house-user me-1"></i> Portal Pelanggan
+                    <a href="{{ $waUrlBase }}?text={{ urlencode('Halo, saya ingin bertanya tentang layanan ' . $siteName) }}" target="_blank" rel="noopener noreferrer" class="btn btn-green nav-desktop-action" title="Hubungi kami via WhatsApp">
+                        <i class="fab fa-whatsapp me-1"></i> WhatsApp
                     </a>
-                    <a href="https://buy.mstore.id" target="_blank" rel="noopener noreferrer" class="btn btn-success btn-full-mobile nav-desktop-action" title="Client Area Hotspot / Voucher">
-                        <i class="fas fa-shopping-cart me-1"></i> Client Area
-                    </a>
-                    <a href="{{ $primaryCtaHref }}" class="btn {{ $isWeddingPage ? 'wedding-btn-light' : 'btn-outline-primary' }} btn-full-mobile nav-desktop-action {{ !empty($servicePage) ? 'track-service-action' : '' }}" @if(!empty($servicePage)) data-track-service="{{ $servicePage['slug'] }}" data-track-action="hero_cta" @endif>
-                        {{ $primaryCtaLabel }}
-                    </a>
-                    <a href="{{ $authHref }}" class="btn {{ auth()->check() ? 'btn-dark' : 'btn-outline-secondary' }} btn-full-mobile nav-desktop-action" title="Login Admin / Karyawan">
-                        <i class="fas fa-building me-1 d-none d-md-inline"></i>{{ $authLabel }}
-                    </a>
-                    <a href="{{ $customerAuthHref }}" class="btn-icon d-lg-none" aria-label="Portal Pelanggan">
-                        <i class="fas fa-house-user"></i>
-                    </a>
-                    <button class="btn-icon nav-toggle" type="button" id="navToggle" aria-controls="navMenu" aria-expanded="false" aria-label="Buka menu">
+                    @auth
+                        <a href="{{ route('dashboard') }}" class="btn btn-primary nav-desktop-action" title="Buka Dashboard">
+                            <i class="fa-solid fa-gauge-high me-1"></i> Dasbor
+                        </a>
+                    @else
+                        <a href="{{ route('tenant.register.create') }}" class="btn btn-outline-primary nav-desktop-action" title="Daftar Toko Gratis">
+                            <i class="fa-solid fa-gift me-1"></i> Coba Gratis
+                        </a>
+                        <a href="{{ route('login') }}" class="btn btn-primary nav-desktop-action" title="Login ke Sistem">
+                            <i class="fa-solid fa-arrow-right-to-bracket me-1"></i> Masuk
+                        </a>
+                    @endauth
+                    <button class="btn-icon nav-toggle d-lg-none" type="button" id="navToggle" aria-controls="navMenu" aria-expanded="false" aria-label="Buka menu navigasi">
                         <i class="fas fa-bars"></i>
                     </button>
                 </div>
@@ -160,9 +157,12 @@
                 <div class="nav-menu-inner">
                     <div class="nav-mobile-sheet">
                         <div class="nav-mobile-head">
-                            <div>
-                                <span class="nav-mobile-kicker">{{ $isWeddingPage ? 'Wedding Navigation' : 'MStore Navigation' }}</span>
-                                <h4>{{ $isWeddingPage ? $siteName.' Decoration' : $siteName }}</h4>
+                            <div class="d-flex align-items-center gap-2">
+                                <img src="{{ $logoUrl }}" width="24" height="24" alt="{{ $siteName }}">
+                                <div>
+                                    <span class="nav-mobile-kicker">{{ $isWeddingPage ? 'Wedding Navigation' : 'Navigasi Menu' }}</span>
+                                    <h5 class="mb-0 fw-bold">{{ $isWeddingPage ? $siteName.' Decoration' : $siteName }}</h5>
+                                </div>
                             </div>
                             <button class="btn-icon nav-close" type="button" id="navClose" aria-label="Tutup menu">
                                 <i class="fas fa-times"></i>
@@ -170,7 +170,7 @@
                         </div>
 
                         <div class="nav-mobile-section">
-                            <div class="nav-mobile-label">Menu Utama</div>
+                            <div class="nav-mobile-label">Menu Layanan</div>
                             <div class="nav-menu-panel">
                                 @foreach($navLinks as $link)
                                     <a class="nav-link {{ !empty($link['active']) ? 'active' : '' }}" href="{{ $link['href'] }}">
@@ -182,20 +182,17 @@
                         </div>
 
                         <div class="nav-mobile-actions">
-                            <a href="{{ $customerAuthHref }}" class="btn btn-primary" title="Portal Pelanggan FTTH / Rumahan">
-                                <i class="fas fa-house-user me-1"></i> Portal Pelanggan
-                            </a>
-                            <a href="https://buy.mstore.id" target="_blank" rel="noopener noreferrer" class="btn btn-success" title="Client Area Hotspot / Voucher">
-                                <i class="fas fa-shopping-cart me-1"></i> Client Area
-                            </a>
-                            <a href="{{ $primaryCtaHref }}" class="btn {{ $isWeddingPage ? 'wedding-btn-light' : 'btn-info' }} {{ !empty($servicePage) ? 'track-service-action' : '' }}" @if(!empty($servicePage)) data-track-service="{{ $servicePage['slug'] }}" data-track-action="hero_cta_mobile" @endif>
-                                {{ $primaryCtaLabel }}
-                            </a>
-                            <a href="{{ $authHref }}" class="btn btn-outline-secondary">
-                                <i class="fas fa-building me-1"></i>{{ $authLabel }} Admin
-                            </a>
-                            <a href="{{ $waUrlBase }}?text={{ urlencode('Halo, saya ingin konsultasi layanan.') }}" class="btn btn-green">
-                                WhatsApp
+                            @auth
+                                <a href="{{ route('dashboard') }}" class="btn btn-primary">
+                                    <i class="fa-solid fa-gauge-high me-2"></i> Buka Dasbor
+                                </a>
+                            @else
+                                <a href="{{ route('login') }}" class="btn btn-primary">
+                                    <i class="fa-solid fa-arrow-right-to-bracket me-2"></i> Masuk Akun
+                                </a>
+                            @endauth
+                            <a href="{{ $waUrlBase }}?text={{ urlencode('Halo, saya ingin bertanya tentang layanan ' . $siteName) }}" target="_blank" rel="noopener noreferrer" class="btn btn-green">
+                                <i class="fab fa-whatsapp me-2"></i> Hubungi via WhatsApp
                             </a>
                         </div>
                     </div>
@@ -285,8 +282,7 @@
                     <h5 class="site-footer-title">Navigasi</h5>
                     <ul class="site-footer-list">
                         <li><a href="{{ route('landing') }}">Beranda</a></li>
-                        <li><a href="{{ route('landing') }}#coverage-area">Coverage</a></li>
-                        <li><a href="#kontak">Kontak</a></li>
+                        <li><a href="#kontak">Kontak & Lokasi</a></li>
                         <li><a href="{{ $authHref }}">{{ $authLabel }}</a></li>
                     </ul>
                 </div>
@@ -329,25 +325,31 @@
                 <i class="fas fa-home"></i>
                 <span>Home</span>
             </a>
-            <a href="{{ route('landing.services.internet') }}" class="bottom-item {{ ($currentServiceSlug ?? null) === 'internet' ? 'active' : '' }}">
-                <i class="fas fa-wifi"></i>
-                <span>Internet</span>
-            </a>
+            @if(\App\Support\ModuleGate::isEnabled('wash'))
             <a href="{{ route('landing.services.wash') }}" class="bottom-item {{ ($currentServiceSlug ?? null) === 'gt-wash' ? 'active' : '' }}">
                 <i class="fas fa-car-side"></i>
                 <span>GT Wash</span>
             </a>
+            @endif
+            @if(\App\Support\ModuleGate::isEnabled('atk'))
+            <a href="{{ route('landing.services.atk') }}" class="bottom-item {{ ($currentServiceSlug ?? null) === 'atk-store' ? 'active' : '' }}">
+                <i class="fas fa-pen-ruler"></i>
+                <span>ATK</span>
+            </a>
+            @endif
+            @if(\App\Support\ModuleGate::isEnabled('wedding'))
+            <a href="{{ route('landing.services.wedding') }}" class="bottom-item {{ ($currentServiceSlug ?? null) === 'wedding-event' ? 'active' : '' }}">
+                <i class="fas fa-ring"></i>
+                <span>Wedding</span>
+            </a>
+            @endif
             <a href="#kontak" class="bottom-item">
                 <i class="fas fa-address-book"></i>
                 <span>Kontak</span>
             </a>
             <a href="{{ $authHref }}" class="bottom-item">
-                <i class="fas fa-user"></i>
+                <i class="fas fa-user-circle"></i>
                 <span>{{ $authLabel }}</span>
-            </a>
-            <a href="{{ $waUrlBase }}?text={{ urlencode('Halo, saya ingin konsultasi layanan.') }}" class="bottom-item">
-                <i class="fab fa-whatsapp"></i>
-                <span>WA</span>
             </a>
         </div>
     </div>

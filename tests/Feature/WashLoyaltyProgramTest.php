@@ -16,6 +16,12 @@ class WashLoyaltyProgramTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        \App\Models\Setting::setValue('wash_loyalty_target', 10);
+    }
+
     public function test_counter_increments_and_creates_voucher_on_10th_paid_transaction_then_resets(): void
     {
         $adminRole = Role::firstOrCreate(['name' => 'admin'], ['label' => 'Administrator']);

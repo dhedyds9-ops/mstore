@@ -261,7 +261,7 @@ class SlaMonitoringService
     {
         $targets = [];
 
-        $technician = $ticket->technician_id ? \App\Models\User::find($ticket->technician_id) : null;
+        $technician = $ticket->technician;
         if ($technician && trim((string) $technician->phone) !== '') {
             $targets[] = ['channel' => 'whatsapp', 'target' => $technician->phone, 'role' => 'technician'];
         }

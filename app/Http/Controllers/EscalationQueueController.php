@@ -20,11 +20,11 @@ class EscalationQueueController extends Controller implements HasMiddleware
         $noUpdateSince = now()->subHours(12);
 
         $tickets = Ticket::query()
-            ->with('customer:id,name')
+            ->with(['customer:id,name', 'technicians:id,name'])
             ->whereNotIn('status', ['closed', 'solved'])
             ->where(function ($q) use ($noUpdateSince) {
                 $q->whereNotNull('sla_status')
-                    ->orWhereNull('technician_id')
+                    ->orWhereDoesntHave('technicians')
                     ->orWhere('updated_at', '<', $noUpdateSince);
             })
             ->orderByRaw("CASE WHEN sla_status IS NOT NULL THEN 1 ELSE 2 END")

@@ -36,7 +36,7 @@ class TicketWebController extends Controller implements HasMiddleware
     {
         $user = Auth::user();
 
-        return $user && ($user->hasRole('finance') || $user->hasRole('manager') || $user->hasRole('manager'));
+        return $user && ($user->isSuperAdmin() || $user->hasAnyRole(['manager', 'finance']));
     }
 
     public static function middleware(): array
@@ -831,7 +831,8 @@ class TicketWebController extends Controller implements HasMiddleware
      */
     public function sendNotification(Request $request, Ticket $ticket, \App\Services\WhatsAppService $whatsappService)
     {
-        if (! Auth::user()->hasRole('finance')) {
+        $user = Auth::user();
+        if (! $user || ! ($user->isSuperAdmin() || $user->hasAnyRole(['manager', 'finance']))) {
             abort(403);
         }
 

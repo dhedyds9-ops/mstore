@@ -97,7 +97,7 @@ class ProcessPaymentSuccess implements ShouldQueue
                 $this->auditLogService->logAction('wedding.booking.confirmed', $booking, $oldBooking, $booking->toArray());
             }
 
-            Transaction::create([
+            $tx = Transaction::create([
                 'user_id' => null,
                 'type' => 'income',
                 'category' => 'Wedding & Event',
@@ -106,6 +106,29 @@ class ProcessPaymentSuccess implements ShouldQueue
                 'transaction_date' => ($transaction->paid_at ?? now())->toDateString(),
                 'reference_number' => 'WEDPAY-'.$transaction->id,
             ]);
+
+            // Auto-journal to General Ledger
+            try {
+                $bankAccId = \App\Models\Account::where('code', '1002')->value('id');
+                $revAccId = \App\Models\Account::where('code', '4006')->value('id');
+                if ($bankAccId && $revAccId && (float) $payment->amount > 0) {
+                    $poster = app(\App\Services\AccountingPoster::class);
+                    $poster->post(
+                        'WED-' . $payment->id . '-' . date('Ymd'),
+                        ($transaction->paid_at ?? now())->toDateString(),
+                        'Wedding Payment ' . strtoupper($payment->type) . ' - ' . $booking->booking_number,
+                        [
+                            ['account_id' => $bankAccId, 'debit' => (float) $payment->amount, 'credit' => 0, 'unit' => 'EVENT'],
+                            ['account_id' => $revAccId, 'debit' => 0, 'credit' => (float) $payment->amount, 'unit' => 'EVENT'],
+                        ],
+                        null,
+                        WeddingPayment::class,
+                        $payment->id
+                    );
+                }
+            } catch (\Throwable $jEx) {
+                Log::warning('Wedding payment journal error: ' . $jEx->getMessage());
+            }
         }
     }
 

@@ -107,7 +107,41 @@ class SalaryAdjustmentController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        SalaryAdjustment::create($request->all());
+        $adjustment = SalaryAdjustment::create($request->all());
+
+        // Auto-journal for kasbon disbursement: Debit Piutang Karyawan, Credit Kas
+        if ($request->type === 'kasbon') {
+            try {
+                $kasbonAccId = \App\Models\Account::where('code', '1103')->value('id');
+                $cashAccId = \App\Models\Account::where('code', '1001')->value('id');
+                $userTarget = \App\Models\User::find($request->user_id);
+                $userName = $userTarget ? $userTarget->name : ('User #' . $request->user_id);
+                $desc = 'Pencairan Kasbon: ' . $userName . ($request->description ? (' (' . $request->description . ')') : '');
+
+                if ($kasbonAccId && $cashAccId) {
+                    $poster = app(\App\Services\AccountingPoster::class);
+                    $poster->post(
+                        'KASBON-' . $adjustment->id . '-' . date('Ymd'),
+                        $request->date ?: now()->toDateString(),
+                        $desc,
+                        [
+                            ['account_id' => $kasbonAccId, 'debit' => $request->amount, 'credit' => 0, 'unit' => 'MSTORE'],
+                            ['account_id' => $cashAccId, 'debit' => 0, 'credit' => $request->amount, 'unit' => 'MSTORE'],
+                        ],
+                        null,
+                        SalaryAdjustment::class,
+                        $adjustment->id
+                    );
+
+                    // Update cash balance
+                    $cash = \App\Models\Cash::firstOrCreate(['name' => 'Kas Utama'], ['balance' => 0]);
+                    $cash->balance = (float) $cash->balance - (float) $request->amount;
+                    $cash->save();
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Kasbon journal error: ' . $e->getMessage());
+            }
+        }
 
         return back()->with('success', __(ucfirst($request->type).' added successfully.'));
     }

@@ -125,7 +125,7 @@
                                     </div>
                                     <div class="list-group list-group-flush">
                                         @forelse($technician->installations()->whereIn('status', ['assigned', 'survey', 'installation'])->get() as $installation)
-                                            <a href="{{ route('installations.show', $installation) }}" class="list-group-item list-group-item-action">
+                                            <div class="list-group-item">
                                                 <div class="d-flex w-100 justify-content-between align-items-center mb-1">
                                                     <h6 class="mb-0 text-primary text-truncate" style="max-width: 70%;">{{ $installation->customer->name ?? __('Pelanggan Tidak Diketahui') }}</h6>
                                                     <span class="badge bg-info-subtle text-info border border-info-subtle text-uppercase" style="font-size: 0.7rem;">
@@ -133,7 +133,7 @@
                                                     </span>
                                                 </div>
                                                 <small class="text-muted">{{ $installation->service_package ?? '-' }}</small>
-                                            </a>
+                                            </div>
                                         @empty
                                             <div class="list-group-item text-center text-muted py-3">{{ __('Tidak ada instalasi aktif.') }}</div>
                                         @endforelse

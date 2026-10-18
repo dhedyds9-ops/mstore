@@ -3,15 +3,16 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Database\Eloquent\Builder;
+use App\Models\Account;
 use App\Models\Asset;
 use App\Models\AtkTransaction;
 use App\Models\Coordinator;
 use App\Models\Customer;
-use App\Models\GenieDeviceStatus;
 use App\Models\Installation;
 use App\Models\InventoryItem;
+use App\Models\Journal;
+use App\Models\JournalEntry;
 use App\Models\Role;
-use App\Models\Setting;
 use App\Models\TechnicianAttendance;
 use App\Models\TechnicianDailySchedule;
 use App\Models\TechnicianSchedule;
@@ -19,6 +20,7 @@ use App\Models\Ticket;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\WashTransaction;
+use App\Models\WeddingPayment;
 use App\Services\SystemMetricsService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -26,65 +28,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 
 class DashboardController extends Controller
 {
-    protected function monitorLogsData(int $limit = 20): array
-    {
-        return Cache::remember('dashboard.monitor_logs.'.$limit, 15, function () use ($limit) {
-            $threshold = (int) Setting::getValue('genieacs_online_threshold_minutes', 15);
-
-            return GenieDeviceStatus::with('customer:id,name')
-                ->orderByDesc('updated_at')
-                ->take($limit)
-                ->get()
-                ->map(function (GenieDeviceStatus $log) use ($threshold) {
-                    $isFresh = $log->updated_at && $log->updated_at->gte(now()->subMinutes($threshold));
-                    $isOnline = (bool) $log->is_online && $isFresh;
-                    $notifyDown = $log->last_notified_down_at ? $log->last_notified_down_at->format('d M H:i') : null;
-                    $notifyUp = $log->last_notified_up_at ? $log->last_notified_up_at->format('d M H:i') : null;
-                    $notifyText = $notifyUp ? 'UP: '.$notifyUp : ($notifyDown ? 'DOWN: '.$notifyDown : '-');
-                    $customerName = $log->customer->name ?? ('#'.$log->customer_id);
-                    $statusText = $isOnline ? 'ONLINE' : 'OFFLINE';
-                    $reasonText = (string) ($log->last_reason ?? '-');
-                    if (! $isFresh) {
-                        $reasonText = 'Status stale (update terakhir lewat 15 menit)';
-                    }
-                    $searchText = strtolower(implode(' ', [
-                        $customerName,
-                        (string) ($log->onu_serial ?? ''),
-                        (string) ($log->tr069_ip ?? ''),
-                        $reasonText,
-                        $statusText,
-                    ]));
-
-                    return [
-                        'updated_at' => $log->updated_at?->format('d M Y H:i') ?? '-',
-                        'customer_name' => $customerName,
-                        'onu_serial' => $log->onu_serial ?: '-',
-                        'status' => $statusText,
-                        'status_key' => strtolower($statusText),
-                        'tr069_ip' => $log->tr069_ip ?: '-',
-                        'notify_text' => $notifyText,
-                        'reason_short' => Str::limit($reasonText, 70),
-                        'search_text' => $searchText,
-                    ];
-                })
-                ->values()
-                ->all();
-        });
-    }
-
     public function index(Request $request)
     {
         $user = Auth::user();
         if ($user) {
-            // Jika user adalah customer, langsung redirect ke portal
-            if ($user->hasRole('customer')) {
-                return redirect()->route('client.onu-wifi.show');
-            }
-            
             // Jika user adalah kasir wash / karyawan wash, arahkan ke dashboard wash
             if ($user->hasRole('kasir-wash') || $user->hasRole('wash-cashier') || $user->hasRole('karyawan-wash') || $user->hasRole('wash-operator')) {
                 if ($user->hasPermission('wash.view')) {
@@ -110,11 +60,13 @@ class DashboardController extends Controller
         }
 
         // Get User's Attendance for Today
-        $todayAttendance = TechnicianAttendance::where('user_id', $user->id)
-            ->whereDate('clock_in', today())
-            ->first();
+        $todayAttendance = \App\Support\ModuleGate::isEnabled('hr')
+            ? TechnicianAttendance::where('user_id', $user->id)
+                ->whereDate('clock_in', today())
+                ->first()
+            : null;
 
-        if ($user->hasAnyRole(['field-technician', 'wash-operator'])) {
+        if (\App\Support\ModuleGate::isEnabled('isp') && $user->hasRole('field-technician')) {
             $attendanceOverview = $this->buildRoleAttendanceOverview($user->role->name);
             $shiftSchedule = $this->getTodayShiftSchedule($user->id);
             $stats = [
@@ -220,109 +172,116 @@ class DashboardController extends Controller
             ->count('user_id');
 
         $attendanceRole = (string) $request->query('attendance_role', 'field-technician');
-        if (! in_array($attendanceRole, ['field-technician', 'wash-operator'], true)) {
-            $attendanceRole = 'field-technician';
-        }
         $attendanceState = (string) $request->query('attendance_state', 'present');
-        if (! in_array($attendanceState, ['present', 'not_present'], true)) {
-            $attendanceState = 'present';
-        }
-        $attendanceDateInput = (string) $request->query('attendance_date', now()->toDateString());
-        try {
-            $attendanceDateObj = Carbon::createFromFormat('Y-m-d', $attendanceDateInput);
-            $attendanceDateStart = $attendanceDateObj->copy()->startOfDay();
-            $attendanceDateEnd = $attendanceDateObj->copy()->endOfDay();
-            $attendanceDate = $attendanceDateObj->toDateString();
-        } catch (\Throwable $e) {
-            $attendanceDateStart = now()->startOfDay();
-            $attendanceDateEnd = now()->endOfDay();
-            $attendanceDate = now()->toDateString();
-        }
-        $attendanceDateLabel = $attendanceDateStart->translatedFormat('d M Y');
-        $selectedRoleIds = $attendanceRole === 'wash-operator' ? $washEmployeeIds : $technicianIds;
-        $attendanceByUser = TechnicianAttendance::query()
-            ->where('clock_in', '>=', $attendanceDateStart)
-            ->where('clock_in', '<=', $attendanceDateEnd)
-            ->whereIn('user_id', $selectedRoleIds)
-            ->orderByDesc('clock_in')
-            ->get()
-            ->groupBy('user_id')
-            ->map(fn ($rows) => $rows->first());
-        $presentStatuses = ['present', 'late'];
-        $presentUserIds = $attendanceByUser
-            ->filter(fn ($attendance) => in_array((string) $attendance->status, $presentStatuses, true))
-            ->keys()
-            ->values()
-            ->all();
-        $attendanceEmployeesQuery = User::query()
-            ->with('role')
-            ->where('is_active', true)
-            ->whereHas('role', function ($q) use ($attendanceRole) {
-                $q->where('name', $attendanceRole);
-            });
-        if ($attendanceState === 'present') {
-            if ($presentUserIds === []) {
-                $attendanceEmployees = collect();
+        $attendanceDate = now()->toDateString();
+        $attendanceDateLabel = now()->translatedFormat('d M Y');
+        $attendanceByUser = collect();
+        $attendanceEmployees = collect();
+        $technicianTaskSummary = collect();
+
+        if (\App\Support\ModuleGate::isEnabled('hr')) {
+            if (! in_array($attendanceRole, ['field-technician', 'wash-operator'], true)) {
+                $attendanceRole = 'field-technician';
+            }
+            if (! in_array($attendanceState, ['present', 'not_present'], true)) {
+                $attendanceState = 'present';
+            }
+            $attendanceDateInput = (string) $request->query('attendance_date', now()->toDateString());
+            try {
+                $attendanceDateObj = Carbon::createFromFormat('Y-m-d', $attendanceDateInput);
+                $attendanceDateStart = $attendanceDateObj->copy()->startOfDay();
+                $attendanceDateEnd = $attendanceDateObj->copy()->endOfDay();
+                $attendanceDate = $attendanceDateObj->toDateString();
+            } catch (\Throwable $e) {
+                $attendanceDateStart = now()->startOfDay();
+                $attendanceDateEnd = now()->endOfDay();
+                $attendanceDate = now()->toDateString();
+            }
+            $attendanceDateLabel = $attendanceDateStart->translatedFormat('d M Y');
+            $selectedRoleIds = $attendanceRole === 'wash-operator' ? $washEmployeeIds : $technicianIds;
+            $attendanceByUser = TechnicianAttendance::query()
+                ->where('clock_in', '>=', $attendanceDateStart)
+                ->where('clock_in', '<=', $attendanceDateEnd)
+                ->whereIn('user_id', $selectedRoleIds)
+                ->orderByDesc('clock_in')
+                ->get()
+                ->groupBy('user_id')
+                ->map(fn ($rows) => $rows->first());
+            $presentStatuses = ['present', 'late'];
+            $presentUserIds = $attendanceByUser
+                ->filter(fn ($attendance) => in_array((string) $attendance->status, $presentStatuses, true))
+                ->keys()
+                ->values()
+                ->all();
+            $attendanceEmployeesQuery = User::query()
+                ->with('role')
+                ->where('is_active', true)
+                ->whereHas('role', function ($q) use ($attendanceRole) {
+                    $q->where('name', $attendanceRole);
+                });
+            if ($attendanceState === 'present') {
+                if ($presentUserIds === []) {
+                    $attendanceEmployees = collect();
+                } else {
+                    $attendanceEmployees = $attendanceEmployeesQuery
+                        ->whereIn('id', $presentUserIds)
+                        ->orderBy('name')
+                        ->get();
+                }
             } else {
                 $attendanceEmployees = $attendanceEmployeesQuery
-                    ->whereIn('id', $presentUserIds)
+                    ->when($presentUserIds !== [], fn ($q) => $q->whereNotIn('id', $presentUserIds))
                     ->orderBy('name')
                     ->get();
             }
-        } else {
-            $attendanceEmployees = $attendanceEmployeesQuery
-                ->when($presentUserIds !== [], fn ($q) => $q->whereNotIn('id', $presentUserIds))
-                ->orderBy('name')
-                ->get();
-        }
-        $technicianTaskSummary = collect();
-        if ($attendanceRole === 'field-technician' && $attendanceEmployees->isNotEmpty()) {
-            $technicianIdsForTable = $attendanceEmployees->pluck('id')->values()->all();
-            $activeTicketRows = DB::table('ticket_user')
-                ->join('tickets', 'tickets.id', '=', 'ticket_user.ticket_id')
-                ->whereIn('ticket_user.user_id', $technicianIdsForTable)
-                ->whereIn('tickets.status', ['open', 'assigned', 'in_progress', 'pending'])
-                ->orderByDesc('tickets.updated_at')
-                ->get(['ticket_user.user_id', 'tickets.id']);
-            $activeTicketIdsByUser = $activeTicketRows
-                ->groupBy('user_id')
-                ->map(fn (Collection $rows) => (int) optional($rows->first())->id);
-            $activeTicketCounts = DB::table('ticket_user')
-                ->join('tickets', 'tickets.id', '=', 'ticket_user.ticket_id')
-                ->select('ticket_user.user_id', DB::raw('COUNT(DISTINCT tickets.id) as total'))
-                ->whereIn('ticket_user.user_id', $technicianIdsForTable)
-                ->whereIn('tickets.status', ['open', 'assigned', 'in_progress', 'pending'])
-                ->groupBy('ticket_user.user_id')
-                ->pluck('total', 'ticket_user.user_id');
-            $activeInstallationCounts = Installation::query()
-                ->select('technician_id', DB::raw('COUNT(*) as total'))
-                ->whereIn('technician_id', $technicianIdsForTable)
-                ->whereIn('status', ['registered', 'survey', 'approved', 'installation'])
-                ->groupBy('technician_id')
-                ->pluck('total', 'technician_id');
-            $activeInstallationIdsByUser = Installation::query()
-                ->whereIn('technician_id', $technicianIdsForTable)
-                ->whereIn('status', ['registered', 'survey', 'approved', 'installation'])
-                ->orderByDesc('updated_at')
-                ->get(['id', 'technician_id'])
-                ->groupBy('technician_id')
-                ->map(fn ($rows) => (int) optional($rows->first())->id);
-            $technicianTaskSummary = $attendanceEmployees->mapWithKeys(function ($employee) use ($activeTicketCounts, $activeInstallationCounts, $activeTicketIdsByUser, $activeInstallationIdsByUser) {
-                $ticketCount = (int) ($activeTicketCounts[$employee->id] ?? 0);
-                $installationCount = (int) ($activeInstallationCounts[$employee->id] ?? 0);
-                $totalTask = $ticketCount + $installationCount;
+            if ($attendanceRole === 'field-technician' && $attendanceEmployees->isNotEmpty()) {
+                $technicianIdsForTable = $attendanceEmployees->pluck('id')->values()->all();
+                $activeTicketRows = DB::table('ticket_user')
+                    ->join('tickets', 'tickets.id', '=', 'ticket_user.ticket_id')
+                    ->whereIn('ticket_user.user_id', $technicianIdsForTable)
+                    ->whereIn('tickets.status', ['open', 'assigned', 'in_progress', 'pending'])
+                    ->orderByDesc('tickets.updated_at')
+                    ->get(['ticket_user.user_id', 'tickets.id']);
+                $activeTicketIdsByUser = $activeTicketRows
+                    ->groupBy('user_id')
+                    ->map(fn (Collection $rows) => (int) optional($rows->first())->id);
+                $activeTicketCounts = DB::table('ticket_user')
+                    ->join('tickets', 'tickets.id', '=', 'ticket_user.ticket_id')
+                    ->select('ticket_user.user_id', DB::raw('COUNT(DISTINCT tickets.id) as total'))
+                    ->whereIn('ticket_user.user_id', $technicianIdsForTable)
+                    ->whereIn('tickets.status', ['open', 'assigned', 'in_progress', 'pending'])
+                    ->groupBy('ticket_user.user_id')
+                    ->pluck('total', 'ticket_user.user_id');
+                $activeInstallationCounts = Installation::query()
+                    ->select('technician_id', DB::raw('COUNT(*) as total'))
+                    ->whereIn('technician_id', $technicianIdsForTable)
+                    ->whereIn('status', ['registered', 'survey', 'approved', 'installation'])
+                    ->groupBy('technician_id')
+                    ->pluck('total', 'technician_id');
+                $activeInstallationIdsByUser = Installation::query()
+                    ->whereIn('technician_id', $technicianIdsForTable)
+                    ->whereIn('status', ['registered', 'survey', 'approved', 'installation'])
+                    ->orderByDesc('updated_at')
+                    ->get(['id', 'technician_id'])
+                    ->groupBy('technician_id')
+                    ->map(fn ($rows) => (int) optional($rows->first())->id);
+                $technicianTaskSummary = $attendanceEmployees->mapWithKeys(function ($employee) use ($activeTicketCounts, $activeInstallationCounts, $activeTicketIdsByUser, $activeInstallationIdsByUser) {
+                    $ticketCount = (int) ($activeTicketCounts[$employee->id] ?? 0);
+                    $installationCount = (int) ($activeInstallationCounts[$employee->id] ?? 0);
+                    $totalTask = $ticketCount + $installationCount;
 
-                return [
-                    $employee->id => [
-                        'active_ticket_id' => (int) ($activeTicketIdsByUser[$employee->id] ?? 0),
-                        'active_installation_id' => (int) ($activeInstallationIdsByUser[$employee->id] ?? 0),
-                        'ticket_active' => $ticketCount,
-                        'installation_active' => $installationCount,
-                        'total_active' => $totalTask,
-                        'label' => $totalTask > 0 ? 'Bertugas' : 'Standby',
-                    ],
-                ];
-            });
+                    return [
+                        $employee->id => [
+                            'active_ticket_id' => (int) ($activeTicketIdsByUser[$employee->id] ?? 0),
+                            'active_installation_id' => (int) ($activeInstallationIdsByUser[$employee->id] ?? 0),
+                            'ticket_active' => $ticketCount,
+                            'installation_active' => $installationCount,
+                            'total_active' => $totalTask,
+                            'label' => $totalTask > 0 ? 'Bertugas' : 'Standby',
+                        ],
+                    ];
+                });
+            }
         }
 
         $regionKey = 'all';
@@ -345,16 +304,26 @@ class DashboardController extends Controller
                 'atk_month_revenue' => AtkTransaction::where('created_at', '>=', $currentMonthStart)->sum('total_amount'),
                 'wash_today' => WashTransaction::where('created_at', '>=', $today)->count(),
                 'wash_month_revenue' => WashTransaction::where('created_at', '>=', $currentMonthStart)->sum('total_amount'),
+                'wedding_today' => WeddingPayment::where('status', 'paid')->where(function ($q) use ($today) {
+                    $q->where('payment_date', '>=', $today)->orWhere(function ($sq) use ($today) {
+                        $sq->whereNull('payment_date')->where('created_at', '>=', $today);
+                    });
+                })->count(),
+                'wedding_month_revenue' => WeddingPayment::where('status', 'paid')->where(function ($q) use ($currentMonthStart) {
+                    $q->where('payment_date', '>=', $currentMonthStart)->orWhere(function ($sq) use ($currentMonthStart) {
+                        $sq->whereNull('payment_date')->where('created_at', '>=', $currentMonthStart);
+                    });
+                })->sum('amount'),
                 'technician_total' => $technicianTotal,
                 'technician_present_today' => $technicianPresentToday,
                 'technician_not_present_today' => max($technicianTotal - $technicianPresentToday, 0),
                 'wash_employee_total' => $washTotal,
                 'wash_employee_present_today' => $washEmployeePresentToday,
                 'wash_employee_not_present_today' => max($washTotal - $washEmployeePresentToday, 0),
-                'total_olts' => \App\Models\OLT::count(),
-                'online_olts' => \App\Models\OLT::where('status', 'online')->count(),
-                'total_onts' => \App\Models\ONT::withoutTrashed()->count(),
-                'online_onts' => \App\Models\ONT::withoutTrashed()->where('oper_status', 'online')->count(),
+                'total_olts' => \App\Support\ModuleGate::isEnabled('isp') && class_exists(\App\Models\OLT::class) ? \App\Models\OLT::count() : 0,
+                'online_olts' => \App\Support\ModuleGate::isEnabled('isp') && class_exists(\App\Models\OLT::class) ? \App\Models\OLT::where('status', 'online')->count() : 0,
+                'total_onts' => \App\Support\ModuleGate::isEnabled('isp') && class_exists(\App\Models\ONT::class) ? \App\Models\ONT::withoutTrashed()->count() : 0,
+                'online_onts' => \App\Support\ModuleGate::isEnabled('isp') && class_exists(\App\Models\ONT::class) ? \App\Models\ONT::withoutTrashed()->where('oper_status', 'online')->count() : 0,
             ];
         });
 
@@ -413,64 +382,171 @@ class DashboardController extends Controller
         $metricsService = new SystemMetricsService;
         $systemMetrics = $metricsService->getMetrics();
 
-        $recentTickets = $ticketQuery->clone()
-            ->with(['customer', 'technicians'])
-            ->where('status', '!=', 'closed')
-            ->latest()
-            ->take(5)
-            ->get();
+        $recentTickets = \App\Support\ModuleGate::isEnabled('ticketing')
+            ? $ticketQuery->clone()
+                ->with(['customer', 'technicians'])
+                ->where('status', '!=', 'closed')
+                ->latest()
+                ->take(5)
+                ->get()
+            : collect();
 
-        $upcomingInstallations = $installationQuery->clone()
-            ->with(['customer', 'technician'])
-            ->whereIn('status', ['registered', 'survey', 'approved', 'installation'])
-            ->orderBy('plan_date', 'asc')
-            ->take(5)
-            ->get();
+        $upcomingInstallations = \App\Support\ModuleGate::isEnabled('isp')
+            ? $installationQuery->clone()
+                ->with(['customer', 'technician'])
+                ->whereIn('status', ['registered', 'survey', 'approved', 'installation'])
+                ->orderBy('plan_date', 'asc')
+                ->take(5)
+                ->get()
+            : collect();
 
         // Monthly Ticket Recap (Current Year)
-        $monthlyTicketTotals = $this->aggregateCountByMonth($ticketQuery->clone(), 'created_at', $currentYear);
-        $monthlyTicketResolved = $this->aggregateCountByMonth(
-            $ticketQuery->clone()->whereIn('status', ['solved', 'closed']),
-            'created_at',
-            $currentYear
-        );
-        $monthlyTicketOpen = $this->aggregateCountByMonth(
-            $ticketQuery->clone()->whereIn('status', ['open', 'assigned', 'in_progress', 'pending']),
-            'created_at',
-            $currentYear
-        );
-
         $ticketRecap = [];
-        for ($i = 1; $i <= 12; $i++) {
-            $monthName = \Carbon\Carbon::create(null, $i, 1)->format('F');
+        if (\App\Support\ModuleGate::isEnabled('ticketing')) {
+            $monthlyTicketTotals = $this->aggregateCountByMonth($ticketQuery->clone(), 'created_at', $currentYear);
+            $monthlyTicketResolved = $this->aggregateCountByMonth(
+                $ticketQuery->clone()->whereIn('status', ['solved', 'closed']),
+                'created_at',
+                $currentYear
+            );
+            $monthlyTicketOpen = $this->aggregateCountByMonth(
+                $ticketQuery->clone()->whereIn('status', ['open', 'assigned', 'in_progress', 'pending']),
+                'created_at',
+                $currentYear
+            );
 
-            $ticketRecap[] = [
-                'month' => $monthName,
-                'total' => (int) ($monthlyTicketTotals->get($i, 0)),
-                'resolved' => (int) ($monthlyTicketResolved->get($i, 0)),
-                'open' => (int) ($monthlyTicketOpen->get($i, 0)),
-            ];
+            for ($i = 1; $i <= 12; $i++) {
+                $monthName = \Carbon\Carbon::create(null, $i, 1)->format('F');
+
+                $ticketRecap[] = [
+                    'month' => $monthName,
+                    'total' => (int) ($monthlyTicketTotals->get($i, 0)),
+                    'resolved' => (int) ($monthlyTicketResolved->get($i, 0)),
+                    'open' => (int) ($monthlyTicketOpen->get($i, 0)),
+                ];
+            }
         }
 
         // Inventory & Assets Data
-        $inventoryItems = InventoryItem::orderBy('stock', 'asc')->take(5)->get();
-        $totalInventoryValue = InventoryItem::sum(DB::raw('stock * price'));
+        $inventoryItems = \App\Support\ModuleGate::isEnabled('inventory')
+            ? InventoryItem::orderBy('stock', 'asc')->take(5)->get()
+            : collect();
+        $totalInventoryValue = \App\Support\ModuleGate::isEnabled('inventory')
+            ? (float) InventoryItem::sum(DB::raw('stock * price'))
+            : 0;
 
-        $deployedAssets = Asset::with(['item', 'holder'])
-            ->where('status', 'deployed')
-            ->whereIn('holder_type', ['App\Models\User', 'App\Models\Coordinator'])
-            ->latest()
-            ->take(10)
-            ->get();
+        $deployedAssets = \App\Support\ModuleGate::isEnabled('inventory')
+            ? Asset::with(['item', 'holder'])
+                ->where('status', 'deployed')
+                ->whereIn('holder_type', ['App\Models\User', 'App\Models\Coordinator'])
+                ->latest()
+                ->take(10)
+                ->get()
+            : collect();
 
-        // Financial Chart Data
-        $financialData = [
-            'labels' => [],
-            'income' => [],
-            'expense' => [],
+        // Executive Financial KPIs (PSAK & General Ledger)
+        $cashAccountIds = Account::where('code', '1001')->pluck('id');
+        $bankAccountIds = Account::where('code', '1002')->pluck('id');
+        $cashTotal = (float) JournalEntry::whereIn('account_id', $cashAccountIds)->sum(DB::raw('debit - credit'));
+        $bankTotal = (float) JournalEntry::whereIn('account_id', $bankAccountIds)->sum(DB::raw('debit - credit'));
+        $totalCashAndBank = $cashTotal + $bankTotal;
+
+        $tradeReceivableIds = Account::where('code', '1101')->pluck('id');
+        $staffReceivableIds = Account::where('code', '1103')->pluck('id');
+        $tradeReceivableTotal = (float) JournalEntry::whereIn('account_id', $tradeReceivableIds)->sum(DB::raw('debit - credit'));
+        $staffReceivableTotal = (float) JournalEntry::whereIn('account_id', $staffReceivableIds)->sum(DB::raw('debit - credit'));
+        $totalReceivables = $tradeReceivableTotal + $staffReceivableTotal;
+
+        $weddingMonthRevenue = (float) ($stats['wedding_month_revenue'] ?? 0);
+        $atkMonthRevenue = (float) ($stats['atk_month_revenue'] ?? 0);
+        $washMonthRevenue = (float) ($stats['wash_month_revenue'] ?? 0);
+        $consolidatedMonthRevenue = $atkMonthRevenue + $washMonthRevenue + $weddingMonthRevenue;
+
+        $monthRevenueGL = (float) JournalEntry::join('journals', 'journal_entries.journal_id', '=', 'journals.id')
+            ->join('accounts', 'journal_entries.account_id', '=', 'accounts.id')
+            ->where('accounts.type', 'revenue')
+            ->where('journals.date', '>=', $currentMonthStart->toDateString())
+            ->sum(DB::raw('journal_entries.credit - journal_entries.debit'));
+
+        $monthExpenseGL = (float) JournalEntry::join('journals', 'journal_entries.journal_id', '=', 'journals.id')
+            ->join('accounts', 'journal_entries.account_id', '=', 'accounts.id')
+            ->where('accounts.type', 'expense')
+            ->where('journals.date', '>=', $currentMonthStart->toDateString())
+            ->sum(DB::raw('journal_entries.debit - journal_entries.credit'));
+
+        $monthNetProfit = $monthRevenueGL - $monthExpenseGL;
+        $netProfitMargin = $monthRevenueGL > 0 ? round(($monthNetProfit / $monthRevenueGL) * 100, 1) : 0;
+
+        $executiveMetrics = [
+            'total_cash_and_bank' => $totalCashAndBank,
+            'cash_total' => $cashTotal,
+            'bank_total' => $bankTotal,
+            'total_receivables' => $totalReceivables,
+            'trade_receivables' => $tradeReceivableTotal,
+            'staff_receivables' => $staffReceivableTotal,
+            'consolidated_month_revenue' => $consolidatedMonthRevenue,
+            'atk_month_revenue' => $atkMonthRevenue,
+            'wash_month_revenue' => $washMonthRevenue,
+            'wedding_month_revenue' => $weddingMonthRevenue,
+            'month_net_profit' => $monthNetProfit,
+            'month_revenue_gl' => $monthRevenueGL,
+            'month_expense_gl' => $monthExpenseGL,
+            'net_profit_margin' => $netProfitMargin,
         ];
 
-        // Fetch Income Data (Collection-based grouping for DB compatibility)
+        // Unit Revenue Breakdown
+        $unitBreakdown = [
+            'atk' => [
+                'label' => 'Toko & Retail',
+                'revenue' => $atkMonthRevenue,
+                'percentage' => $consolidatedMonthRevenue > 0 ? round(($atkMonthRevenue / $consolidatedMonthRevenue) * 100, 1) : 0,
+                'badge' => 'primary',
+                'icon' => 'fa-store',
+            ],
+            'wash' => [
+                'label' => 'Jasa & Layanan',
+                'revenue' => $washMonthRevenue,
+                'percentage' => $consolidatedMonthRevenue > 0 ? round(($washMonthRevenue / $consolidatedMonthRevenue) * 100, 1) : 0,
+                'badge' => 'info',
+                'icon' => 'fa-hand-sparkles',
+            ],
+            'wedding' => [
+                'label' => 'Booking & Reservasi',
+                'revenue' => $weddingMonthRevenue,
+                'percentage' => $consolidatedMonthRevenue > 0 ? round(($weddingMonthRevenue / $consolidatedMonthRevenue) * 100, 1) : 0,
+                'badge' => 'danger',
+                'icon' => 'fa-calendar-check',
+            ],
+        ];
+
+        // Latest General Ledger Feed
+        $latestJournalEntries = JournalEntry::with(['journal', 'account'])
+            ->latest('id')
+            ->take(6)
+            ->get();
+
+        $glTotalDebit = (float) JournalEntry::sum('debit');
+        $glTotalCredit = (float) JournalEntry::sum('credit');
+        $glIsBalanced = abs($glTotalDebit - $glTotalCredit) < 0.01;
+
+        // Financial Chart Data (General Ledger + Fallback to Transactions)
+        $monthExpr = $this->monthExpression('journals.date');
+        $glIncomeByMonth = JournalEntry::join('journals', 'journal_entries.journal_id', '=', 'journals.id')
+            ->join('accounts', 'journal_entries.account_id', '=', 'accounts.id')
+            ->where('accounts.type', 'revenue')
+            ->whereYear('journals.date', $currentYear)
+            ->selectRaw($monthExpr.' as month_key, SUM(journal_entries.credit - journal_entries.debit) as total')
+            ->groupBy('month_key')
+            ->pluck('total', 'month_key');
+
+        $glExpenseByMonth = JournalEntry::join('journals', 'journal_entries.journal_id', '=', 'journals.id')
+            ->join('accounts', 'journal_entries.account_id', '=', 'accounts.id')
+            ->where('accounts.type', 'expense')
+            ->whereYear('journals.date', $currentYear)
+            ->selectRaw($monthExpr.' as month_key, SUM(journal_entries.debit - journal_entries.credit) as total')
+            ->groupBy('month_key')
+            ->pluck('total', 'month_key');
+
         $incomeData = $this->aggregateSumByMonth(
             Transaction::query()->where('type', 'income'),
             'transaction_date',
@@ -484,51 +560,28 @@ class DashboardController extends Controller
             $currentYear
         );
 
+        $financialData = [
+            'labels' => [],
+            'income' => [],
+            'expense' => [],
+        ];
+
         for ($i = 1; $i <= 12; $i++) {
             $financialData['labels'][] = \Carbon\Carbon::create(null, $i, 1)->format('F');
-            $financialData['income'][] = $incomeData->get($i, 0);
-            $financialData['expense'][] = $expenseData->get($i, 0);
+            $inc = (float) ($glIncomeByMonth->get($i, null) ?? $incomeData->get($i, 0));
+            $exp = (float) ($glExpenseByMonth->get($i, null) ?? $expenseData->get($i, 0));
+            $financialData['income'][] = $inc;
+            $financialData['expense'][] = $exp;
         }
 
-        $networkMonitor = app(\Modules\Network\Services\MonitoringService::class);
-        $mixRadiusOk = $networkMonitor->health()['ok'] ?? false;
-        $monitorSummaryRaw = Setting::getValue('network_monitor_summary');
-        $monitorSummary = is_string($monitorSummaryRaw) ? json_decode($monitorSummaryRaw, true) : null;
-        if (! is_array($monitorSummary)) {
-            $monitorSummary = null;
-        }
-        $monitorHistoryRaw = Setting::getValue('network_monitor_history');
-        $monitorHistory = is_string($monitorHistoryRaw) ? json_decode($monitorHistoryRaw, true) : [];
-        if (! is_array($monitorHistory)) {
-            $monitorHistory = [];
-        }
-        $dailyLatest = [];
-        foreach ($monitorHistory as $item) {
-            if (! is_array($item) || empty($item['ran_at'])) {
-                continue;
-            }
-            $dateKey = \Carbon\Carbon::parse($item['ran_at'])->format('Y-m-d');
-            $dailyLatest[$dateKey] = [
-                'checked' => (int) ($item['checked'] ?? 0),
-                'down' => (int) ($item['down'] ?? 0),
-                'tickets_created' => (int) ($item['tickets_created'] ?? 0),
-                'errors' => (int) ($item['errors'] ?? 0),
-            ];
-        }
-        $monitorTrend = [];
-        for ($i = 6; $i >= 0; $i--) {
-            $date = now()->subDays($i)->format('Y-m-d');
-            $monitorTrend[] = [
-                'date' => $date,
-                'label' => now()->subDays($i)->format('d M'),
-                'checked' => $dailyLatest[$date]['checked'] ?? 0,
-                'down' => $dailyLatest[$date]['down'] ?? 0,
-                'tickets_created' => $dailyLatest[$date]['tickets_created'] ?? 0,
-                'errors' => $dailyLatest[$date]['errors'] ?? 0,
-            ];
-        }
         return view('dashboard', compact(
             'stats',
+            'executiveMetrics',
+            'unitBreakdown',
+            'latestJournalEntries',
+            'glIsBalanced',
+            'glTotalDebit',
+            'glTotalCredit',
             'recentTickets',
             'upcomingInstallations',
             'ticketRecap',
@@ -540,9 +593,6 @@ class DashboardController extends Controller
             'trafficData',
             'trafficStats',
             'systemMetrics',
-            'mixRadiusOk',
-            'monitorSummary',
-            'monitorTrend',
             'attendanceRole',
             'attendanceState',
             'attendanceDate',
@@ -553,18 +603,6 @@ class DashboardController extends Controller
             'onlineTechnicians',
             'onlineWashEmployees'
         ));
-    }
-
-    public function monitorLogs()
-    {
-        $user = Auth::user();
-        if (! $user || ! $user->hasPermission('dashboard.view')) {
-            abort(403);
-        }
-
-        return response()->json([
-            'logs' => $this->monitorLogsData(),
-        ]);
     }
 
     protected function aggregateCountByMonth(Builder $query, string $dateColumn, int $year): Collection

@@ -39,6 +39,10 @@ class AccountingPoster
             if ($period->status === 'closed') {
                 throw new InvalidArgumentException('Cannot post to a closed period');
             }
+            // Determine company & branch
+            $companyId = Auth::user()?->company_id ?? \App\Models\Company::first()?->id ?? 1;
+            $branchId = Auth::user()?->company_branch_id ?? \App\Models\CompanyBranch::where('company_id', $companyId)->first()?->id;
+
             // Delete any existing journal with same journal_no first
             Journal::where('journal_no', $journalNo)->delete();
             
@@ -53,6 +57,8 @@ class AccountingPoster
                 'posted_by' => Auth::id(),
                 'posted_at' => now(),
                 'status' => 'posted',
+                'company_id' => $companyId,
+                'company_branch_id' => $branchId,
             ]);
             foreach ($lines as $l) {
                 JournalEntry::create([
@@ -63,6 +69,8 @@ class AccountingPoster
                     'memo' => $l['memo'] ?? null,
                     'unit' => $l['unit'] ?? null,
                     'cost_center' => $l['cost_center'] ?? null,
+                    'company_id' => $companyId,
+                    'company_branch_id' => $branchId,
                 ]);
             }
 

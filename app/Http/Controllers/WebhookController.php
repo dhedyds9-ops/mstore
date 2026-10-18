@@ -2,10 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\RenewUserJob;
 use App\Models\Invoice;
 use App\Services\Payment\PaymentManager;
-use App\Services\MixRadiusService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -51,8 +49,7 @@ class WebhookController extends Controller
             return response()->json(['message' => 'ignored'], 200);
         }
 
-        $userId = null;
-        DB::transaction(function () use ($orderId, &$userId) {
+        DB::transaction(function () use ($orderId) {
             $invoice = Invoice::where('midtrans_order_id', $orderId)
                 ->orWhere('code', $orderId)
                 ->lockForUpdate()
@@ -65,13 +62,8 @@ class WebhookController extends Controller
                     'status' => 'paid',
                     'paid_at' => now(),
                 ]);
-                $userId = $invoice->user_id;
             }
         });
-
-        if ($userId) {
-            RenewUserJob::dispatch($userId, 'Payment settled: '.$orderId)->onQueue('default');
-        }
 
         return response()->json(['message' => 'ok']);
     }

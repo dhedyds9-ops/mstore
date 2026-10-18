@@ -341,7 +341,7 @@ class TechnicianAttendanceController extends Controller implements HasMiddleware
             }
         }
 
-        \App\Models\Transaction::create([
+        $transaction = \App\Models\Transaction::create([
             'user_id' => Auth::id(),
             'type' => 'expense',
             'category' => 'Salary',
@@ -350,11 +350,86 @@ class TechnicianAttendanceController extends Controller implements HasMiddleware
             'transaction_date' => now(),
         ]);
 
+        // 1. Update pending adjustments to processed
         if ($pendingAdjustments->isNotEmpty()) {
             \App\Models\SalaryAdjustment::whereIn('id', $pendingAdjustments->pluck('id'))->update(['status' => 'processed']);
         }
 
-        return back()->with('success', __('Salary expense of :amount has been recorded in Finance.', ['amount' => number_format($totalAmount, 0, ',', '.')]));
+        // 2. Mark wash commissions as paid
+        foreach ($summary as $item) {
+            if (!empty($item['wash_employee_id']) && ($item['wash_commission'] ?? 0) > 0) {
+                $commQuery = \App\Models\WashCommissionEarning::where('wash_employee_id', $item['wash_employee_id'])
+                    ->where('status', \App\Models\WashCommissionEarning::STATUS_EARNED);
+                if ($request->filled('start_date') && $request->filled('end_date')) {
+                    $commQuery->whereBetween('created_at', [
+                        Carbon::parse($request->start_date)->startOfDay(),
+                        Carbon::parse($request->end_date)->endOfDay(),
+                    ]);
+                } elseif ($request->filled('month')) {
+                    $m = Carbon::parse($request->month);
+                    $commQuery->whereBetween('created_at', [$m->copy()->startOfMonth(), $m->copy()->endOfMonth()]);
+                } elseif ($request->filled('date')) {
+                    $commQuery->whereDate('created_at', $request->date);
+                }
+                $commQuery->update([
+                    'status' => \App\Models\WashCommissionEarning::STATUS_PAID,
+                    'paid_at' => now(),
+                    'paid_reference_type' => \App\Models\Transaction::class,
+                    'paid_reference_id' => $transaction->id,
+                ]);
+            }
+        }
+
+        // 3. Post Double-Entry Journal to General Ledger
+        try {
+            $salaryAccId = \App\Models\Account::where('code', '6003')->value('id');
+            $commAccId = \App\Models\Account::where('code', '6008')->value('id') ?? $salaryAccId;
+            $kasbonAccId = \App\Models\Account::where('code', '1103')->value('id');
+            $cashAccId = \App\Models\Account::where('code', '1001')->value('id');
+
+            $sumBaseAndBonus = (float) $summary->sum('total_daily_salary') + (float) $summary->sum('total_bonus');
+            $sumLateDeduction = (float) $summary->sum('late_deduction');
+            $grossSalaryExpense = max(0, $sumBaseAndBonus - $sumLateDeduction);
+            $sumWashCommission = (float) $summary->sum('wash_commission');
+            $sumKasbonDeduction = (float) $summary->sum('total_kasbon');
+
+            $lines = [];
+            if ($grossSalaryExpense > 0 && $salaryAccId) {
+                $lines[] = ['account_id' => $salaryAccId, 'debit' => $grossSalaryExpense, 'credit' => 0, 'unit' => 'MSTORE'];
+            }
+            if ($sumWashCommission > 0 && $commAccId) {
+                $lines[] = ['account_id' => $commAccId, 'debit' => $sumWashCommission, 'credit' => 0, 'unit' => 'WASH'];
+            }
+            if ($sumKasbonDeduction > 0 && $kasbonAccId) {
+                $lines[] = ['account_id' => $kasbonAccId, 'debit' => 0, 'credit' => $sumKasbonDeduction, 'unit' => 'MSTORE'];
+            }
+            if ($totalAmount > 0 && $cashAccId) {
+                $lines[] = ['account_id' => $cashAccId, 'debit' => 0, 'credit' => $totalAmount, 'unit' => 'MSTORE'];
+            }
+
+            if (count($lines) >= 2) {
+                $poster = app(\App\Services\AccountingPoster::class);
+                $poster->post(
+                    'PAYROLL-' . $transaction->id . '-' . date('Ymd'),
+                    now()->toDateString(),
+                    $description,
+                    $lines,
+                    null,
+                    \App\Models\Transaction::class,
+                    $transaction->id
+                );
+            }
+
+            // Deduct cash balance
+            $cashModel = \App\Models\Cash::firstOrCreate(['name' => 'Kas Utama'], ['balance' => 0]);
+            $cashModel->balance = (float) $cashModel->balance - (float) $totalAmount;
+            $cashModel->save();
+
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Payroll accounting journal error: ' . $e->getMessage());
+        }
+
+        return back()->with('success', __('Salary expense of :amount has been recorded in Finance and posted to Accounting.', ['amount' => number_format($totalAmount, 0, ',', '.')]));
     }
 
     public function sendNotification(TechnicianAttendance $attendance)

@@ -17,6 +17,15 @@
                     <input type="date" name="end_date" value="{{ $end }}" class="form-control form-control-lg">
                 </div>
                 <div class="col-12 col-md-auto">
+                    <label class="form-label fw-bold small text-muted">Unit Bisnis</label>
+                    <select name="unit" class="form-select form-select-lg">
+                        <option value="">Semua Unit (Konsolidasi)</option>
+                        @foreach($unitOptions ?? [] as $code => $label)
+                            <option value="{{ $code }}" {{ ($unit ?? '') === $code ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-12 col-md-auto">
                     <button class="btn btn-primary btn-lg w-100 w-md-auto">
                         <i class="fas fa-filter me-1"></i> Terapkan
                     </button>

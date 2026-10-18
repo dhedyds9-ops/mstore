@@ -34,35 +34,30 @@
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h6 class="m-0 font-weight-bold text-primary">Daftar Transaksi</h6>
             </div>
-            <form action="{{ route('wash.transactions.index') }}" method="GET" class="row g-3 align-items-center wash-filter-form">
-                <div class="col-12 col-md-auto">
-                    <label for="start_date" class="col-form-label">{{ __('Tanggal Mulai') }}</label>
+            <form action="{{ route('wash.transactions.index') }}" method="GET" class="row g-2 align-items-center wash-filter-form">
+                <div class="col-12 col-md-3">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-light text-muted border-end-0">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </span>
+                        <input type="text" id="search" name="search" class="form-control form-control-sm bg-light border-start-0" placeholder="Cari transaksi / no plat..." value="{{ request('search') }}">
+                    </div>
                 </div>
-                <div class="col-12 col-md-auto">
-                    <input type="date" id="start_date" name="start_date" class="form-control" value="{{ request('start_date') }}">
+                <div class="col-6 col-md-2">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-light text-muted small">{{ __('Dari') }}</span>
+                        <input type="date" id="start_date" name="start_date" class="form-control form-control-sm bg-light" value="{{ request('start_date') }}">
+                    </div>
                 </div>
-                <div class="col-12 col-md-auto">
-                    <label for="end_date" class="col-form-label">{{ __('Tanggal Selesai') }}</label>
+                <div class="col-6 col-md-2">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-light text-muted small">{{ __('Sampai') }}</span>
+                        <input type="date" id="end_date" name="end_date" class="form-control form-control-sm bg-light" value="{{ request('end_date') }}">
+                    </div>
                 </div>
-                <div class="col-12 col-md-auto">
-                    <input type="date" id="end_date" name="end_date" class="form-control" value="{{ request('end_date') }}">
-                </div>
-                <div class="col-12 col-md-auto">
-                    <label for="per_page" class="col-form-label">Per Halaman</label>
-                </div>
-                <div class="col-12 col-md-auto">
-                    <select id="per_page" name="per_page" class="form-select">
-                        <option value="10" {{ request('per_page', '10') === '10' ? 'selected' : '' }}>10</option>
-                        <option value="20" {{ request('per_page') === '20' ? 'selected' : '' }}>20</option>
-                        <option value="all" {{ request('per_page') === 'all' ? 'selected' : '' }}>Semua</option>
-                    </select>
-                </div>
-                <div class="col-12 col-md-auto">
-                    <label for="vehicle_plate" class="col-form-label">Plat Nomor</label>
-                </div>
-                <div class="col-12 col-md-auto">
-                    <select id="vehicle_plate" name="vehicle_plate" class="form-select">
-                        <option value="">Semua Plat</option>
+                <div class="col-6 col-md-2">
+                    <select id="vehicle_plate" name="vehicle_plate" class="form-select form-select-sm bg-light">
+                        <option value="">Semua Plat Nomor</option>
                         @foreach(($knownVehiclePlates ?? []) as $plateOption)
                             <option value="{{ $plateOption['plate'] }}" {{ request('vehicle_plate') === $plateOption['plate'] ? 'selected' : '' }}>
                                 {{ $plateOption['plate'] }}
@@ -71,20 +66,19 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-12 col-md-auto">
-                    <label for="search" class="col-form-label">Cari</label>
+                <div class="col-6 col-md-1">
+                    <select id="per_page" name="per_page" class="form-select form-select-sm bg-light">
+                        <option value="10" {{ request('per_page', '10') === '10' ? 'selected' : '' }}>10</option>
+                        <option value="20" {{ request('per_page') === '20' ? 'selected' : '' }}>20</option>
+                        <option value="all" {{ request('per_page') === 'all' ? 'selected' : '' }}>Semua</option>
+                    </select>
                 </div>
-                <div class="col-12 col-md-auto">
-                    <input type="text" id="search" name="search" class="form-control" placeholder="Cari transaksi..." value="{{ request('search') }}">
-                </div>
-                <div class="col-12 col-md-auto d-flex flex-wrap gap-2 wash-filter-actions">
-                    <button type="submit" class="btn btn-primary" title="{{ __('Saring') }}">
-                        <i class="fas fa-filter"></i>
-                        <span class="d-none d-md-inline ms-1">{{ __('Saring') }}</span>
+                <div class="col-12 col-md-auto d-flex gap-2 wash-filter-actions ms-auto">
+                    <button type="submit" class="btn btn-sm btn-primary" title="{{ __('Filter') }}">
+                        <i class="fa-solid fa-filter me-1"></i>{{ __('Filter') }}
                     </button>
-                    <a href="{{ route('wash.transactions.index') }}" class="btn btn-secondary" title="{{ __('Atur Ulang') }}">
-                        <i class="fas fa-rotate-left"></i>
-                        <span class="d-none d-md-inline ms-1">{{ __('Atur Ulang') }}</span>
+                    <a href="{{ route('wash.transactions.index') }}" class="btn btn-sm btn-outline-secondary" title="{{ __('Reset') }}">
+                        <i class="fa-solid fa-rotate-left me-1"></i>{{ __('Reset') }}
                     </a>
                 </div>
             </form>

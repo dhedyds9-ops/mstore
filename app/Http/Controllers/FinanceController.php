@@ -1188,7 +1188,7 @@ class FinanceController extends Controller implements HasMiddleware
             $endDate = $date->endOfMonth()->toDateString();
         }
 
-        $query = Transaction::with(['user', 'field-leader'])->latest('transaction_date');
+        $query = Transaction::with(['user', 'coordinator'])->latest('transaction_date');
 
         $userCoordinator = null;
         if (! Auth::user()->hasPermission('finance.view')) {
@@ -1419,7 +1419,7 @@ class FinanceController extends Controller implements HasMiddleware
             $recentIncomes = Transaction::where('type', 'income')
                 ->whereIn('category', ['Member Income', 'Voucher Income'])
                 ->whereBetween('transaction_date', [$startDate, $endDate])
-                ->with('field-leader')
+                ->with('coordinator')
                 ->latest('transaction_date')
                 ->take(10)
                 ->get();

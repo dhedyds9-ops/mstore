@@ -33,8 +33,8 @@ class TechnicianAssignmentService
      */
     protected function getAvailableTechnicians()
     {
-        return User::whereHas('roles', function($q) {
-            $q->whereIn('name', ['teknisi', 'teknisi lapangan', 'admin']);
+        return User::whereHas('role', function($q) {
+            $q->whereIn('name', ['teknisi', 'teknisi lapangan', 'admin', 'field-technician']);
         })
         ->where('status', 'active')
         ->where('is_present', true)
@@ -102,10 +102,8 @@ class TechnicianAssignmentService
             'assigned_at' => now(),
         ]);
 
-        $ticket->update([
-            'technician_id' => $technician->id,
-            'status' => 'assigned',
-        ]);
+        $ticket->technicians()->syncWithoutDetaching([$technician->id]);
+        $ticket->update(['status' => 'assigned']);
 
         Log::info("AutoAssign: Assigned ticket {$ticket->id} to technician {$technician->id}");
 

@@ -2,17 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\HotspotProfile;
 use App\Models\Setting;
-use App\Models\Voucher;
-use App\Models\VoucherPayment;
-use App\Models\VoucherTemplate;
 use App\Models\WhatsAppMenu;
 use App\Models\WhatsAppLog;
 use App\Models\WhatsAppConversation;
 use App\Services\AiService;
-use App\Services\Payment\PaymentManager;
-use App\Services\VoucherService;
 use App\Services\WhatsAppService;
 use App\Services\WhatsApp\WhatsAppAutoReplyService;
 use Illuminate\Http\Request;
@@ -24,16 +18,12 @@ class WhatsAppWebhookController extends Controller
 {
     protected $whatsappService;
     protected $aiService;
-    protected $voucherService;
-    protected $paymentManager;
     protected $autoReplyService;
 
-    public function __construct(WhatsAppService $whatsappService, AiService $aiService, VoucherService $voucherService, PaymentManager $paymentManager, WhatsAppAutoReplyService $autoReplyService)
+    public function __construct(WhatsAppService $whatsappService, AiService $aiService, WhatsAppAutoReplyService $autoReplyService)
     {
         $this->whatsappService = $whatsappService;
         $this->aiService = $aiService;
-        $this->voucherService = $voucherService;
-        $this->paymentManager = $paymentManager;
         $this->autoReplyService = $autoReplyService;
     }
 
@@ -473,11 +463,6 @@ class WhatsAppWebhookController extends Controller
             }
         }
 
-        // Check for voucher purchase flow
-        if ($message === 'voucher' || $message === 'beli' || $message === 'paket' || is_numeric($message)) {
-            return $this->handleVoucherRequest($phone, $message);
-        }
-
         // Try AI Assistant if no keyword matches
         try {
             // Get context from previous messages (last 20 messages)
@@ -557,263 +542,6 @@ class WhatsAppWebhookController extends Controller
         $reply = str_replace('{tanggal_sekarang}', now()->format('d M Y'), $reply);
 
         return $reply;
-    }
-
-    /**
-     * Handle voucher purchase requests
-     */
-    private function handleVoucherRequest(string $phone, string $message): string
-    {
-        $packages = HotspotProfile::query()->active()->vouchers()->orderBy('sort_order')->orderBy('price')->get();
-
-        if ($packages->isEmpty() && class_exists(VoucherTemplate::class)) {
-            $packages = VoucherTemplate::where('is_active', true)->orderBy('price')->get();
-        }
-
-        if ($packages->isEmpty()) {
-            return "Maaf, saat ini tidak ada paket voucher yang tersedia.";
-        }
-
-        $normalize = strtolower(trim($message));
-        $byNumber = null;
-        if (preg_match('/^\s*#?(\d+)\s*$/', $normalize, $m)) {
-            $numChoosen = (int) $m[1];
-            if ($numChoosen >= 1 && $numChoosen <= $packages->count()) {
-                $byNumber = $packages->values()[$numChoosen - 1] ?? null;
-            }
-        }
-
-        foreach ($packages as $package) {
-            $pid = (string) $package->id;
-            if ($byNumber && $byNumber->is($package)) {
-                return $this->createPayment($phone, $package);
-            }
-            if ($pid !== '' && Str::contains($message, $pid)) {
-                return $this->createPayment($phone, $package);
-            }
-            if (Str::contains($normalize, Str::slug($package->name, ' '))) {
-                return $this->createPayment($phone, $package);
-            }
-        }
-
-        $response = "*Daftar Paket Voucher Hotspot:*\n\n";
-        foreach ($packages as $index => $pkg) {
-            $response .= ($index + 1) . ". *{$pkg->name}*\n";
-            $price = $pkg instanceof HotspotProfile ? (float) $pkg->price : (float) ($pkg->price ?? 0);
-            $response .= "   💰 Harga: Rp " . number_format($price, 0, ',', '.') . "\n";
-            if ($pkg->duration_seconds) {
-                $response .= "   ⏱ Durasi: " . $this->formatDuration($pkg->duration_seconds) . "\n";
-            }
-            if (! empty($pkg->quota_mb)) {
-                $response .= "   📊 Kuota: " . number_format($pkg->quota_mb, 0, ',', '.') . " MB\n";
-            }
-            $rate = $pkg instanceof HotspotProfile ? ($pkg->rate_limit_mbps ? $pkg->rate_limit_mbps . ' Mbps' : ($pkg->mikrotik_profile_name ?? null)) : ($pkg->rate_limit ?? null);
-            if ($rate) {
-                $response .= "   🚀 Kecepatan: {$rate}\n";
-            }
-            $response .= "   👉 Balas dengan *" . ($index + 1) . "* atau ID *{$pkg->id}* untuk beli paket ini!\n\n";
-        }
-
-        return $response;
-    }
-
-    /**
-     * Create payment and return QR code
-     */
-    private function createPayment(string $phone, object $package): string
-    {
-        $isHotspot = $package instanceof HotspotProfile;
-        $price = $isHotspot ? (float) $package->price : (float) ($package->price ?? 0);
-        $name = $package->name;
-
-        $existingPending = VoucherPayment::where('phone_number', $phone)->where('status', 'pending')->first();
-        if ($existingPending) {
-            return "Anda masih memiliki pembayaran yang belum selesai!\n\n" .
-                   "Silakan selesaikan pembayaran terlebih dahulu atau cek status dengan mengetik *cek*.";
-        }
-
-        $createPayload = [
-            'phone_number' => $phone,
-            'amount' => $price,
-            'status' => 'pending',
-            'payment_method' => 'QRIS',
-        ];
-        if ($isHotspot) {
-            $createPayload['hotspot_profile_id'] = $package->id;
-        } else {
-            $createPayload['voucher_template_id'] = $package->id;
-        }
-
-        $payment = VoucherPayment::create($createPayload);
-
-        $duitku = $this->paymentManager->gateway('duitku');
-        $duitkuResponse = $duitku->createTransaction([
-            'reference_id' => $payment->reference_id,
-            'amount' => $price,
-            'payment_method' => 'QR',
-            'description' => 'Voucher Hotspot: ' . $name,
-            'customer_name' => 'WA-' . $phone,
-            'customer_email' => 'customer@mstore.id',
-            'customer_phone' => $phone,
-        ]);
-
-        if (isset($duitkuResponse['statusCode']) && $duitkuResponse['statusCode'] == '00') {
-            $payment->update([
-                'payment_reference' => $duitkuResponse['reference'],
-                'qr_url' => $duitkuResponse['paymentUrl'],
-                'qr_data' => $duitkuResponse['qrCode'] ?? null,
-            ]);
-
-            $paymentUrl = route('voucher.payment.show', $payment->reference_id);
-            $expiresAt = $payment->expires_at->format('d M Y H:i');
-
-            $response = "*🛒 Pembayaran Voucher Hotspot:*\n\n";
-            $response .= "*Paket:* {$name}\n";
-            $response .= "*Total:* Rp " . number_format($price, 0, ',', '.') . "\n";
-            $response .= "*Metode:* QRIS\n\n";
-            $response .= "Silakan scan QR code atau buka link di bawah:\n";
-            $response .= "*{$paymentUrl}*\n\n";
-            $response .= "Kadaluarsa: {$expiresAt}\n\n";
-            $response .= "Setelah pembayaran berhasil, voucher akan dikirim otomatis!";
-
-            return $response;
-        } else {
-            $payment->update(['status' => 'failed']);
-            $error = $duitkuResponse['statusMessage'] ?? 'Gagal membuat pembayaran';
-            return "Maaf, {$error}. Silakan coba lagi nanti.";
-        }
-    }
-
-    /**
-     * Check payment status
-     */
-    private function checkPaymentStatus(VoucherPayment $payment): string
-    {
-        $duitku = $this->paymentManager->gateway('duitku');
-        $duitkuResponse = $duitku->checkStatus($payment->reference_id);
-
-        if (isset($duitkuResponse['statusCode']) && $duitkuResponse['statusCode'] == '00') {
-            if ($payment->status !== 'paid') {
-                $payment->update([
-                    'status' => 'paid',
-                    'paid_at' => now(),
-                ]);
-
-                $this->generateVoucherAndSendToUser($payment);
-            }
-        }
-
-        $statusText = [
-            'pending' => 'Menunggu Pembayaran',
-            'paid' => 'Sudah Dibayar',
-            'failed' => 'Gagal',
-            'expired' => 'Kadaluarsa',
-        ];
-
-        $packageName = 'Voucher Hotspot';
-        if ($payment->hotspotProfile) {
-            $packageName = $payment->hotspotProfile->name;
-        } elseif ($payment->voucherTemplate) {
-            $packageName = $payment->voucherTemplate->name;
-        }
-
-        $response = "*📊 Status Pembayaran:*\n\n";
-        $response .= "*ID:* {$payment->reference_id}\n";
-        $response .= "*Status:* {$statusText[$payment->status]}\n";
-        $response .= "*Paket:* {$packageName}\n";
-        $response .= "*Total:* Rp " . number_format($payment->amount, 0, ',', '.') . "\n";
-
-        if ($payment->status === 'pending' && $payment->qr_url) {
-            $paymentUrl = route('voucher.payment.show', $payment->reference_id);
-            $response .= "\nUntuk membayar: {$paymentUrl}";
-        }
-
-        return $response;
-    }
-
-    private function generateVoucherAndSendToUser(VoucherPayment $payment)
-    {
-        try {
-            if ($payment->voucher_id) {
-                return;
-            }
-
-            $template = $payment->voucherTemplate;
-            $profile = $payment->hotspotProfile;
-
-            $rateLimit = null;
-            $durationSeconds = null;
-            $quotaMb = null;
-            $packageName = 'Voucher Hotspot';
-            $hotspotProfileId = null;
-
-            if ($profile) {
-                $rateLimit = $profile->mikrotik_profile_name ?? ($profile->rate_limit_mbps ? $profile->rate_limit_mbps . 'M/' . $profile->rate_limit_mbps . 'M' : null);
-                $durationSeconds = $profile->duration_seconds;
-                $quotaMb = $profile->quota_mb;
-                $packageName = $profile->name;
-                $hotspotProfileId = $profile->id;
-            } elseif ($template) {
-                $rateLimit = $template->rate_limit;
-                $durationSeconds = $template->duration_seconds;
-                $quotaMb = $template->quota_mb;
-                $packageName = $template->name;
-            }
-
-            $batch = $this->voucherService->generateBatch(
-                $rateLimit,
-                $durationSeconds,
-                $quotaMb,
-                1,
-                true,
-                null,
-                $hotspotProfileId
-            );
-
-            $voucher = Voucher::where('batch_id', $batch->id)->first();
-
-            $payment->update([
-                'voucher_id' => $voucher->id,
-            ]);
-
-            $message = "*🎉 Pembayaran Berhasil!*\n\n";
-            $message .= "*Paket:* {$packageName}\n";
-            if ($durationSeconds) {
-                $message .= "*Durasi:* " . $this->formatDuration($durationSeconds) . "\n";
-            }
-            if ($quotaMb) {
-                $message .= "*Kuota:* " . number_format($quotaMb, 0, ',', '.') . " MB\n";
-            }
-            $message .= "\n";
-            $message .= "*Username:* `{$voucher->username}`\n";
-            $message .= "*Password:* `{$voucher->password}`\n";
-            $message .= "\n";
-            $message .= "Gunakan username dan password di atas untuk login ke hotspot!";
-
-            $this->whatsappService->sendMessage($payment->phone_number, $message);
-        } catch (\Exception $e) {
-            Log::error('Failed to generate and send voucher', ['error' => $e->getMessage(), 'payment_id' => $payment->id]);
-        }
-    }
-
-    /**
-     * Format duration seconds to human-readable format
-     */
-    private function formatDuration(int $seconds): string
-    {
-        if ($seconds >= 86400) {
-            $days = floor($seconds / 86400);
-            return $days . ' ' . ($days > 1 ? 'hari' : 'hari');
-        }
-        if ($seconds >= 3600) {
-            $hours = floor($seconds / 3600);
-            return $hours . ' ' . ($hours > 1 ? 'jam' : 'jam');
-        }
-        if ($seconds >= 60) {
-            $minutes = floor($seconds / 60);
-            return $minutes . ' ' . ($minutes > 1 ? 'menit' : 'menit');
-        }
-        return $seconds . ' detik';
     }
 
     /**

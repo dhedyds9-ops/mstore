@@ -85,9 +85,35 @@ class AttendancePayrollService
             // Kasbon Lainnya (Total Kasbon - Specific Kasbons)
             $kasbonLainnya = $totalKasbon - ($kasbonKantor + $kasbonWarung);
 
+            // Calculate Wash Commission (if user is linked to WashEmployee)
+            $washEmployee = \App\Models\WashEmployee::where('user_id', $user->id)->first();
+            $washCommission = 0;
+            $washCommissionCount = 0;
+            if ($washEmployee) {
+                $commissionQuery = \App\Models\WashCommissionEarning::where('wash_employee_id', $washEmployee->id)
+                    ->where('status', \App\Models\WashCommissionEarning::STATUS_EARNED);
+                
+                if ($request) {
+                    if ($request->filled('start_date') && $request->filled('end_date')) {
+                        $commissionQuery->whereBetween('created_at', [
+                            \Carbon\Carbon::parse($request->start_date)->startOfDay(),
+                            \Carbon\Carbon::parse($request->end_date)->endOfDay(),
+                        ]);
+                    } elseif ($request->filled('month')) {
+                        $m = \Carbon\Carbon::parse($request->month);
+                        $commissionQuery->whereBetween('created_at', [$m->copy()->startOfMonth(), $m->copy()->endOfMonth()]);
+                    } elseif ($request->filled('date')) {
+                        $commissionQuery->whereDate('created_at', $request->date);
+                    }
+                }
+                
+                $washCommission = (float) $commissionQuery->sum('total_earned');
+                $washCommissionCount = (int) $commissionQuery->sum('quantity');
+            }
+
             $totalDailySalary = $paidDays * $dailySalary;
             $totalDeductions = $lateDeduction + $totalKasbon;
-            $totalSalary = $totalDailySalary + $totalBonus - $totalDeductions;
+            $totalSalary = $totalDailySalary + $totalBonus + $washCommission - $totalDeductions;
 
             return [
                 'user' => $user,
@@ -113,6 +139,9 @@ class AttendancePayrollService
                 'bonus_absensi' => $bonusAbsensi,
                 'bonus_lainnya' => $bonusLainnya,
                 'total_bonus' => $totalBonus,
+                'wash_commission' => $washCommission,
+                'wash_commission_count' => $washCommissionCount,
+                'wash_employee_id' => $washEmployee?->id,
                 'kasbon_kantor' => $kasbonKantor,
                 'kasbon_warung' => $kasbonWarung,
                 'kasbon_lainnya' => $kasbonLainnya,

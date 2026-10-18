@@ -1,56 +1,80 @@
 @extends('layouts.app')
 
-@section('title', __('Tambah Transaksi Float'))
+@section('title', __('Catat Mutasi Saldo Float ATK'))
 
 @section('content')
-<div class="container-fluid">
-    <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 mb-4">
-        <h1 class="h3 mb-0 text-gray-800">{{ __('Tambah Transaksi Float') }}</h1>
-        <div>
-            <a href="{{ route('atk.float-accounts.show', $account) }}" class="btn btn-secondary">
-                <i class="fa-solid fa-arrow-left"></i>
-                <span class="d-none d-md-inline ms-2">{{ __('Kembali ke Akun') }}</span>
-            </a>
-        </div>
-    </div>
-
-    <div class="card shadow mb-4">
-        <div class="card-body">
-            <div class="mb-4">
-                <h5>{{ __('Akun:') }} {{ $account->name }} ({{ $account->code }})</h5>
-                <p><strong>{{ __('Saldo Saat Ini:') }}</strong> Rp {{ number_format($account->current_balance, 0, ',', '.') }}</p>
+<div class="container-fluid px-3 px-md-4 py-3">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-7">
+            {{-- Header --}}
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <div>
+                    <h1 class="h4 fw-bold text-gray-800 mb-1">{{ __('Catat Mutasi Saldo Float') }}</h1>
+                    <p class="text-muted small mb-0">{{ __('Input penambahan saldo deposit, penarikan, transfer antar akun, atau penyesuaian.') }}</p>
+                </div>
+                <a href="{{ route('atk.float-accounts.show', $account) }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="fa-solid fa-arrow-left me-1"></i>{{ __('Kembali ke Akun') }}
+                </a>
             </div>
-            <form action="{{ route('atk.float-accounts.store-transaction', $account) }}" method="POST">
-                @csrf
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">{{ __('Tipe Transaksi') }}</label>
-                        <select name="transaction_type" class="form-select @error('transaction_type') is-invalid @enderror" required>
-                            <option value="">{{ __('Pilih Tipe Transaksi') }}</option>
-                            <option value="deposit" {{ old('transaction_type') === 'deposit' ? 'selected' : '' }}>{{ __('Deposit') }}</option>
-                            <option value="withdrawal" {{ old('transaction_type') === 'withdrawal' ? 'selected' : '' }}>{{ __('Withdrawal') }}</option>
-                            <option value="transfer" {{ old('transaction_type') === 'transfer' ? 'selected' : '' }}>{{ __('Transfer') }}</option>
-                            <option value="topup" {{ old('transaction_type') === 'topup' ? 'selected' : '' }}>{{ __('Topup') }}</option>
-                            <option value="ppob" {{ old('transaction_type') === 'ppob' ? 'selected' : '' }}>{{ __('PPOB') }}</option>
-                            <option value="adjustment" {{ old('transaction_type') === 'adjustment' ? 'selected' : '' }}>{{ __('Adjustment') }}</option>
-                        </select>
-                        @error('transaction_type') <div class="invalid-feedback">{{ $message }}</div> @enderror
+
+            {{-- Form Card --}}
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-white border-bottom py-3 px-4 d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-muted small">{{ __('Akun Target:') }}</span>
+                        <h6 class="fw-bold mb-0 text-gray-900">{{ $account->name }} ({{ $account->code }})</h6>
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">{{ __('Jumlah') }}</label>
-                        <input type="number" name="amount" class="form-control @error('amount') is-invalid @enderror" value="{{ old('amount') }}" min="0" required>
-                        @error('amount') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-                    <div class="col-md-12 mb-3">
-                        <label class="form-label">{{ __('Deskripsi') }}</label>
-                        <textarea name="description" class="form-control @error('description') is-invalid @enderror" rows="3">{{ old('description') }}</textarea>
-                        @error('description') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <div class="text-end">
+                        <span class="text-muted small">{{ __('Saldo Saat Ini:') }}</span>
+                        <div class="fw-bold text-success fs-6">Rp {{ number_format($account->current_balance, 0, ',', '.') }}</div>
                     </div>
                 </div>
-                <div class="text-end">
-                    <button type="submit" class="btn btn-primary">{{ __('Simpan Transaksi') }}</button>
+
+                <div class="card-body p-4">
+                    <form action="{{ route('atk.float-accounts.store-transaction', $account) }}" method="POST">
+                        @csrf
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-muted">{{ __('Tipe Mutasi') }} <span class="text-danger">*</span></label>
+                                <select name="transaction_type" class="form-select @error('transaction_type') is-invalid @enderror" required autofocus>
+                                    <option value="">{{ __('Pilih Tipe Mutasi') }}</option>
+                                    <option value="deposit" {{ old('transaction_type') === 'deposit' ? 'selected' : '' }}>{{ __('Deposit / Tambah Modal Saldo (+)') }}</option>
+                                    <option value="withdrawal" {{ old('transaction_type') === 'withdrawal' ? 'selected' : '' }}>{{ __('Tarik Saldo ke Rekening / Kas (-)') }}</option>
+                                    <option value="transfer" {{ old('transaction_type') === 'transfer' ? 'selected' : '' }}>{{ __('Transfer Keluar (-)') }}</option>
+                                    <option value="topup" {{ old('transaction_type') === 'topup' ? 'selected' : '' }}>{{ __('Topup Pelanggan (-)') }}</option>
+                                    <option value="ppob" {{ old('transaction_type') === 'ppob' ? 'selected' : '' }}>{{ __('Pembayaran PPOB (-)') }}</option>
+                                    <option value="adjustment" {{ old('transaction_type') === 'adjustment' ? 'selected' : '' }}>{{ __('Penyesuaian Saldo (Koreksi)') }}</option>
+                                </select>
+                                @error('transaction_type') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-muted">{{ __('Jumlah Nominal') }} <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light fw-bold">Rp</span>
+                                    <input type="number" name="amount" class="form-control form-control-lg fw-bold" placeholder="0" value="{{ old('amount') }}" min="1" required>
+                                </div>
+                                @error('amount') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-bold small text-muted">{{ __('Keterangan / Catatan Transaksi') }}</label>
+                                <textarea name="description" class="form-control @error('description') is-invalid @enderror" rows="3" placeholder="Contoh: Suntik deposit saldo server PPOB via Kas Utama">{{ old('description') }}</textarea>
+                                @error('description') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 pt-4 mt-3 border-top">
+                            <a href="{{ route('atk.float-accounts.show', $account) }}" class="btn btn-outline-secondary px-3">
+                                {{ __('Batal') }}
+                            </a>
+                            <button type="submit" class="btn btn-primary px-4 shadow-sm">
+                                <i class="fa-solid fa-check me-1"></i>{{ __('Simpan Mutasi Saldo') }}
+                            </button>
+                        </div>
+                    </form>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>

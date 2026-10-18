@@ -14,8 +14,9 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
-        $allPermissionIds = Permission::query()->pluck('id')->all();
-        $permissionIdByName = Permission::query()->pluck('id', 'name');
+        $allPermissions = Permission::all();
+        $allPermissionIds = $allPermissions->pluck('id')->all();
+        $permissionIdByName = $allPermissions->pluck('id', 'name');
 
         foreach (DefaultRolePermissions::definitions() as $roleName => $definition) {
             $role = Role::firstOrCreate(
@@ -25,18 +26,21 @@ class RoleSeeder extends Seeder
 
             if (DefaultRolePermissions::grantsAll($roleName)) {
                 if (! empty($allPermissionIds)) {
-                    $role->permissions()->syncWithoutDetaching($allPermissionIds);
+                    $role->permissions()->sync($allPermissionIds);
                 }
                 continue;
             }
 
+            $rawPerms = DefaultRolePermissions::permissionNames($roleName);
+            $expandedNames = DefaultRolePermissions::expandPermissionNames($rawPerms, $allPermissions);
+
             $permissionIds = $permissionIdByName
-                ->only(DefaultRolePermissions::permissionNames($roleName))
+                ->only($expandedNames)
                 ->values()
                 ->all();
 
             if (! empty($permissionIds)) {
-                $role->permissions()->syncWithoutDetaching($permissionIds);
+                $role->permissions()->sync($permissionIds);
             }
         }
     }

@@ -169,17 +169,19 @@
                         <!-- Section: Data Pegawai & Keuangan -->
                         <div class="card border-0 shadow-sm mb-4">
                             <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
-                                <h6 class="fw-bold text-primary mb-0"><i class="fa-solid fa-wallet me-1"></i> Payroll & Absensi</h6>
+                                <h6 class="fw-bold text-primary mb-0"><i class="fa-solid fa-wallet me-1"></i> Data Payroll & Rekening Bank</h6>
                                 <hr class="mt-2 mb-0">
                             </div>
                             <div class="card-body">
                                 <div class="row g-3">
+                                    @if(\App\Support\ModuleGate::isEnabled('hr'))
                                     <div class="col-md-12 mb-2">
                                         <label for="attendance_card_code" class="form-label fw-medium">{{ __('Kode ID Card Absensi') }}</label>
                                         <input type="text" name="attendance_card_code" id="attendance_card_code" value="{{ old('attendance_card_code') }}" class="form-control @error('attendance_card_code') is-invalid @enderror">
                                         <div class="form-text small">Gunakan kode unik ini untuk pembuatan barcode/QR kartu pegawai.</div>
                                         @error('attendance_card_code') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                     </div>
+                                    @endif
                                     <div class="col-md-6">
                                         <label for="monthly_salary" class="form-label fw-medium">{{ __('Gaji Pokok Bulanan (Rp)') }}</label>
                                         <input type="number" name="monthly_salary" id="monthly_salary" value="{{ old('monthly_salary') }}" class="form-control @error('monthly_salary') is-invalid @enderror" min="0">

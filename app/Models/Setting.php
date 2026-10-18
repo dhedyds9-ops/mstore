@@ -41,7 +41,25 @@ class Setting extends Model
     {
         $values = self::allValues();
 
-        return array_key_exists($key, $values) ? $values[$key] : $default;
+        if (array_key_exists($key, $values) && !is_null($values[$key]) && $values[$key] !== '') {
+            return $values[$key];
+        }
+
+        // Fallback otomatis ke profil perusahaan toko yang sedang aktif
+        $user = auth()->user();
+        if ($user && $user->company_id) {
+            $company = $user->company;
+            if ($company) {
+                if (in_array($key, ['store_name', 'atk_store_name', 'wash_store_name'], true) && !empty($company->name)) {
+                    return $company->name;
+                }
+                if (in_array($key, ['store_address', 'atk_store_address', 'wash_store_address'], true) && !empty($company->address)) {
+                    return $company->address;
+                }
+            }
+        }
+
+        return $default;
     }
 
     public static function allValues(): array
@@ -62,6 +80,22 @@ class Setting extends Model
         }
 
         return self::$cachedValues;
+    }
+
+    public static function setValue(string $key, mixed $value, string $group = 'general', string $type = 'string'): self
+    {
+        $setting = self::updateOrCreate(
+            ['key' => $key],
+            [
+                'value' => (string) $value,
+                'group' => $group,
+                'type' => $type,
+            ]
+        );
+
+        self::forgetCache();
+
+        return $setting;
     }
 
     public static function forgetCache(): void

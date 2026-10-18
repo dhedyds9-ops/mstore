@@ -35,64 +35,81 @@
 <body>
     <div class="auth-shell">
         <div class="auth-header-actions d-flex justify-content-between align-items-center mb-3">
-            <a href="{{ url('/') }}" class="back-home-btn">
-                <i class="fa-solid fa-arrow-left me-2"></i> Kembali
+            <a href="{{ url('/') }}" class="back-home-btn" title="Kembali ke Beranda">
+                <i class="fa-solid fa-arrow-left me-2"></i> <span>Kembali ke Beranda</span>
             </a>
             <div class="d-flex align-items-center gap-2">
-                <a href="{{ route('login.customer') }}" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1" style="border-radius:999px; padding:6px 14px; font-size:12px; font-weight:600;">
-                    <i class="fa-solid fa-house-user"></i>
-                    <span>Portal Pelanggan</span>
-                    <i class="fa-solid fa-arrow-right" style="font-size:10px"></i>
-                </a>
-                <button type="button" class="theme-toggle-btn" id="themeToggleLogin">
+                <button type="button" class="theme-toggle-btn" id="themeToggleLogin" title="Ganti Mode Gelap/Terang" aria-label="Toggle tema">
                     <i class="fa-solid fa-moon"></i>
                 </button>
             </div>
         </div>
         <div class="auth-card">
             <div class="auth-left">
-                <div>
+                <div class="auth-left-content">
                     <div class="auth-left-title">
-                        <img src="{{ app()->environment('production') ? secure_asset('img/logo.png') : asset('img/logo.png') }}" alt="MSTORE.NET">
+                        <img src="{{ app()->environment('production') ? secure_asset('img/logo.png') : asset('img/logo.png') }}" alt="{{ config('app.name', 'MStore') }}">
                     </div>
+                    <h2 class="auth-brand-name">{{ config('app.name', 'MStore') }}</h2>
                     <div class="auth-left-sub">
-                        Platform monitoring jaringan fiber optic tercan ggih. Kelola infrastruktur Anda dengan mudah.
+                        Sistem Informasi & Operasional Terpadu
                     </div>
-                    <div class="mt-4 small opacity-75">
-                        <div class="mb-2"><i class="fa-solid fa-users-gear me-2"></i> Admin, NOC, Teknisi, Keuangan</div>
-                        <div class="mb-2"><i class="fa-solid fa-chart-line me-2"></i> Dashboard &amp; Laporan Jaringan</div>
-                        <div><i class="fa-solid fa-user-shield me-2"></i> Kelola Data Pelanggan &amp; Billing</div>
+                    
+                    <div class="auth-feature-list mt-4">
+                        <div class="auth-feature-item">
+                            <i class="fa-solid fa-store"></i>
+                            <span>Kasir Toko & Retail Modern</span>
+                        </div>
+                        <div class="auth-feature-item">
+                            <i class="fa-solid fa-hand-holding-heart"></i>
+                            <span>Jasa, Layanan & Perawatan</span>
+                        </div>
+                        <div class="auth-feature-item">
+                            <i class="fa-solid fa-calendar-check"></i>
+                            <span>Booking & Reservasi Usaha</span>
+                        </div>
+                        <div class="auth-feature-item">
+                            <i class="fa-solid fa-calculator"></i>
+                            <span>Keuangan & Akuntansi Standar</span>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="auth-right">
+                <div class="auth-right-header mb-4">
+                    <h1 class="auth-header-title">Selamat Datang</h1>
+                    <p class="auth-header-sub mb-0">Silakan masukkan akun Anda untuk melanjutkan ke sistem.</p>
+                </div>
+
                 @if (session('status'))
-                    <div class="alert alert-success mb-3 w-100" role="alert">
-                        {{ session('status') }}
+                    <div class="alert alert-success alert-dismissible fade show mb-3 w-100" role="alert">
+                        <i class="fa-solid fa-circle-check me-2"></i> {{ session('status') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 @endif
 
                 @if (session('warning'))
-                    <div class="alert alert-warning mb-3 w-100" role="alert">
-                        {{ session('warning') }}
+                    <div class="alert alert-warning alert-dismissible fade show mb-3 w-100" role="alert">
+                        <i class="fa-solid fa-triangle-exclamation me-2"></i> {{ session('warning') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('login', [], false) }}" class="w-100">
+                <form method="POST" action="{{ route('login', [], false) }}" class="w-100 auth-form">
                     @csrf
                     <input type="hidden" name="mode" value="admin">
 
                     <div class="mb-3">
-                        <label for="login" class="auth-form-label">Username | Email</label>
+                        <label for="login" class="auth-form-label">Username atau Email</label>
                         <div class="input-group auth-input-group">
                             <span class="input-group-text auth-input-addon border-end-0">
                                 <i class="fa-solid fa-user"></i>
                             </span>
-                            <input id="login" class="form-control auth-input border-start-0 @error('login') is-invalid @enderror" type="text" name="login" value="{{ old('login') }}" required autofocus placeholder="Masukan Username" />
-                            @error('login')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
+                            <input id="login" class="form-control auth-input border-start-0 @error('login') is-invalid @enderror" type="text" name="login" value="{{ old('login') }}" required autofocus placeholder="Masukkan username atau email" autocomplete="username" />
                         </div>
+                        @error('login')
+                            <div class="invalid-feedback d-block mt-1">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="mb-3">
@@ -101,45 +118,49 @@
                             <span class="input-group-text auth-input-addon border-end-0">
                                 <i class="fa-solid fa-lock"></i>
                             </span>
-                            <input id="password" class="form-control auth-input border-start-0 @error('password') is-invalid @enderror" type="password" name="password" required autocomplete="current-password" placeholder="Masukan Password" />
-                            @error('password')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
+                            <input id="password" class="form-control auth-input border-start-0 border-end-0 @error('password') is-invalid @enderror" type="password" name="password" required autocomplete="current-password" placeholder="Masukkan password" />
+                            <button type="button" class="input-group-text auth-input-addon auth-eye-btn border-start-0" id="togglePasswordBtn" title="Lihat/Sembunyikan Password" tabindex="-1">
+                                <i class="fa-solid fa-eye" id="togglePasswordIcon"></i>
+                            </button>
                         </div>
+                        @error('password')
+                            <div class="invalid-feedback d-block mt-1">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center mb-4 auth-links">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="showPasswordLogin">
-                            <label class="form-check-label" for="showPasswordLogin">
-                                Tampilkan Password
+                            <input class="form-check-input" type="checkbox" name="remember" id="rememberMe">
+                            <label class="form-check-label" for="rememberMe">
+                                Ingat Saya
                             </label>
                         </div>
-                        <a href="{{ route('password.forgot') }}">Lupa Password?</a>
+                        @if (Route::has('password.forgot'))
+                            <a href="{{ route('password.forgot') }}" class="auth-forgot-link">Lupa Password?</a>
+                        @endif
                     </div>
 
                     <div class="d-grid mb-3">
-                        <button type="submit" class="btn btn-auth-primary">
-                            Masuk Sekarang <span class="ms-2"><i class="fa-solid fa-arrow-right"></i></span>
+                        <button type="submit" class="btn btn-auth-primary" id="btnSubmitLogin">
+                            <span>Masuk ke Sistem</span>
+                            <i class="fa-solid fa-arrow-right ms-2"></i>
                         </button>
                     </div>
-                    
-                    <div class="auth-separator">
-                        <span>atau</span>
+
+                    <div class="p-3 bg-light rounded text-center mb-3 border">
+                        <div class="small text-muted mb-1">Ingin menggunakan sistem kasir ini untuk usaha Anda?</div>
+                        <a href="{{ route('tenant.register.create') }}" class="btn btn-outline-primary btn-sm w-100 fw-bold">
+                            <i class="fa-solid fa-gift me-1"></i> Daftar Toko Baru & Coba Gratis 14 Hari
+                        </a>
                     </div>
 
-                    <div class="text-center auth-links">
-                        <span>Belum punya akun?</span>
-                        @if (Route::has('register'))
-                            <a href="{{ route('register') }}">Buat Akun</a>
-                        @else
-                            <a href="{{ route('login') }}">Hubungi Admin</a>
-                        @endif
+                    <div class="auth-help-box text-center mt-3">
+                        <span class="text-muted small">Mengalami kendala saat login? Hubungi <strong>Administrator</strong>.</span>
                     </div>
                 </form>
 
                 <div class="auth-footer text-center mt-4">
-                    &copy; {{ date('Y') }} {{ config('app.name', 'MStore') }}. All rights reserved.
+                    &copy; {{ date('Y') }} {{ config('app.name', 'MStore') }}. Seluruh hak cipta dilindungi.
                 </div>
             </div>
         </div>
@@ -178,10 +199,20 @@
         }
 
         const loginPasswordField = document.getElementById('password');
-        const loginShowPasswordCheckbox = document.getElementById('showPasswordLogin');
-        if (loginPasswordField && loginShowPasswordCheckbox) {
-            loginShowPasswordCheckbox.addEventListener('change', function () {
-                loginPasswordField.type = loginShowPasswordCheckbox.checked ? 'text' : 'password';
+        const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+        const togglePasswordIcon = document.getElementById('togglePasswordIcon');
+
+        if (loginPasswordField && togglePasswordBtn && togglePasswordIcon) {
+            togglePasswordBtn.addEventListener('click', function () {
+                const isPassword = loginPasswordField.type === 'password';
+                loginPasswordField.type = isPassword ? 'text' : 'password';
+                if (isPassword) {
+                    togglePasswordIcon.classList.remove('fa-eye');
+                    togglePasswordIcon.classList.add('fa-eye-slash');
+                } else {
+                    togglePasswordIcon.classList.remove('fa-eye-slash');
+                    togglePasswordIcon.classList.add('fa-eye');
+                }
             });
         }
         

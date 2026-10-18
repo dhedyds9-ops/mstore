@@ -39,12 +39,12 @@
         <div class="col-auto flex-grow-1 flex-md-grow-0">
             <div class="input-group input-group-sm">
                 <input type="text" name="search" class="form-control" placeholder="{{ $searchPlaceholder }}" value="{{ request('search') }}" style="min-width: 150px;">
-                <button class="btn btn-primary px-3" type="submit">
-                    <i class="fa-solid fa-search"></i>
+                <button class="btn btn-primary px-3" type="submit" title="{{ __('Cari') }}">
+                    <i class="fa-solid fa-magnifying-glass"></i>
                 </button>
                 @if(request()->filled('search') || request()->filled('role_id') || request()->filled('per_page'))
-                    <a href="{{ $route ?? url()->current() }}" class="btn btn-danger px-3" title="Reset Filter">
-                        <i class="fa-solid fa-times"></i>
+                    <a href="{{ $route ?? url()->current() }}" class="btn btn-outline-secondary px-3" title="{{ __('Reset Filter') }}">
+                        <i class="fa-solid fa-rotate-left"></i>
                     </a>
                 @endif
             </div>

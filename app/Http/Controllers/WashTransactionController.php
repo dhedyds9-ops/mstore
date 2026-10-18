@@ -78,57 +78,75 @@ class WashTransactionController extends Controller implements HasMiddleware
         $today = now()->format('Y-m-d');
         $month = now()->format('Y-m');
         $user = Auth::user();
-        $todayAttendance = TechnicianAttendance::where('user_id', Auth::id())
-            ->whereDate('clock_in', today())
-            ->first();
-        $isWashOnly = $user->hasRole('kasir-wash');
-        $attendanceRole = $isWashOnly ? 'karyawan-wash' : 'kasir-wash';
-        
-        $washRoleUserIds = \App\Models\User::query()
-            ->where('is_active', true)
-            ->whereHas('washEmployee')
-            ->pluck('id');
-
-        $presentEmployees = TechnicianAttendance::query()
-            ->with(['user.washEmployee'])
-            ->whereDate('clock_in', today())
-            ->whereIn('status', ['present', 'late'])
-            ->whereIn('user_id', $washRoleUserIds)
-            ->get();
-
-        // Get job counts for these employees today
-        $washEmployeeIds = $presentEmployees->map(fn($a) => $a->user->washEmployee?->id)->filter()->toArray();
-        $jobCounts = WashTransactionItem::whereIn('employee_id', $washEmployeeIds)
-            ->whereDate('created_at', today())
-            ->groupBy('employee_id')
-            ->select('employee_id', DB::raw('count(*) as total_jobs'))
-            ->pluck('total_jobs', 'employee_id');
-
-        // Attach job count to attendance record
-        foreach ($presentEmployees as $attendance) {
-            $employeeId = $attendance->user->washEmployee?->id;
-            $attendance->total_jobs = $jobCounts[$employeeId] ?? 0;
-        }
-
-        $presentCount = $presentEmployees->unique('user_id')->count();
+        $todayAttendance = null;
+        $presentEmployees = collect();
         $attendanceOverview = [
             'role' => 'Karyawan Wash',
-            'total' => $washRoleUserIds->count(),
-            'present' => $presentCount,
-            'not_present' => max($washRoleUserIds->count() - $presentCount, 0),
+            'total' => 0,
+            'present' => 0,
+            'not_present' => 0,
         ];
-        $shiftSchedule = TechnicianDailySchedule::query()
-            ->where('user_id', $user->id)
-            ->whereDate('date', today())
-            ->first();
+        $shiftSchedule = null;
+        $dailyAttendanceCount = 0;
+
+        if (true) {
+            $todayAttendance = TechnicianAttendance::where('user_id', Auth::id())
+                ->whereDate('clock_in', today())
+                ->first();
+            $isWashOnly = $user->hasRole('kasir-wash');
+            $attendanceRole = $isWashOnly ? 'karyawan-wash' : 'kasir-wash';
+            
+            $washRoleUserIds = \App\Models\User::query()
+                ->where('is_active', true)
+                ->where(function ($q) {
+                    $q->whereHas('washEmployee')
+                        ->orWhereHas('roles', function ($rq) {
+                            $rq->whereIn('name', ['wash-operator', 'wash-cashier', 'kasir-wash', 'karyawan-wash']);
+                        });
+                })
+                ->pluck('id');
+
+            $presentEmployees = TechnicianAttendance::query()
+                ->with(['user.washEmployee'])
+                ->whereDate('clock_in', today())
+                ->whereIn('status', ['present', 'late'])
+                ->whereIn('user_id', $washRoleUserIds)
+                ->get();
+
+            // Get job counts for these employees today
+            $washEmployeeIds = $presentEmployees->map(fn($a) => $a->user->washEmployee?->id)->filter()->toArray();
+            $jobCounts = WashTransactionItem::whereIn('employee_id', $washEmployeeIds)
+                ->whereDate('created_at', today())
+                ->groupBy('employee_id')
+                ->select('employee_id', DB::raw('count(*) as total_jobs'))
+                ->pluck('total_jobs', 'employee_id');
+
+            // Attach job count to attendance record
+            foreach ($presentEmployees as $attendance) {
+                $employeeId = $attendance->user->washEmployee?->id;
+                $attendance->total_jobs = $jobCounts[$employeeId] ?? 0;
+            }
+
+            $presentCount = $presentEmployees->unique('user_id')->count();
+            $attendanceOverview = [
+                'role' => 'Karyawan Wash',
+                'total' => $washRoleUserIds->count(),
+                'present' => $presentCount,
+                'not_present' => max($washRoleUserIds->count() - $presentCount, 0),
+            ];
+            $shiftSchedule = TechnicianDailySchedule::query()
+                ->where('user_id', $user->id)
+                ->whereDate('date', today())
+                ->first();
+            $dailyAttendanceCount = TechnicianAttendance::whereDate('clock_in', $today)
+                ->whereIn('status', ['present', 'late'])
+                ->distinct('user_id')
+                ->count('user_id');
+        }
 
         $dailySales = WashTransaction::whereDate('created_at', $today)->sum('total_amount');
         $monthlySales = WashTransaction::where('created_at', 'like', "$month%")->sum('total_amount');
         $transactionCount = WashTransaction::whereDate('created_at', $today)->count();
-        $dailyAttendanceCount = TechnicianAttendance::whereDate('clock_in', $today)
-            ->whereIn('status', ['present', 'late'])
-            ->distinct('user_id')
-            ->count('user_id');
 
         $dailyCommission = 0;
         $monthlyCommission = 0;
@@ -564,7 +582,7 @@ class WashTransactionController extends Controller implements HasMiddleware
             $loyaltyMode = $bonusCheck['mode'] ?? 'voucher';
 
             $skipAutoRedeem = (bool) $request->input('skip_auto_redeem_voucher', false);
-            $bonusApplyMode = (string) $request->input('bonus_apply_mode', 'now');
+            $bonusApplyMode = (string) $request->input('bonus_apply_mode', 'save');
             if ($bonusApplyMode === 'save') {
                 $skipAutoRedeem = true;
             }
@@ -826,6 +844,13 @@ class WashTransactionController extends Controller implements HasMiddleware
             );
 
             DB::commit();
+
+            // Real-time double-entry accounting journal sync
+            try {
+                $transaction->syncAccountingJournal();
+            } catch (\Throwable $jEx) {
+                \Illuminate\Support\Facades\Log::warning('Direct accounting sync failed for WashTransaction '.$transaction->id.': '.$jEx->getMessage());
+            }
 
             // Dispatch OutboxEventProcessorJob after commit
             \App\Jobs\OutboxEventProcessorJob::dispatch($outboxEvent->id);

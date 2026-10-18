@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\HandleCors::class,
         ], append: [
             \App\Http\Middleware\LogRequestPerformance::class,
+            \App\Http\Middleware\EnsureModuleEnabled::class,
         ]);
 
         $middleware->web(prepend: [
@@ -28,10 +29,10 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\LogRequestPerformance::class,
             \App\Http\Middleware\SecurityHeaders::class,
             \App\Http\Middleware\CompanyMiddleware::class,
+            \App\Http\Middleware\EnsureModuleEnabled::class,
         ]);
         
         $middleware->validateCsrfTokens(except: [
-            '/voucher-payment/callback',
             '/webhooks/*',
         ]);
 

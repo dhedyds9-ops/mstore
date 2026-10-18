@@ -81,5 +81,82 @@ class WeddingPaymentController extends Controller implements HasMiddleware
         $payment->loadMissing(['booking.package', 'paymentTransaction']);
         return view('wedding.payments.show', compact('payment'));
     }
+
+    public function markPaidManual(Request $request, WeddingPayment $payment)
+    {
+        if ($payment->status === 'paid') {
+            return back()->with('info', 'Pembayaran sudah lunas sebelumnya.');
+        }
+
+        $method = $request->input('payment_method', 'cash'); // cash or bank
+        $payment->loadMissing('booking');
+
+        $old = $payment->toArray();
+        $payment->update([
+            'status' => 'paid',
+            'paid_at' => now(),
+        ]);
+        $this->auditLogService->logAction('wedding.payment.paid_manual', $payment, $old, $payment->toArray());
+
+        $booking = $payment->booking;
+        if ($booking) {
+            $oldBooking = $booking->toArray();
+            if ($payment->type === 'dp') {
+                $booking->update([
+                    'status' => 'dp',
+                    'dp_amount' => $booking->dp_amount ?? $payment->amount,
+                ]);
+                $this->auditLogService->logAction('wedding.booking.dp_paid', $booking, $oldBooking, $booking->toArray());
+            } else {
+                $booking->update([
+                    'status' => 'confirmed',
+                    'confirmed_at' => $booking->confirmed_at ?? now(),
+                ]);
+                $this->auditLogService->logAction('wedding.booking.confirmed', $booking, $oldBooking, $booking->toArray());
+            }
+
+            \App\Models\Transaction::create([
+                'user_id' => auth()->id(),
+                'type' => 'income',
+                'category' => 'Wedding & Event',
+                'amount' => (string) $payment->amount,
+                'description' => 'Wedding payment '.$payment->type.' - '.$booking->booking_number,
+                'transaction_date' => now()->toDateString(),
+                'reference_number' => 'WEDPAY-'.$payment->id,
+            ]);
+
+            // Auto-journal to General Ledger
+            try {
+                $debitCode = $method === 'bank' ? '1002' : '1001';
+                $debitAccId = \App\Models\Account::where('code', $debitCode)->value('id');
+                $revAccId = \App\Models\Account::where('code', '4006')->value('id');
+                if ($debitAccId && $revAccId && (float) $payment->amount > 0) {
+                    $poster = app(\App\Services\AccountingPoster::class);
+                    $poster->post(
+                        'WED-' . $payment->id . '-' . date('Ymd'),
+                        now()->toDateString(),
+                        'Wedding Payment Manual (' . strtoupper($method) . ') ' . strtoupper($payment->type) . ' - ' . $booking->booking_number,
+                        [
+                            ['account_id' => $debitAccId, 'debit' => (float) $payment->amount, 'credit' => 0, 'unit' => 'EVENT'],
+                            ['account_id' => $revAccId, 'debit' => 0, 'credit' => (float) $payment->amount, 'unit' => 'EVENT'],
+                        ],
+                        null,
+                        WeddingPayment::class,
+                        $payment->id
+                    );
+
+                    if ($method === 'cash') {
+                        $cash = \App\Models\Cash::firstOrCreate(['name' => 'Kas Utama'], ['balance' => 0]);
+                        $cash->balance = (float) $cash->balance + (float) $payment->amount;
+                        $cash->save();
+                    }
+                }
+            } catch (\Throwable $jEx) {
+                \Illuminate\Support\Facades\Log::warning('Manual wedding payment journal error: ' . $jEx->getMessage());
+            }
+        }
+
+        return back()->with('success', 'Pembayaran berhasil dikonfirmasi lunas dan dibukukan ke Akuntansi.');
+    }
 }
 

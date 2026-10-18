@@ -210,7 +210,9 @@ class WhatsAppIntegrationRouter
 
     private function handleMyTickets(User $user): string
     {
-        $tickets = Ticket::where('assigned_to', $user->id)
+        $tickets = Ticket::whereHas('technicians', function ($q) use ($user) {
+            $q->where('users.id', $user->id);
+        })
             ->whereIn('status', ['open', 'in_progress', 'pending'])
             ->orderBy('created_at', 'desc')
             ->take(10)

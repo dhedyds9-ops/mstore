@@ -11,7 +11,8 @@
         @endif
     </div>
 
-    @if(Auth::user()->hasPermission('attendance.view'))
+
+    @if(Auth::user()->hasPermission('attendance.view') || Auth::user()->hasPermission('attendance.create'))
     <div class="row mb-4">
         <div class="col-12">
             <div class="card border-0 shadow-sm border-start border-4 border-primary wash-panel">
@@ -383,18 +384,18 @@
         <div class="col-xl-4 col-md-6 mb-4">
             <div class="card border-left-success shadow h-100 py-2 wash-stat-card">
                 <div class="card-body">
-                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">{{ __('Hadir Hari Ini') }}</div>
-                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $attendanceOverview['present'] ?? 0 }}</div>
-                    <div class="small text-muted mt-2">{{ __('Total anggota peran ini: :total', ['total' => $attendanceOverview['total'] ?? 0]) }}</div>
+                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">{{ __('Karyawan Hadir Hari Ini') }}</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $attendanceOverview['present'] ?? 0 }} / {{ $attendanceOverview['total'] ?? 0 }}</div>
+                    <div class="small text-muted mt-2">{{ __('Total staf terdaftar di unit wash') }}</div>
                 </div>
             </div>
         </div>
         <div class="col-xl-4 col-md-6 mb-4">
-            <div class="card border-left-secondary shadow h-100 py-2 wash-stat-card">
+            <div class="card border-left-warning shadow h-100 py-2 wash-stat-card">
                 <div class="card-body">
-                    <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">{{ __('Tidak Hadir Hari Ini') }}</div>
+                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">{{ __('Belum Hadir') }}</div>
                     <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $attendanceOverview['not_present'] ?? 0 }}</div>
-                    <div class="small text-muted mt-2">{{ __('Belum absen atau tidak masuk hari ini') }}</div>
+                    <div class="small text-muted mt-2">{{ __('Belum absen masuk hari ini') }}</div>
                 </div>
             </div>
         </div>
@@ -402,8 +403,8 @@
             <div class="card border-left-info shadow h-100 py-2 wash-stat-card">
                 <div class="card-body">
                     <div class="text-xs font-weight-bold text-info text-uppercase mb-1">{{ __('Jadwal Shift Hari Ini') }}</div>
-                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $shiftSchedule?->status ? __(ucfirst($shiftSchedule->status)) : __('Belum Diatur') }}</div>
-                    <div class="small text-muted mt-2">{{ $shiftSchedule?->notes ?: __('Belum ada catatan jadwal untuk hari ini.') }}</div>
+                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $shiftSchedule?->status ? __(ucfirst($shiftSchedule->status)) : __('Sesuai Jadwal') }}</div>
+                    <div class="small text-muted mt-2">{{ $shiftSchedule?->notes ?: __('Operasional GT Wash berjalan normal.') }}</div>
                 </div>
             </div>
         </div>
@@ -413,14 +414,17 @@
         <div class="col-12 mb-4">
             <div class="card shadow mb-4 wash-panel">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">{{ __('Daftar Karyawan Hadir') }} ({{ $attendanceOverview['role'] ?? 'Wash' }})</h6>
+                    <h6 class="m-0 font-weight-bold text-primary"><i class="fa-solid fa-users-gear me-2"></i>{{ __('Daftar Karyawan Hadir') }} ({{ $attendanceOverview['role'] ?? 'Wash' }})</h6>
+                    <a href="{{ route('attendance.daily') }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fa-solid fa-clipboard-user me-1"></i>{{ __('Semua Presensi') }}
+                    </a>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-bordered" width="100%" cellspacing="0">
-                            <thead>
+                        <table class="table table-bordered align-middle" width="100%" cellspacing="0">
+                            <thead class="table-light">
                                 <tr>
-                                    <th>{{ __('Nama') }}</th>
+                                    <th>{{ __('Nama Karyawan') }}</th>
                                     <th>{{ __('Jam Masuk') }}</th>
                                     <th>{{ __('Pekerjaan') }}</th>
                                     <th><i class="fa-solid fa-coins text-warning me-1"></i> {{ __('Komisi Hari Ini') }}</th>
@@ -432,8 +436,8 @@
                             <tbody>
                                 @forelse($presentEmployees as $attendance)
                                     <tr>
-                                        <td>{{ $attendance->user->name }}</td>
-                                        <td>{{ $attendance->clock_in->format('H:i') }}</td>
+                                        <td class="fw-bold">{{ $attendance->user->name }}</td>
+                                        <td>{{ \Carbon\Carbon::parse($attendance->clock_in)->format('H:i') }}</td>
                                         <td>
                                             <span class="badge bg-info text-dark">
                                                 {{ $attendance->total_jobs ?? 0 }} {{ __('Jobs') }}
@@ -459,11 +463,14 @@
                                                 {{ __(ucfirst($attendance->status)) }}
                                             </span>
                                         </td>
-                                        <td>{{ $attendance->clock_out ? $attendance->clock_out->format('H:i') : '-' }}</td>
+                                        <td>{{ $attendance->clock_out ? \Carbon\Carbon::parse($attendance->clock_out)->format('H:i') : '-' }}</td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center">{{ __('Belum ada karyawan yang hadir.') }}</td>
+                                        <td colspan="7" class="text-center py-4 text-muted">
+                                            <i class="fa-solid fa-user-clock fa-2x mb-2 d-block text-gray-300"></i>
+                                            {{ __('Belum ada karyawan wash yang absen masuk hari ini.') }}
+                                        </td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -473,6 +480,7 @@
             </div>
         </div>
     </div>
+
 
     <div class="row">
         <div class="col-lg-6 mb-4">

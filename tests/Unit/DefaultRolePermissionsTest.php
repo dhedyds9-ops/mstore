@@ -11,18 +11,19 @@ class DefaultRolePermissionsTest extends TestCase
     {
         $templates = collect(DefaultRolePermissions::primaryDefinitions())->pluck('label')->values()->all();
 
-        $this->assertContains('Administrator', $templates);
-        $this->assertContains('Direktur', $templates);
-        $this->assertContains('Network Operations Center', $templates);
-        $this->assertContains('Technician', $templates);
-        $this->assertContains('Coordinator', $templates);
-        $this->assertContains('Customer Service', $templates);
-        $this->assertContains('HRD', $templates);
-        $this->assertContains('Finance Staff', $templates);
-        $this->assertContains('HRD Manager', $templates);
-        $this->assertContains('Kasir ATK', $templates);
-        $this->assertContains('Kasir Wash', $templates);
-        $this->assertContains('Karyawan Wash', $templates);
-        $this->assertContains('Customer', $templates);
+        $this->assertContains('Super Administrator', $templates);
+        $this->assertContains('Manager', $templates);
+        $this->assertContains('Supervisor Operasional', $templates);
+        $this->assertContains('Finance / Admin Keuangan', $templates);
+        $this->assertContains('Admin Wedding & Event', $templates);
+        $this->assertContains('Staf Logistik & Gudang', $templates);
+        $this->assertContains('Kasir POS Wash', $templates);
+        $this->assertContains('Kasir POS ATK', $templates);
+        $this->assertContains('Operator Wash / Tukang Cuci', $templates);
+        $this->assertContains('NOC / Network Monitoring', $templates);
+        $this->assertContains('Leader Jaringan', $templates);
+        $this->assertContains('Teknisi Lapangan', $templates);
+        $this->assertContains('Mitra / Reseller', $templates);
+        $this->assertContains('Pelanggan', $templates);
     }
 }

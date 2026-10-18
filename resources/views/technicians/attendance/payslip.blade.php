@@ -333,9 +333,15 @@
                                             </div>
                                         @endif
                                     @endif
+                                    @if(($data['wash_commission'] ?? 0) > 0)
+                                        <div class="d-flex justify-content-between x-small fw-bold text-success">
+                                            <span>Komisi Cuci ({{ $data['wash_commission_count'] ?? 1 }} unit)</span>
+                                            <span>+{{ number_format($data['wash_commission'], 0, ',', '.') }}</span>
+                                        </div>
+                                    @endif
                                     <div class="d-flex justify-content-between x-small mt-1 text-primary border-top border-1 pt-1 fw-bold">
                                         <span>Total Pendapatan</span>
-                                        <span>{{ number_format($data['total_daily_salary'] + $data['total_bonus'], 0, ',', '.') }}</span>
+                                        <span>{{ number_format($data['total_daily_salary'] + $data['total_bonus'] + ($data['wash_commission'] ?? 0), 0, ',', '.') }}</span>
                                     </div>
                                 </div>
                             </div>

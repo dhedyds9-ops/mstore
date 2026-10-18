@@ -22,36 +22,26 @@ use App\Events\WhatsApp\WhatsAppAnalyticsObserved;
 use App\Services\AiService;
 use App\Services\KnowledgeBaseRetrievalService;
 use App\Services\PaymentService;
-use App\Services\NetworkDiagnosticService;
 use App\Services\TechnicianAssignmentService;
 use App\Services\Wash\WashLoyaltyService;
 use App\Services\Wash\WashMembershipService;
-use App\Actions\WhatsApp\RunDiagnosticAction;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-
-use Modules\Network\Services\MonitoringService;
 
 class WhatsAppDynamicReplyService
 {
     protected $aiService;
     protected $paymentService;
-    protected $networkDiagnosticService;
     protected $technicianAssignmentService;
-    protected $runDiagnosticAction;
     protected $knowledgeBaseRetrieval;
-    protected $monitoringService;
 
-    public function __construct(AiService $aiService, PaymentService $paymentService, NetworkDiagnosticService $networkDiagnosticService, TechnicianAssignmentService $technicianAssignmentService, RunDiagnosticAction $runDiagnosticAction, KnowledgeBaseRetrievalService $knowledgeBaseRetrieval, MonitoringService $monitoringService)
+    public function __construct(AiService $aiService, PaymentService $paymentService, TechnicianAssignmentService $technicianAssignmentService, KnowledgeBaseRetrievalService $knowledgeBaseRetrieval)
     {
         $this->aiService = $aiService;
         $this->paymentService = $paymentService;
-        $this->networkDiagnosticService = $networkDiagnosticService;
         $this->technicianAssignmentService = $technicianAssignmentService;
-        $this->runDiagnosticAction = $runDiagnosticAction;
         $this->knowledgeBaseRetrieval = $knowledgeBaseRetrieval;
-        $this->monitoringService = $monitoringService;
     }
 
     public function getReply(string $message, ?User $user = null, ?WhatsAppSession $session = null, ?string $mediaUrl = null, ?string $mediaType = null): array
@@ -463,16 +453,10 @@ class WhatsAppDynamicReplyService
 
     private function handleShowPackages(): array
     {
-        try {
-            $response = $this->aiService->getInternetPackages();
-            return $this->convertAiResponseToWhatsApp($response);
-        } catch (\Exception $e) {
-            Log::error('Failed to get packages for WhatsApp: '.$e->getMessage());
-            return [
-                'type' => 'text',
-                'text' => 'Maaf, gagal menampilkan paket internet saat ini.'
-            ];
-        }
+        return [
+            'type' => 'text',
+            'text' => "Untuk informasi produk ATK dan layanan GT Wash, silakan kunjungi halaman layanan di aplikasi MStore.",
+        ];
     }
 
     private function handleCheckBillStart(?WhatsAppSession $session): array
@@ -690,29 +674,11 @@ class WhatsAppDynamicReplyService
         }
 
         if ($step === 2) {
-            // Restart connection
-            $payload = $session->payload;
-            $customer = Customer::find($payload['customer_id']);
-            
-            if (strtolower(trim($message)) === 'ya' || strtolower(trim($message)) === '1') {
-                // Restart
-                $success = $this->restartPppoeConnection($customer);
-                if ($success) {
-                    $session->reset();
-                    return [
-                        'type' => 'text',
-                        'text' => "✅ Koneksi Anda sedang di-restart! Silakan tunggu 1-2 menit lalu coba kembali!"
-                    ];
-                }
-                return [
-                    'type' => 'text',
-                    'text' => "❌ Gagal me-restart koneksi. Silakan hubungi admin!"
-                ];
-            }
+            // Customer has been shown the connection status; no further action available.
             $session->reset();
             return [
                 'type' => 'text',
-                'text' => "✅ Baik, tidak jadi di-restart!"
+                'text' => "Silakan hubungi admin bila koneksi Anda masih bermasalah."
             ];
         }
 
@@ -724,9 +690,6 @@ class WhatsAppDynamicReplyService
     {
         $user = $customer->user;
         $package = $customer->package;
-        $olt = $customer->olt;
-        $odp = $customer->odp;
-        $htb = $customer->htb;
 
         $statusText = "📊 STATUS KONEKSI\n";
         $statusText .= "Nama: {$customer->name}\n";
@@ -749,33 +712,11 @@ class WhatsAppDynamicReplyService
                 'step' => 2,
                 'payload' => ['customer_id' => $customer->id]
             ]);
-            $statusText .= "\nApakah Anda ingin me-restart koneksi? (Ketik 'Ya' atau '1')";
         }
         return [
             'type' => 'text',
             'text' => $statusText
         ];
-    }
-
-    private function restartPppoeConnection(Customer $customer): bool
-    {
-        $user = $customer->user;
-        if (!$user || !$user->radius_username) {
-            return false;
-        }
-        // Get Router from OLT's Router, or get first active router
-        $router = $customer->router ?? Router::where('is_active', true)->first();
-        if (!$router) return false;
-
-        try {
-            if (!$this->monitoringService->isRouterConnected($router)) {
-                return false;
-            }
-            return $this->monitoringService->killActive($router, $user->radius_username);
-        } catch (\Exception $e) {
-            Log::error("Failed to restart PPPoE: " . $e->getMessage());
-            return false;
-        }
     }
 
     private function handleCheckOutage(string $message, ?User $user, ?WhatsAppSession $session): array
@@ -980,7 +921,7 @@ class WhatsAppDynamicReplyService
         $step = $session->step;
 
         if ($step === 1) {
-            // Step 1: Find customer and run diagnostic
+            // Step 1: Find customer and ask for the issue details
             $customer = Customer::where('customer_id', $message)
                 ->orWhere('phone', $message)
                 ->first();
@@ -992,59 +933,32 @@ class WhatsAppDynamicReplyService
                 ];
             }
 
-            // Run diagnostic
-            try {
-                $diagnosticResponse = $this->runDiagnosticAction->execute($customer, $session);
+            $session->updatePayload(['customer_id' => $customer->id]);
+            $session->update(['step' => 2]);
 
-                // Store diagnostic info in session
-                if (isset($diagnosticResponse['diagnostic'])) {
-                    $session->updatePayload([
-                        'customer_id' => $customer->id,
-                        'diagnostic_id' => $diagnosticResponse['diagnostic']->id,
-                        'ticket_needed' => $diagnosticResponse['diagnostic']->ticket_needed
-                    ]);
-                    $session->update(['step' => 2]);
-                }
-
-                return $diagnosticResponse;
-            } catch (\Exception $e) {
-                Log::error('Failed to run diagnostic for WhatsApp', ['error' => $e->getMessage()]);
-                
-                $session->updatePayload(['customer_id' => $customer->id]);
-                $session->update(['step' => 2]);
-                
-                return [
-                    'type' => 'text',
-                    'text' => "Terima kasih, {$customer->name}! Sekarang silakan jelaskan detail kendala yang Anda alami:"
-                ];
-            }
+            return [
+                'type' => 'text',
+                'text' => "Terima kasih, {$customer->name}! Sekarang silakan jelaskan detail kendala yang Anda alami:"
+            ];
         }
 
         if ($step === 2) {
             // Step 2: Check if user typed "LANJUT" to create ticket
             $payload = $session->payload;
             $customer = Customer::find($payload['customer_id']);
-            $diagnosticId = $payload['diagnostic_id'] ?? null;
 
             if (strtolower(trim($message)) === 'lanjut') {
                 // Create ticket
                 try {
-                    $diagnostic = \App\Models\NetworkDiagnostic::find($diagnosticId);
-                    
                     $ticket = Ticket::create([
                         'ticket_number' => Ticket::generateNumber(),
                         'customer_id' => $customer->id,
-                        'subject' => 'Laporan Gangguan Internet - ' . ($diagnostic?->summary ?? 'Auto Diagnostic'),
-                        'description' => $diagnostic?->summary ?? $message,
+                        'subject' => 'Laporan Gangguan Internet',
+                        'description' => $message,
                         'type' => 'outage',
-                        'priority' => $diagnostic?->priority ?? 'medium',
+                        'priority' => 'medium',
                         'status' => 'open',
-                        'diagnostic_id' => $diagnosticId
                     ]);
-                    
-                    if ($diagnostic) {
-                        $diagnostic->update(['ticket_id' => $ticket->id]);
-                    }
 
                     event(new WhatsAppAnalyticsObserved([
                         'occurred_at' => now(),
@@ -1058,7 +972,6 @@ class WhatsAppDynamicReplyService
                         'meta' => [
                             'source' => 'whatsapp_dynamic_reply',
                             'flow' => 'report_outage',
-                            'with_diagnostic' => (bool) $diagnosticId,
                         ],
                     ]));
 
@@ -1080,7 +993,7 @@ class WhatsAppDynamicReplyService
                                . "Tim teknisi kami akan segera melakukan pengecekan dan menghubungi Anda!"
                     ];
                 } catch (\Exception $e) {
-                    Log::error('Failed to create ticket from diagnostic', ['error' => $e->getMessage()]);
+                    Log::error('Failed to create ticket', ['error' => $e->getMessage()]);
                     $session->reset();
                     return [
                         'type' => 'text',
@@ -1098,7 +1011,6 @@ class WhatsAppDynamicReplyService
                 'type' => 'outage',
                 'priority' => 'medium',
                 'status' => 'open',
-                'diagnostic_id' => $diagnosticId
             ]);
 
             event(new WhatsAppAnalyticsObserved([
@@ -1113,7 +1025,6 @@ class WhatsAppDynamicReplyService
                 'meta' => [
                     'source' => 'whatsapp_dynamic_reply',
                     'flow' => 'report_outage',
-                    'with_diagnostic' => (bool) $diagnosticId,
                 ],
             ]));
 
@@ -1229,16 +1140,10 @@ class WhatsAppDynamicReplyService
             return $this->handleCctvPackages();
         }
 
-        try {
-            $response = $this->aiService->getCctvInfo();
-            return $this->convertAiResponseToWhatsApp($response);
-        } catch (\Exception $e) {
-            Log::error('Failed to get CCTV info for WhatsApp: '.$e->getMessage());
-            return [
-                'type' => 'text',
-                'text' => '📹 *LAYANAN CCTV*\n\nKami menyediakan layanan pemasangan CCTV profesional!'
-            ];
-        }
+        return [
+            'type' => 'text',
+            'text' => '📹 *LAYANAN CCTV*\n\nKami menyediakan layanan pemasangan CCTV profesional!',
+        ];
     }
 
     private function handleWash(): array

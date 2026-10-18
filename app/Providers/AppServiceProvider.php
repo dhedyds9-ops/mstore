@@ -18,13 +18,10 @@ use App\Observers\TicketObserver;
 use App\Observers\UserObserver;
 use App\Observers\WashEmployeeObserver;
 use App\Observers\WashTransactionObserver;
-use Illuminate\Cache\RateLimiting\Limit;
-use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
@@ -84,65 +81,53 @@ class AppServiceProvider extends ServiceProvider
             }
         }
 
-        RateLimiter::for('ganti-wifi-otp', function (Request $request) {
-            $userId = Auth::id() ?? $request->ip();
-            return Limit::perMinute(10)->by('onu-wifi-otp-' . $userId);
-        });
+        // View Composers for Sidebar / Layout Data
+        \Illuminate\Support\Facades\View::composer('layouts.app', function ($view) {
+            $authUser = Auth::user();
+            $isAdmin = false;
+            $permissionMap = [];
+            $sidebarMenu = [];
+            $unreadNotificationCount = 0;
+            $unreadNotifications = collect();
+            
+            if ($authUser) {
+                $isAdmin = $authUser->hasRole('finance');
+                $roleId = $authUser->role_id;
+                $runningUnitTests = app()->runningUnitTests();
 
-        RateLimiter::for('ganti-wifi-update', function (Request $request) {
-            $userId = Auth::id() ?? $request->ip();
-            return Limit::perHour(3)->by('onu-wifi-update-' . $userId);
-        });
+                if (! $isAdmin) {
+                    $computePermissionMap = function () use ($roleId): array {
+                        $role = Role::query()
+                            ->whereKey($roleId)
+                            ->with(['permissions:id,name'])
+                            ->first();
 
-        if (! $this->app->runningInConsole()) {
-            // View Composers for Sidebar / Layout Data
-            \Illuminate\Support\Facades\View::composer('layouts.app', function ($view) {
-                $authUser = Auth::user();
-                $isAdmin = false;
-                $permissionMap = [];
-                $sidebarMenu = [];
-                $unreadNotificationCount = 0;
-                $unreadNotifications = collect();
-                
-                if ($authUser) {
-                    $isAdmin = $authUser->hasRole('finance');
-                    $roleId = $authUser->role_id;
-                    $runningUnitTests = app()->runningUnitTests();
+                        return ($role?->permissions?->pluck('name')->flip()->all()) ?? [];
+                    };
 
-                    if (! $isAdmin) {
-                        $computePermissionMap = function () use ($roleId): array {
-                            $role = Role::query()
-                                ->whereKey($roleId)
-                                ->with(['permissions:id,name'])
-                                ->first();
-
-                            return ($role?->permissions?->pluck('name')->flip()->all()) ?? [];
-                        };
-
-                        $permissionMap = $runningUnitTests
-                            ? $computePermissionMap()
-                            : Cache::remember("sidebar.permission_map.role.{$roleId}", 300, $computePermissionMap);
-                    }
-
-                    $sidebarMenu = $runningUnitTests
-                        ? \App\Support\Sidebar\SidebarMenu::tree()
-                        : Cache::rememberForever('sidebar.menu.tree.v13', function () {
-                            return \App\Support\Sidebar\SidebarMenu::tree();
-                        });
-                    $unreadNotificationCount = $authUser->unreadNotifications()->count();
-                    $unreadNotifications = $authUser->unreadNotifications()->latest()->limit(10)->get();
+                    $permissionMap = $runningUnitTests
+                        ? $computePermissionMap()
+                        : Cache::remember("sidebar.permission_map.role.{$roleId}", 300, $computePermissionMap);
                 }
-                
-                $view->with([
-                    'authUser' => $authUser,
-                    'isAdmin' => $isAdmin,
-                    'permissionMap' => $permissionMap,
-                    'sidebarMenu' => $sidebarMenu,
-                    'unreadNotificationCount' => $unreadNotificationCount,
-                    'unreadNotifications' => $unreadNotifications,
-                ]);
-            });
-        }
+
+                $sidebarMenu = $runningUnitTests
+                    ? \App\Support\ModuleGate::filterSidebar(\App\Support\Sidebar\SidebarMenu::tree())
+                    : Cache::rememberForever('sidebar.menu.tree.v16', function () {
+                        return \App\Support\ModuleGate::filterSidebar(\App\Support\Sidebar\SidebarMenu::tree());
+                    });
+                $unreadNotificationCount = $authUser->unreadNotifications()->count();
+                $unreadNotifications = $authUser->unreadNotifications()->latest()->limit(10)->get();
+            }
+            
+            $view->with([
+                'authUser' => $authUser,
+                'isAdmin' => $isAdmin,
+                'permissionMap' => $permissionMap,
+                'sidebarMenu' => $sidebarMenu,
+                'unreadNotificationCount' => $unreadNotificationCount,
+                'unreadNotifications' => $unreadNotifications,
+            ]);
+        });
 
         // Dynamic Permissions from Database
         try {
@@ -179,7 +164,7 @@ class AppServiceProvider extends ServiceProvider
             $hasTicketsTable = Cache::rememberForever('has_tickets_table', function () {
                 return Schema::hasTable('tickets');
             });
-            if ($hasTicketsTable) {
+            if ($hasTicketsTable && \App\Support\ModuleGate::isEnabled('ticketing')) {
                 Ticket::observe(TicketObserver::class);
             }
 
