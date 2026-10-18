@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Transaksi Wash')
+@section('title', 'Transaksi Jasa & Layanan')
 
 @section('content')
 <div class="container-fluid wash-transactions-page py-2 py-md-3">
     <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 mb-4">
-        <h1 class="h3 mb-0 text-body">Transaksi Wash</h1>
+        <h1 class="h3 mb-0 text-body">Transaksi Jasa & Layanan</h1>
         <div class="d-flex flex-wrap gap-2 wash-transactions-toolbar">
             @if(Auth::user()->hasPermission('wash.manage'))
             <button type="button" class="btn btn-sm btn-outline-danger shadow-sm d-none" id="bulkDeleteBtn" onclick="confirmBulkDelete()">

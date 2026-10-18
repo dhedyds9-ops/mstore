@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Wash Members')
+@section('title', 'Data Member Layanan')
 
 @section('content')
 <div class="container-fluid py-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
         <div>
-            <h4 class="mb-1">Member GT Wash</h4>
+            <h4 class="mb-1">Member Pelanggan Layanan</h4>
             <div class="text-muted">Database member digital, level, kendaraan, dan spending.</div>
         </div>
         <a href="{{ route('wash.members.levels') }}" class="btn btn-outline-primary">Membership Level</a>

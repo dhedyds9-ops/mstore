@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', __('Jadwal Wedding'))
+@section('title', __('Jadwal Acara & Reservasi'))
 
 @section('content')
 <div class="container-fluid">

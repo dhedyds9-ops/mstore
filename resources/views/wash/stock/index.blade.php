@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Stok Wash & Caffe')
+@section('title', 'Stok Bahan & Operasional Jasa')
 
 @section('content')
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0">Daftar Stok Wash & Caffe</h1>
+        <h1 class="h3 mb-0">Daftar Stok Bahan & Operasional Jasa</h1>
         <a href="{{ route('wash.stock.create') }}" class="btn btn-primary">
             <i class="fas fa-plus"></i> Tambah Item
         </a>

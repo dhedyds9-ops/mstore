@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', __('Booking Wedding'))
+@section('title', __('Booking & Reservasi Acara'))
 
 @section('content')
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="mb-0 fw-bold">{{ __('Booking Wedding') }}</h4>
+        <h4 class="mb-0 fw-bold">{{ __('Booking & Reservasi Acara') }}</h4>
         <a href="{{ route('wedding.bookings.create') }}" class="btn btn-sm btn-primary shadow-sm">
             <i class="fa-solid fa-plus me-1"></i>{{ __('Tambah Booking') }}
         </a>

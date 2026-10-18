@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', __('Riwayat Transaksi Penjualan ATK'))
+@section('title', __('Riwayat Transaksi Toko & Retail'))
 
 @section('content')
 <div class="container-fluid px-3 px-md-4 py-3">

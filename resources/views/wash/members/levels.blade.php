@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Membership Level Wash')
+@section('title', 'Tingkatan Level Member')
 
 @section('content')
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <h4 class="mb-1">Membership Level GT Wash</h4>
+            <h4 class="mb-1">Tingkatan Level Member Layanan</h4>
             <div class="text-muted">Bronze, Silver, Gold, Platinum dengan diskon dan prioritas otomatis.</div>
         </div>
         <a href="{{ route('wash.members.index') }}" class="btn btn-outline-secondary">Kembali ke Member</a>

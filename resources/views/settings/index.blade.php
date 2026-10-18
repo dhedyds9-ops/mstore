@@ -308,7 +308,7 @@
                                     <div class="col-md-12">
                                         <label for="pos_qris_text" class="form-label fw-medium">Data String QRIS</label>
                                         <textarea class="form-control" id="pos_qris_text" name="pos_qris_text" rows="3">{{ \App\Models\Setting::getValue('pos_qris_text', '') }}</textarea>
-                                        <div class="small text-muted mt-1">Isi QRIS statis atau data QRIS yang dipakai di kasir Wash dan ATK.</div>
+                                        <div class="small text-muted mt-1">Isi QRIS statis atau data QRIS yang dipakai di kasir Toko dan Layanan Jasa.</div>
                                     </div>
                                 </div>
                             </div>
@@ -317,7 +317,7 @@
                         <!-- Landing Page -->
                         <div class="tab-pane fade" id="content-landing" role="tabpanel">
                             <div class="mb-4 pb-3 border-bottom">
-                                <h6 class="fw-bold text-primary text-uppercase mb-3">Landing Promo Internet</h6>
+                                <h6 class="fw-bold text-primary text-uppercase mb-3">Landing Promo Layanan</h6>
                                 <div class="row g-3">
                                     <div class="col-md-4">
                                         <label for="landing_internet_promo_enabled" class="form-label fw-medium">Status Promo</label>
@@ -329,7 +329,7 @@
                                     </div>
                                     <div class="col-md-4">
                                         <label for="landing_internet_promo_label" class="form-label fw-medium">Teks Promo</label>
-                                        <input type="text" class="form-control" id="landing_internet_promo_label" name="landing_internet_promo_label" value="{{ \App\Models\Setting::getValue('landing_internet_promo_label', 'Promo Paket Internet') }}">
+                                        <input type="text" class="form-control" id="landing_internet_promo_label" name="landing_internet_promo_label" value="{{ \App\Models\Setting::getValue('landing_internet_promo_label', 'Promo Paket Layanan') }}">
                                     </div>
                                     <div class="col-md-4">
                                         <label for="landing_internet_promo_percent" class="form-label fw-medium">Diskon Promo (%)</label>
@@ -340,11 +340,11 @@
                             </div>
 
                             <div class="alert alert-info mb-0">
-                                <div class="fw-bold">Pengelolaan Landing per Layanan</div>
-                                <div class="small text-muted">Paket Wedding, Paket CCTV, dan galeri foto Wedding dikelola di menu Business Units agar lebih rapi dan mudah dipahami.</div>
+                                <div class="fw-bold">Pengelolaan Landing per Solusi Bisnis</div>
+                                <div class="small text-muted">Paket Layanan Acara, Paket Solusi, dan galeri foto dikelola di menu modul terkait agar lebih rapi dan terorganisir.</div>
                                 <div class="mt-2 d-flex flex-wrap gap-2">
-                                    <a class="btn btn-sm btn-outline-primary" href="{{ route('wedding.packages.index') }}">Paket Wedding</a>
-                                    <a class="btn btn-sm btn-outline-primary" href="{{ route('wedding.gallery.index') }}">Galeri Wedding</a>
+                                    <a class="btn btn-sm btn-outline-primary" href="{{ route('wedding.packages.index') }}">Paket Layanan Acara</a>
+                                    <a class="btn btn-sm btn-outline-primary" href="{{ route('wedding.gallery.index') }}">Galeri Acara</a>
                                     <a class="btn btn-sm btn-outline-primary" href="{{ route('cctv.packages.index') }}">Paket CCTV</a>
                                 </div>
                             </div>

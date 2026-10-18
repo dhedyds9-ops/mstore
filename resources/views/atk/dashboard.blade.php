@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', __('Dasbor Toko ATK'))
+@section('title', __('Dasbor Toko & Retail'))
 
 @section('content')
 <div class="container-fluid px-3 px-md-4 py-3">
@@ -9,13 +9,13 @@
         <div>
             <div class="d-flex align-items-center gap-2 mb-1">
                 <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill small fw-semibold">
-                    <i class="fa-solid fa-store me-1"></i>{{ __('Retail & Layanan Toko') }}
+                    <i class="fa-solid fa-store me-1"></i>{{ __('Toko & Retail') }}
                 </span>
                 <span class="text-muted small">
                     <i class="fa-regular fa-calendar-days me-1"></i>{{ \Carbon\Carbon::now()->locale('id')->translatedFormat('l, d F Y') }}
                 </span>
             </div>
-            <h1 class="h3 fw-bold text-gray-800 mb-0">{{ __('Dasbor Toko ATK') }}</h1>
+            <h1 class="h3 fw-bold text-gray-800 mb-0">{{ __('Dasbor Toko & Retail') }}</h1>
             <p class="text-muted small mb-0">{{ __('Pantau penjualan harian, perputaran kas, pendapatan fee, dan produk terlaris.') }}</p>
         </div>
         <div class="d-flex flex-wrap gap-2">
@@ -338,7 +338,7 @@
                     <div>
                         <h6 class="fw-bold mb-0 text-gray-800 d-flex align-items-center gap-2">
                             <i class="fa-solid fa-fire text-danger"></i>
-                            <span>{{ __('5 Produk ATK Terlaris') }}</span>
+                            <span>{{ __('5 Produk Terlaris') }}</span>
                         </h6>
                         <small class="text-muted">{{ __('Berdasarkan akumulasi jumlah unit terjual') }}</small>
                     </div>
@@ -393,7 +393,7 @@
                             <i class="fa-solid fa-bolt text-warning"></i>
                             <span>{{ __('Pintasan Aksi Cepat') }}</span>
                         </h6>
-                        <small class="text-muted">{{ __('Akses cepat ke menu dan fitur utama kasir ATK') }}</small>
+                        <small class="text-muted">{{ __('Akses cepat ke menu dan fitur utama kasir toko & retail') }}</small>
                     </div>
                 </div>
                 <div class="card-body p-3 p-md-4">

@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', __('Galeri Wedding'))
+@section('title', __('Galeri Acara'))
 
 @section('content')
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="mb-0">Galeri Wedding</h4>
+        <h4 class="mb-0">Galeri & Portofolio Acara</h4>
         <a href="{{ route('wedding.gallery.create') }}" class="btn btn-primary">Tambah Foto</a>
     </div>
 

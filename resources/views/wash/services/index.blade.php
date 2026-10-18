@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'Kelola Layanan Wash')
+@section('title', 'Kelola Layanan Jasa')
 
 @section('content')
 <div class="col-12 pb-5 pb-md-0 wash-services-page">
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
         <div class="d-flex align-items-center gap-2">
-            <h1 class="h3 mb-0 text-gray-800">Layanan Wash</h1>
-            <a href="{{ route('wash.services.create') }}" class="btn btn-primary d-inline d-sm-none rounded-circle" aria-label="Tambah Layanan Wash" style="width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;">
+            <h1 class="h3 mb-0 text-gray-800">Daftar Layanan Jasa</h1>
+            <a href="{{ route('wash.services.create') }}" class="btn btn-primary d-inline d-sm-none rounded-circle" aria-label="Tambah Layanan Jasa" style="width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;">
                 <i class="fas fa-plus"></i>
             </a>
         </div>

@@ -7,15 +7,15 @@
 
     @if(\App\Support\ModuleGate::isEnabled('atk') && (Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('atk.pos')))
     <a href="{{ route('atk.pos') }}" class="mbn-item {{ request()->routeIs('atk.pos') ? 'active' : '' }}">
-        <div class="mbn-icon"><i class="fa-solid fa-cash-register"></i></div>
-        <span class="mbn-label">{{ __('ATK') }}</span>
+        <div class="mbn-icon"><i class="fa-solid fa-store"></i></div>
+        <span class="mbn-label">{{ __('Toko') }}</span>
     </a>
     @endif
 
     @if(\App\Support\ModuleGate::isEnabled('wash') && (Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('wash.pos')))
     <a href="{{ route('wash.pos') }}" class="mbn-item {{ request()->routeIs('wash.pos') ? 'active' : '' }}">
-        <div class="mbn-icon"><i class="fa-solid fa-car"></i></div>
-        <span class="mbn-label">{{ __('Wash') }}</span>
+        <div class="mbn-icon"><i class="fa-solid fa-hand-holding-heart"></i></div>
+        <span class="mbn-label">{{ __('Jasa') }}</span>
     </a>
     @endif
 

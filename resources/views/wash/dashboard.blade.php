@@ -1,12 +1,14 @@
 @extends('layouts.app')
 
+@section('title', __('Dasbor Jasa & Layanan'))
+
 @section('content')
 <div class="container-fluid wash-dashboard-page py-2 py-md-3">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-4">
-        <h1 class="h3 mb-0 text-body">{{ __('Dasbor Wash') }}</h1>
+        <h1 class="h3 mb-0 text-body">{{ __('Dasbor Jasa & Layanan') }}</h1>
         @if(Auth::user()->hasPermission('wash.pos'))
         <a href="{{ route('wash.pos') }}" class="btn btn-primary">
-            <i class="fas fa-cash-register me-2"></i>{{ __('Buka POS') }}
+            <i class="fas fa-cash-register me-2"></i>{{ __('Buka POS Kasir') }}
         </a>
         @endif
     </div>
@@ -404,7 +406,7 @@
                 <div class="card-body">
                     <div class="text-xs font-weight-bold text-info text-uppercase mb-1">{{ __('Jadwal Shift Hari Ini') }}</div>
                     <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $shiftSchedule?->status ? __(ucfirst($shiftSchedule->status)) : __('Sesuai Jadwal') }}</div>
-                    <div class="small text-muted mt-2">{{ $shiftSchedule?->notes ?: __('Operasional GT Wash berjalan normal.') }}</div>
+                    <div class="small text-muted mt-2">{{ $shiftSchedule?->notes ?: __('Operasional jasa berjalan normal.') }}</div>
                 </div>
             </div>
         </div>

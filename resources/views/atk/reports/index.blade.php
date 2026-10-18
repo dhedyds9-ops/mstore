@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', __('Laporan Keuangan & Penjualan ATK'))
+@section('title', __('Laporan Keuangan & Penjualan Toko'))
 
 @section('content')
 <div class="container-fluid px-3 px-md-4 py-3">
@@ -15,8 +15,8 @@
                     <i class="fa-regular fa-calendar-days me-1"></i>{{ \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y') }}
                 </span>
             </div>
-            <h1 class="h3 fw-bold text-gray-800 mb-0">{{ __('Laporan Keuangan & Penjualan ATK') }}</h1>
-            <p class="text-muted small mb-0">{{ __('Rekapitulasi omzet pemasukan, pengeluaran operasional, dan kalkulasi laba/rugi toko ATK.') }}</p>
+            <h1 class="h3 fw-bold text-gray-800 mb-0">{{ __('Laporan Keuangan & Penjualan Toko') }}</h1>
+            <p class="text-muted small mb-0">{{ __('Rekapitulasi omzet pemasukan, pengeluaran operasional, dan kalkulasi laba/rugi toko retail.') }}</p>
         </div>
 
         <div class="d-flex flex-wrap align-items-center gap-2">
