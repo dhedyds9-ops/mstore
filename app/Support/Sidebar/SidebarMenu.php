@@ -98,6 +98,10 @@ class SidebarMenu
                 'id' => 'sec-hr',
                 'label' => 'SDM & Presensi',
                 'items' => [
+                    self::group('hr-staff', 'Kepegawaian', [
+                        self::link('employees', 'Data Karyawan', 'employees.index', permissions: ['employee.view']),
+                        self::link('employee-leave', 'Pengajuan Cuti', 'admin.leave-requests', permissions: ['attendance.view']),
+                    ], permissions: ['employee.view', 'attendance.view']),
                     self::group('hr-attendance', 'Presensi & Payroll', [
                         self::link('attendance-kiosk', 'Kiosk Presensi', 'attendance.kiosk', permissions: ['attendance.view', 'setting.view']),
                         self::link('attendance-daily', 'Presensi Harian', 'attendance.daily', permissions: ['attendance.view']),
