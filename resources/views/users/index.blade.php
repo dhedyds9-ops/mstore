@@ -3,26 +3,25 @@
 @section('title', __('Manajemen Pengguna'))
 
 @section('content')
-<div class="mb-4">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+<div class="container-fluid py-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
         <div>
-            <h4 class="fw-bold text-primary mb-1">{{ __('Manajemen Pengguna') }}</h4>
-            <p class="text-muted small mb-0">{{ __('Kelola pengguna sistem dan perannya.') }}</p>
+            <h4 class="fw-bold mb-1">
+                <i class="fa-solid fa-users-gear text-primary me-2"></i>{{ __('Manajemen Pengguna') }}
+            </h4>
+            <p class="text-body-secondary small mb-0">{{ __('Kelola akun pengguna, peran akses, penempatan cabang, dan kredensial sistem.') }}</p>
         </div>
         <div class="d-flex flex-wrap gap-2">
-            <a href="{{ route('users.export', request()->query()) }}" class="btn btn-sm btn-outline-success text-nowrap">
+            <a href="{{ route('users.export', request()->query()) }}" class="btn btn-sm btn-outline-success shadow-sm text-nowrap">
                 <i class="fa-solid fa-file-excel me-1"></i> {{ __('Ekspor Excel') }}
             </a>
-            <a href="{{ route('users.create') }}" class="btn btn-sm btn-outline-primary text-nowrap">
-                <i class="fa-solid fa-plus me-1"></i> {{ __('Tambah Pengguna Baru') }}
+            <a href="{{ route('users.create') }}" class="btn btn-sm btn-primary shadow-sm text-nowrap">
+                <i class="fa-solid fa-user-plus me-1"></i> {{ __('Tambah Pengguna Baru') }}
             </a>
         </div>
     </div>
-</div>
 
-<div class="row">
-    <div class="col-12">
-        <div class="card border-0 shadow-sm">
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
             <div class="card-header bg-white py-3 border-bottom-0">
                 <x-table-toolbar 
                     :route="route('users.index')" 
@@ -168,7 +167,6 @@
             </div>
         </div>
     </div>
-</div>
 
 <div class="modal fade" id="sendAccountWaModal" tabindex="-1" aria-labelledby="sendAccountWaModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
