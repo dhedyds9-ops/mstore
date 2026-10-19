@@ -1,21 +1,31 @@
 @extends('layouts.app')
 
-@section('title', 'Tambah Karyawan')
+@section('title', __('Tambah Data Karyawan'))
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="mb-0 fw-bold text-primary">Tambah Karyawan</h4>
-    <a href="{{ route('employees.index') }}" class="btn btn-outline-secondary btn-sm">
-        <i class="fa-solid fa-arrow-left me-1"></i> Kembali
-    </a>
-</div>
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+        <div>
+            <h4 class="fw-bold mb-1">
+                <i class="fa-solid fa-user-plus text-primary me-2"></i>{{ __('Tambah Data Karyawan') }}
+            </h4>
+            <p class="text-body-secondary small mb-0">{{ __('Daftarkan biodata lengkap karyawan, penempatan divisi, payroll, dan opsi akun login sistem.') }}</p>
+        </div>
+        <div>
+            <a href="{{ route('employees.index') }}" class="btn btn-outline-secondary btn-sm shadow-sm">
+                <i class="fa-solid fa-arrow-left me-1"></i> {{ __('Kembali ke Daftar') }}
+            </a>
+        </div>
+    </div>
 
-<div class="card shadow-sm border-0">
-    <div class="card-body">
-        <form method="POST" action="{{ route('employees.store') }}" enctype="multipart/form-data" class="row g-3">
-            @csrf
-            @include('employees.partials.form', ['employee' => null])
-        </form>
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-11">
+            <form method="POST" action="{{ route('employees.store') }}" enctype="multipart/form-data">
+                @csrf
+                @include('employees.partials.form', ['employee' => null])
+            </form>
+        </div>
     </div>
 </div>
 @endsection

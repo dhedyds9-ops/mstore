@@ -3,32 +3,30 @@
 @section('title', 'Data Karyawan')
 
 @section('content')
-<div class="card shadow-sm border-0 mb-4 overflow-hidden">
-    <div class="card-body p-3">
-        {{-- Row 1: Judul & Utama --}}
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
-            <div class="d-flex align-items-center gap-2">
-                <i class="fa-solid fa-users text-primary fa-lg"></i>
-                <div>
-                    <h5 class="mb-0 fw-bold">Data Karyawan</h5>
-                    <div class="text-muted x-small">Kelola data master dan ID Card karyawan.</div>
-                </div>
-            </div>
-            
-            <div class="d-flex gap-2">
-                <form action="{{ route('employees.sync') }}" method="POST" onsubmit="return confirm('Sinkronkan data sekarang?')">
-                    @csrf
-                    <button type="submit" class="btn btn-sm btn-outline-primary shadow-sm">
-                        <i class="fa-solid fa-rotate me-1"></i> Sinkron
-                    </button>
-                </form>
-                <a href="{{ route('employees.create') }}" class="btn btn-sm btn-primary shadow-sm px-3">
-                    <i class="fa-solid fa-plus me-1"></i> Tambah Baru
-                </a>
-            </div>
+<div class="container-fluid py-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+        <div>
+            <h4 class="fw-bold mb-1">
+                <i class="fa-solid fa-users text-primary me-2"></i>Data Karyawan
+            </h4>
+            <p class="text-body-secondary small mb-0">Kelola data master biodata, penempatan jabatan, absensi, dan kartu ID Card karyawan.</p>
         </div>
+        
+        <div class="d-flex gap-2">
+            <form action="{{ route('employees.sync') }}" method="POST" onsubmit="return confirm('Sinkronkan data sekarang?')">
+                @csrf
+                <button type="submit" class="btn btn-sm btn-outline-primary shadow-sm">
+                    <i class="fa-solid fa-rotate me-1"></i> Sinkron
+                </button>
+            </form>
+            <a href="{{ route('employees.create') }}" class="btn btn-sm btn-primary shadow-sm px-3">
+                <i class="fa-solid fa-user-plus me-1"></i> Tambah Karyawan
+            </a>
+        </div>
+    </div>
 
-        <hr class="my-3 opacity-10">
+    <div class="card shadow-sm border-0 rounded-4 mb-4 overflow-hidden">
+        <div class="card-body p-3 p-md-4">
 
         {{-- Row 2: Filter & Search --}}
         <form method="GET" class="row g-2 align-items-center">
@@ -205,6 +203,7 @@
             {{ $employees->appends(request()->query())->links() }}
         </div>
     @endif
+    </div>
 </div>
 @endsection
 
