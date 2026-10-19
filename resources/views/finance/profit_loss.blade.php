@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid">
+<div class="container-fluid py-4">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
             <h1 class="h4 mb-1 fw-bold text-body"><i class="fa-solid fa-chart-line text-primary me-2"></i>{{ __('Laporan Laba Rugi') }}</h1>
