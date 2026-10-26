@@ -121,6 +121,7 @@ class SidebarMenu
                         self::link('atk-settings', 'Setting Toko', 'settings.atk.index', permissions: ['setting.view']),
                         self::link('wash-settings', 'Setting Layanan', 'settings.wash.index', permissions: ['setting.view']),
                         self::link('attendance-settings', 'Setting Presensi', 'settings.attendance.index', permissions: ['setting.view']),
+                        self::link('whatsapp-settings', 'Gateway WhatsApp', 'whatsapp.index', permissions: ['chat.view', 'setting.view']),
                     ], permissions: ['setting.view']),
                     self::group('sys-payment', 'Payment Gateway', [
                         self::link('payment-dashboard', 'Status Gateway', 'payment.dashboard', permissions: ['payment.view']),

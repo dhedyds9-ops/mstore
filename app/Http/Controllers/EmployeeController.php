@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Employee;
+use App\Models\Role;
 use App\Models\Setting;
 use App\Models\User;
 use App\Models\WashEmployee;
 use App\Services\EmployeeSyncService;
+use App\Services\WhatsAppService;
 use App\Traits\HasIdCard;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -14,6 +16,7 @@ use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -32,7 +35,7 @@ class EmployeeController extends Controller implements HasMiddleware
             new Middleware('auth'),
             new Middleware('permission:employee.view', only: ['index', 'idCard', 'printCards']),
             new Middleware('permission:employee.create', only: ['create', 'store']),
-            new Middleware('permission:employee.edit', only: ['edit', 'update']),
+            new Middleware('permission:employee.edit', only: ['edit', 'update', 'syncToDsBilling', 'createUserAccount', 'sendWhatsAppCredentials']),
             new Middleware('permission:employee.delete', only: ['destroy']),
             new Middleware('permission:employee.sync', only: ['syncExisting']),
             new Middleware('permission:employee.export', only: ['exportCsv', 'exportPdf', 'exportExcel']),
@@ -473,6 +476,125 @@ class EmployeeController extends Controller implements HasMiddleware
         }
 
         return back()->with('error', $result['message']);
+    }
+
+    /**
+     * Buat dan tautkan akun User Login langsung untuk karyawan ini.
+     */
+    public function createUserAccount(Employee $employee)
+    {
+        if ($employee->user_id && $employee->user) {
+            return back()->with('info', "Karyawan {$employee->full_name} sudah memiliki akun login (Username: {$employee->user->username}).");
+        }
+
+        $email = trim((string) $employee->email);
+        $fullName = trim((string) $employee->full_name);
+        $phone = trim((string) $employee->phone);
+
+        // Cari atau buat User berdasarkan email atau username
+        $user = null;
+        if ($email !== '') {
+            $user = User::query()->where('email', $email)->first();
+        }
+
+        $defaultPassword = 'Password123!';
+
+        if (! $user) {
+            $username = User::generateUniqueUsername($fullName, $email);
+
+            // Cari role sesuai jabatan karyawan
+            $roleName = $this->employeeSyncService->roleNameFromPosition($employee->position);
+            $roleId = null;
+            if ($roleName) {
+                $role = Role::query()->where('name', $roleName)->first();
+                $roleId = $role?->id;
+            }
+            if (! $roleId) {
+                $fallbackRole = Role::query()->whereIn('name', ['staff', 'employee', 'operator', 'atk-cashier', 'admin'])->first();
+                $roleId = $fallbackRole?->id;
+            }
+
+            $user = User::create([
+                'name' => $fullName,
+                'email' => $email,
+                'phone' => $phone,
+                'username' => $username,
+                'password' => Hash::make($defaultPassword),
+                'role_id' => $roleId,
+                'is_active' => true,
+            ]);
+        }
+
+        $employee->update(['user_id' => $user->id]);
+
+        // Sync Employee.position -> User.role
+        $this->employeeSyncService->syncFromEmployee($employee->fresh());
+
+        return back()->with('success', "Akun login berhasil dibuat & ditautkan untuk {$employee->full_name}! Username: {$user->username}, Password Default: {$defaultPassword}");
+    }
+
+    /**
+     * Kirim data login (Nama, Jabatan, Username, Password) langsung ke nomor WhatsApp karyawan via Gateway.
+     */
+    public function sendWhatsAppCredentials(Employee $employee, WhatsAppService $wa)
+    {
+        $rawPhone = $employee->phone ?: '';
+        $cleanPhone = preg_replace('/[^0-9]/', '', (string) $rawPhone);
+        if (str_starts_with($cleanPhone, '08')) {
+            $cleanPhone = '628' . substr($cleanPhone, 2);
+        } elseif (str_starts_with($cleanPhone, '8')) {
+            $cleanPhone = '628' . substr($cleanPhone, 1);
+        } elseif (str_starts_with($cleanPhone, '6208')) {
+            $cleanPhone = '628' . substr($cleanPhone, 4);
+        }
+
+        if (empty($cleanPhone) || !str_starts_with($cleanPhone, '628') || strlen($cleanPhone) < 10 || strlen($cleanPhone) > 16) {
+            return back()->with('error', "Nomor WhatsApp karyawan ('{$rawPhone}') tidak valid. WhatsApp memerlukan nomor ponsel seluler Indonesia (contoh: 08123456789 atau 628123456789).");
+        }
+
+        // Jika belum memiliki user akun, buatkan otomatis terlebih dahulu
+        if (! $employee->user_id || ! $employee->user) {
+            $this->createUserAccount($employee);
+            $employee->refresh();
+        }
+
+        $user = $employee->user;
+        $username = $user?->username ?? ($user?->email ?? '-');
+        $nama = $employee->full_name;
+        $jabatan = $employee->position ?: ($employee->department ?: 'Staff');
+        $loginUrl = route('login');
+        $defaultPassword = 'Password123!';
+
+        $msgText = "Halo *{$nama}*,\n\n"
+            . "Berikut informasi akun login sistem Anda:\n"
+            . "━━━━━━━━━━━━━━━━━━━━\n"
+            . "🏢 *Aplikasi:* MStore\n"
+            . "👤 *Nama:* {$nama}\n"
+            . "💼 *Jabatan:* {$jabatan}\n"
+            . "🌐 *Link Login:* {$loginUrl}\n\n"
+            . "🔐 *Kredensial Login:*\n"
+            . "• Username: *{$username}*\n"
+            . "• Password: *{$defaultPassword}*\n"
+            . "━━━━━━━━━━━━━━━━━━━━\n"
+            . "Silakan gunakan informasi di atas untuk masuk ke sistem. Demi keamanan, segera ganti password Anda setelah login pertama kali.\n\n"
+            . "Terima kasih.";
+
+        // Cek gateway WhatsApp di MStore
+        $gwStatus = $wa->checkGatewayStatus();
+        if (! ($gwStatus['ok'] ?? false) || ! ($gwStatus['connected'] ?? false)) {
+            $errMsg = $gwStatus['message'] ?? 'Gateway WhatsApp belum diatur / belum aktif.';
+            return back()->with('error', "Gagal mengirim via WhatsApp Gateway: {$errMsg}. Silakan periksa pengaturan di menu Pengaturan > Gateway WhatsApp.");
+        }
+
+        try {
+            $res = $wa->sendMessage($cleanPhone, $msgText, 'employee_credentials');
+            if ($res['success'] ?? false) {
+                return back()->with('success', "✅ Kredensial login (Username & Password) berhasil dikirim via WhatsApp Gateway ke {$cleanPhone}!");
+            }
+            return back()->with('error', "Gagal mengirim via WhatsApp Gateway: " . ($res['error'] ?? ($res['message'] ?? 'Respon gateway tidak berhasil.')));
+        } catch (\Throwable $e) {
+            return back()->with('error', "Terjadi kesalahan saat menghubungi WhatsApp Gateway: " . $e->getMessage());
+        }
     }
 
     private function validateEmployee(Request $request, ?int $id = null): array

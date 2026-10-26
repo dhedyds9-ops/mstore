@@ -210,23 +210,82 @@
         </div>
     </div>
 
-    <!-- SECTION 4: AKSES AKUN LOGIN SISTEM (OPSIONAL) -->
+    <!-- SECTION 4: AKSES AKUN LOGIN SISTEM -->
     <div class="col-12">
         <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
             <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
                 <h6 class="m-0 fw-bold text-dark">
                     <i class="fa-solid fa-shield-halved text-primary me-2"></i>{{ __('Akses Akun Login Sistem') }}
                 </h6>
-                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-1 small">
-                    Opsional
-                </span>
+                @if($employee?->user_id && $employee->user)
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-3 py-1 small">
+                        <i class="fa-solid fa-circle-check me-1"></i> Terhubung Akun User
+                    </span>
+                @else
+                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill px-3 py-1 small">
+                        Belum Ada Akun User
+                    </span>
+                @endif
             </div>
             <div class="card-body p-3 p-md-4 border-top">
+                @if($employee?->user_id && $employee->user)
+                    <div class="p-3 bg-success bg-opacity-10 rounded-3 mb-3 border border-success border-opacity-25">
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
+                            <div>
+                                <div class="fw-bold text-success mb-1">
+                                    <i class="fa-solid fa-circle-check me-1"></i> Akun Login Tertaut: <b>{{ $employee->user->name }}</b>
+                                </div>
+                                <div class="small text-muted d-flex flex-wrap gap-3">
+                                    <span>Username: <code class="fw-bold text-dark bg-white px-2 py-0.5 rounded border">{{ $employee->user->username ?? $employee->user->email }}</code></span>
+                                    <span>Peran (Role): <span class="badge bg-primary">{{ $employee->user->role?->label ?? '-' }}</span></span>
+                                    <span>Password Default: <code class="fw-bold text-primary bg-white px-2 py-0.5 rounded border">Password123!</code></span>
+                                </div>
+                            </div>
+                            <div class="d-flex flex-wrap gap-1 mt-2 mt-md-0">
+                                @if(!empty($employee?->id))
+                                    <button type="submit" form="formSendWaCredentials" class="btn btn-sm btn-success">
+                                        <i class="fa-brands fa-whatsapp me-1"></i> Kirim via WA Gateway
+                                    </button>
+                                    @php
+                                        $cleanPhone = preg_replace('/[^0-9]/', '', (string)($employee->phone ?? ''));
+                                        if (str_starts_with($cleanPhone, '08')) $cleanPhone = '628' . substr($cleanPhone, 2);
+                                        elseif (str_starts_with($cleanPhone, '8')) $cleanPhone = '628' . substr($cleanPhone, 1);
+                                        elseif (str_starts_with($cleanPhone, '6208')) $cleanPhone = '628' . substr($cleanPhone, 4);
+                                        $uname = $employee->user->username ?? ($employee->user->email ?? '-');
+                                        $waText = rawurlencode("Halo *{$employee->full_name}*,\n\nBerikut informasi akun login sistem Anda:\n━━━━━━━━━━━━━━━━━━━━\n🏢 *Aplikasi:* MStore\n👤 *Nama:* {$employee->full_name}\n💼 *Jabatan:* " . ($employee->position ?: 'Staff') . "\n🌐 *Link Login:* " . route('login') . "\n\n🔐 *Kredensial Login:*\n• Username: *{$uname}*\n• Password: *Password123!*\n━━━━━━━━━━━━━━━━━━━━\nSilakan gunakan informasi di atas untuk masuk ke sistem. Demi keamanan, segera ganti password Anda setelah login pertama kali.\n\nTerima kasih.");
+                                    @endphp
+                                    @if($cleanPhone)
+                                        <a href="https://wa.me/{{ $cleanPhone }}?text={{ $waText }}" target="_blank" class="btn btn-sm btn-outline-secondary" title="Buka WhatsApp Web manual">
+                                            <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Manual WA
+                                        </a>
+                                    @endif
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @else
+                    <div class="p-3 bg-light rounded-3 mb-3 border d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
+                        <div>
+                            <div class="fw-semibold text-dark small mb-1">
+                                <i class="fa-solid fa-circle-exclamation text-warning me-1"></i> Karyawan ini belum terhubung dengan akun login sistem.
+                            </div>
+                            <div class="text-muted small">
+                                Anda dapat membuat akun login secara instan (Username otomatis & Password default: <code>Password123!</code>) langsung dari tombol di bawah.
+                            </div>
+                        </div>
+                        @if(!empty($employee?->id))
+                            <button type="submit" form="formCreateUserAccount" class="btn btn-sm btn-primary text-nowrap">
+                                <i class="fa-solid fa-user-plus me-1"></i> + Buat Akun Login Langsung
+                            </button>
+                        @endif
+                    </div>
+                @endif
+
                 <div class="p-3 bg-light rounded-3 mb-3 border">
                     <div class="form-check form-switch m-0">
                         <input class="form-check-input" type="checkbox" role="switch" name="create_user_account" id="create_user_account" value="1" {{ old('create_user_account', $employee?->user_id ? '1' : '') ? 'checked' : '' }}>
                         <label class="form-check-label fw-semibold text-dark small" for="create_user_account">
-                            {{ $employee?->user_id ? __('Perbarui / Aktifkan Akun Login Sistem') : __('Aktifkan Akun Login untuk Karyawan Ini') }}
+                            {{ $employee?->user_id ? __('Atur / Perbarui Detail Akun Login Manual') : __('Atur Username & Password Manual Saat Simpan') }}
                         </label>
                     </div>
                 </div>

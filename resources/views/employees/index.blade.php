@@ -168,6 +168,40 @@
                             </td>
                             <td class="text-end pe-3">
                                 <div class="d-flex justify-content-end gap-1">
+                                    @php
+                                        $cleanPhone = preg_replace('/[^0-9]/', '', (string)($employee->phone ?? ''));
+                                        if (str_starts_with($cleanPhone, '08')) {
+                                            $cleanPhone = '628' . substr($cleanPhone, 2);
+                                        } elseif (str_starts_with($cleanPhone, '8')) {
+                                            $cleanPhone = '628' . substr($cleanPhone, 1);
+                                        } elseif (str_starts_with($cleanPhone, '6208')) {
+                                            $cleanPhone = '628' . substr($cleanPhone, 4);
+                                        }
+                                        $userUname = $employee->user?->username ?? ($employee->user?->email ?? $employee->email);
+                                        $manualWaText = rawurlencode("Halo *{$employee->full_name}*,\n\nBerikut informasi akun login sistem Anda:\n━━━━━━━━━━━━━━━━━━━━\n🏢 *Aplikasi:* MStore\n👤 *Nama:* {$employee->full_name}\n💼 *Jabatan:* " . ($employee->position ?: 'Staff') . "\n🌐 *Link Login:* " . route('login') . "\n\n🔐 *Kredensial Login:*\n• Username: *{$userUname}*\n• Password: *Password123!*\n━━━━━━━━━━━━━━━━━━━━\nSilakan gunakan informasi di atas untuk masuk ke sistem. Demi keamanan, segera ganti password Anda setelah login pertama kali.\n\nTerima kasih.");
+                                    @endphp
+                                    @if($cleanPhone)
+                                        <div class="dropdown d-inline">
+                                            <button class="btn btn-sm btn-outline-success dropdown-toggle" type="button" data-bs-toggle="dropdown" title="Kirim Akun via WhatsApp">
+                                                <i class="fa-brands fa-whatsapp"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 small">
+                                                <li>
+                                                    <form action="{{ route('employees.send-whatsapp', $employee) }}" method="POST">
+                                                        @csrf
+                                                        <button type="submit" class="dropdown-item py-2 text-success">
+                                                            <i class="fa-solid fa-paper-plane me-2"></i> Kirim Otomatis via Gateway
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item py-2 text-secondary" href="https://wa.me/{{ $cleanPhone }}?text={{ $manualWaText }}" target="_blank">
+                                                        <i class="fa-solid fa-arrow-up-right-from-square me-2"></i> Buka WhatsApp Web Manual
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    @endif
                                     <form action="{{ route('employees.sync-dsbilling', $employee) }}" method="POST" class="d-inline form-sync-dsbilling" data-name="{{ $employee->full_name }}">
                                         @csrf
                                         <button class="btn btn-sm btn-outline-info" type="button" onclick="confirmDsBillingSync(this)" title="Kirim ke dsBilling">

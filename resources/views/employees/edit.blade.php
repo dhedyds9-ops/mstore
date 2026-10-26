@@ -12,17 +12,59 @@
             </h4>
             <p class="text-body-secondary small mb-0">{{ __('Perbarui informasi profil personal, status jabatan, payroll, dan akses login :name', ['name' => $employee->full_name]) }}</p>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex flex-wrap gap-2">
             <a href="{{ route('employees.index') }}" class="btn btn-outline-secondary btn-sm shadow-sm">
                 <i class="fa-solid fa-arrow-left me-1"></i> {{ __('Kembali ke Daftar') }}
             </a>
+            @if(empty($employee->user_id))
+                <form action="{{ route('employees.create-user', $employee) }}" method="POST" class="d-inline">
+                    @csrf
+                    <button type="submit" class="btn btn-primary btn-sm shadow-sm">
+                        <i class="fa-solid fa-user-plus me-1"></i> {{ __('+ Buat Akun Login Langsung') }}
+                    </button>
+                </form>
+            @endif
+            @php
+                $cleanPhone = preg_replace('/[^0-9]/', '', (string)($employee->phone ?? ''));
+                if (str_starts_with($cleanPhone, '08')) {
+                    $cleanPhone = '628' . substr($cleanPhone, 2);
+                } elseif (str_starts_with($cleanPhone, '8')) {
+                    $cleanPhone = '628' . substr($cleanPhone, 1);
+                } elseif (str_starts_with($cleanPhone, '6208')) {
+                    $cleanPhone = '628' . substr($cleanPhone, 4);
+                }
+                $userUname = $employee->user?->username ?? ($employee->user?->email ?? $employee->email);
+                $manualWaText = rawurlencode("Halo *{$employee->full_name}*,\n\nBerikut informasi akun login sistem Anda:\n━━━━━━━━━━━━━━━━━━━━\n🏢 *Aplikasi:* MStore\n👤 *Nama:* {$employee->full_name}\n💼 *Jabatan:* " . ($employee->position ?: 'Staff') . "\n🌐 *Link Login:* " . route('login') . "\n\n🔐 *Kredensial Login:*\n• Username: *{$userUname}*\n• Password: *Password123!*\n━━━━━━━━━━━━━━━━━━━━\nSilakan gunakan informasi di atas untuk masuk ke sistem. Demi keamanan, segera ganti password Anda setelah login pertama kali.\n\nTerima kasih.");
+            @endphp
+            @if($cleanPhone)
+                <div class="dropdown d-inline">
+                    <button class="btn btn-outline-success btn-sm dropdown-toggle shadow-sm" type="button" data-bs-toggle="dropdown">
+                        <i class="fa-brands fa-whatsapp me-1"></i> {{ __('Kirim Akun via WA') }}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 small">
+                        <li>
+                            <form action="{{ route('employees.send-whatsapp', $employee) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="dropdown-item py-2 text-success">
+                                    <i class="fa-solid fa-paper-plane me-2"></i> {{ __('Kirim Otomatis via Gateway') }}
+                                </button>
+                            </form>
+                        </li>
+                        <li>
+                            <a class="dropdown-item py-2 text-secondary" href="https://wa.me/{{ $cleanPhone }}?text={{ $manualWaText }}" target="_blank">
+                                <i class="fa-solid fa-arrow-up-right-from-square me-2"></i> {{ __('Buka WhatsApp Web Manual') }}
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            @endif
             <form action="{{ route('employees.sync-dsbilling', $employee) }}" method="POST" class="d-inline form-sync-dsbilling" data-name="{{ $employee->full_name }}">
                 @csrf
                 <button type="button" class="btn btn-outline-info btn-sm shadow-sm" onclick="confirmDsBillingSync(this)">
                     <i class="fa-solid fa-satellite-dish me-1"></i> {{ __('Kirim ke dsBilling') }}
                 </button>
             </form>
-            <a href="{{ route('employees.id-card', $employee) }}" class="btn btn-outline-primary btn-sm shadow-sm" target="_blank">
+            <a href="{{ route('employees.id-card', $employee) }}" class="btn btn-outline-dark btn-sm shadow-sm" target="_blank">
                 <i class="fa-solid fa-id-badge me-1"></i> {{ __('Cetak ID Card') }}
             </a>
         </div>
@@ -34,6 +76,13 @@
                 @csrf
                 @method('PUT')
                 @include('employees.partials.form', ['employee' => $employee])
+            </form>
+
+            <form id="formCreateUserAccount" action="{{ route('employees.create-user', $employee) }}" method="POST" style="display:none;">
+                @csrf
+            </form>
+            <form id="formSendWaCredentials" action="{{ route('employees.send-whatsapp', $employee) }}" method="POST" style="display:none;">
+                @csrf
             </form>
         </div>
     </div>
