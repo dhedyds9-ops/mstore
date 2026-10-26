@@ -703,6 +703,8 @@ class EmployeeSyncService
 
         try {
             $payload = [
+                'sync_token' => $apiToken,
+                'api_token' => $apiToken,
                 'nik' => $employee->nik,
                 'name' => $employee->full_name,
                 'position' => $employee->position,
@@ -719,6 +721,8 @@ class EmployeeSyncService
             $response = \Illuminate\Support\Facades\Http::timeout(10)
                 ->withHeaders([
                     'X-DSBILLING-TOKEN' => $apiToken,
+                    'X-MSTORE-TOKEN' => $apiToken,
+                    'Authorization' => 'Bearer ' . $apiToken,
                     'Accept' => 'application/json',
                 ])
                 ->post($apiUrl, $payload);
