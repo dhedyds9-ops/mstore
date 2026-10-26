@@ -100,7 +100,7 @@
                                     <div class="form-check mb-0 text-danger">
                                         <input type="checkbox" name="reset_default_password" id="reset_default_password" value="1" class="form-check-input">
                                         <label class="form-check-label fw-semibold small" for="reset_default_password">
-                                            <i class="fa-solid fa-key me-1"></i> {{ __('Reset password ke default (12345678)') }}
+                                            <i class="fa-solid fa-key me-1"></i> {{ __('Reset password ke default (Password123!)') }}
                                         </label>
                                     </div>
                                 </div>

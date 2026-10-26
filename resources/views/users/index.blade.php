@@ -177,7 +177,7 @@
                     <div class="mb-2"><strong>{{ __('Username') }}:</strong> <span id="waUsername">-</span></div>
                     <div class="mb-3"><strong>{{ __('Nomor HP') }}:</strong> <span id="waUserPhone">-</span></div>
                     <label for="send_password" class="form-label">{{ __('Password yang akan dikirim') }}</label>
-                    <input type="text" class="form-control" id="send_password" name="send_password" value="12345678" required>
+                    <input type="text" class="form-control" id="send_password" name="send_password" value="Password123!" required>
                     <div class="form-text">{{ __('Silakan isi password akun yang benar sebelum mengirim.') }}</div>
                 </div>
                 <div class="modal-footer">

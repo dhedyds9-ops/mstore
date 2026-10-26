@@ -92,7 +92,7 @@
                                         </label>
                                     </div>
                                     <div class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill small">
-                                        <i class="fa-solid fa-lock me-1"></i> {{ __('Password awal default: 12345678') }}
+                                        <i class="fa-solid fa-lock me-1"></i> {{ __('Password awal default: Password123!') }}
                                     </div>
                                 </div>
                             </div>

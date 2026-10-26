@@ -178,7 +178,9 @@ class EmployeeController extends Controller implements HasMiddleware
         }
 
         // Handle User Account Creation/Update/Linking consistently
-        if ($request->boolean('create_user_account')) {
+        if (!empty($validated['user_id'])) {
+            $employee->update(['user_id' => (int) $validated['user_id']]);
+        } elseif ($request->boolean('create_user_account')) {
             if (empty($validated['user_id']) && $employee->user_id) {
                 $validated['user_id'] = $employee->user_id;
             }
@@ -193,13 +195,32 @@ class EmployeeController extends Controller implements HasMiddleware
         if ($employee->user_id) {
             $user = User::find($employee->user_id);
             if ($user) {
-                // Update user record to match basic info
-                $user->update([
+                // Update user record to match basic info & sync username/password
+                $userUpdate = [
                     'name' => $validated['full_name'],
                     'email' => $validated['email'],
                     'phone' => $validated['phone'],
                     'avatar' => $validated['id_card_photo_path'] ?? $user->avatar,
-                ]);
+                ];
+
+                $inputUsername = trim((string) ($request->input('username') ?? ''));
+                if ($inputUsername !== '') {
+                    $taken = User::where('username', $inputUsername)->where('id', '!=', $user->id)->exists();
+                    if (!$taken) {
+                        $userUpdate['username'] = $inputUsername;
+                    }
+                }
+
+                $inputPassword = trim((string) ($request->input('password') ?? ''));
+                if ($inputPassword !== '') {
+                    $userUpdate['password'] = Hash::make($inputPassword);
+                }
+
+                if (!empty($validated['role_id'])) {
+                    $userUpdate['role_id'] = (int) $validated['role_id'];
+                }
+
+                $user->update($userUpdate);
 
                 // Sync Employee.position → User.role (reverse direction, 2-way sync)
                 $this->employeeSyncService->syncFromEmployee($employee->fresh());
@@ -491,10 +512,19 @@ class EmployeeController extends Controller implements HasMiddleware
         $fullName = trim((string) $employee->full_name);
         $phone = trim((string) $employee->phone);
 
-        // Cari atau buat User berdasarkan email atau username
+        // Cari atau buat User berdasarkan email, nomor telepon, atau nama
         $user = null;
         if ($email !== '') {
             $user = User::query()->where('email', $email)->first();
+        }
+        if (! $user && $phone !== '') {
+            $digits = preg_replace('/\D+/', '', $phone);
+            $user = User::query()->where('phone', $phone)
+                ->when(strlen($digits) >= 8, fn ($q) => $q->orWhere('phone', 'like', '%'.substr($digits, -8)))
+                ->first();
+        }
+        if (! $user && $fullName !== '') {
+            $user = User::query()->where('name', $fullName)->first();
         }
 
         $defaultPassword = 'Password123!';
@@ -801,7 +831,7 @@ class EmployeeController extends Controller implements HasMiddleware
         if (! empty($validated['password'])) {
             $data['password'] = bcrypt((string) $validated['password']);
         } elseif ($isNew) {
-            $data['password'] = bcrypt('password');
+            $data['password'] = bcrypt('Password123!');
         }
 
         $user->fill($data)->save();

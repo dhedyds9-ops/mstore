@@ -249,7 +249,7 @@ class UserController extends Controller implements HasMiddleware
             'email' => $validated['email'] ?? null,
             'username' => $username,
             'radius_username' => $validated['radius_username'] ?? null,
-            'password' => \Illuminate\Support\Facades\Hash::make('12345678'),
+            'password' => \Illuminate\Support\Facades\Hash::make('Password123!'),
             'role_id' => $validated['role_id'],
             'company_id' => $validated['company_id'],
             'company_branch_id' => $companyBranchId,
@@ -421,7 +421,7 @@ class UserController extends Controller implements HasMiddleware
 
         if ($request->boolean('reset_default_password')) {
             $user->update([
-                'password' => Hash::make('12345678'),
+                'password' => Hash::make('Password123!'),
             ]);
         }
 
@@ -481,7 +481,7 @@ class UserController extends Controller implements HasMiddleware
 
         $passwordToSend = trim((string) ($validated['send_password'] ?? ''));
         if ($passwordToSend === '') {
-            $passwordToSend = '12345678';
+            $passwordToSend = 'Password123!';
         }
 
         $vars = [
