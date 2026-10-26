@@ -12,59 +12,58 @@ class EmployeeSyncService
     public static function positionRoleDepartmentMap(): array
     {
         return [
-            // dsBilling / ISP Positions
-            ['group' => 'dsBilling', 'role' => 'field-technician', 'position' => 'Teknisi Lapangan',          'department' => 'Teknis & Jaringan', 'role_label' => 'Teknisi Lapangan'],
-            ['group' => 'dsBilling', 'role' => 'noc-operator',     'position' => 'NOC / Monitoring Jaringan', 'department' => 'Teknis & Jaringan', 'role_label' => 'NOC / Monitoring Jaringan'],
-            ['group' => 'dsBilling', 'role' => 'field-leader',     'position' => 'Koordinator Jaringan',       'department' => 'Teknis & Jaringan', 'role_label' => 'Koordinator Jaringan'],
-            ['group' => 'dsBilling', 'role' => 'customer-service', 'position' => 'Customer Service & Helpdesk','department' => 'Layanan Pelanggan', 'role_label' => 'Customer Service & Helpdesk'],
-            ['group' => 'dsBilling', 'role' => 'finance',          'position' => 'Kasir Loket Billing',       'department' => 'Keuangan & Billing','role_label' => 'Kasir Loket Billing'],
-            ['group' => 'dsBilling', 'role' => 'finance',          'position' => 'Kolektor Tagihan Lapangan',  'department' => 'Keuangan & Billing','role_label' => 'Kolektor Tagihan Lapangan'],
-            ['group' => 'dsBilling', 'role' => 'admin',            'position' => 'Sales / Marketing Internet', 'department' => 'Penjualan & Kemitraan', 'role_label' => 'Sales / Marketing Internet'],
+            // Layanan Internet & Jaringan (dsBilling)
+            ['group' => 'Layanan Internet & Jaringan', 'role' => 'field-technician', 'position' => 'Teknisi Lapangan',  'department' => 'Teknis & Jaringan', 'role_label' => 'Teknisi Lapangan'],
+            ['group' => 'Layanan Internet & Jaringan', 'role' => 'noc-operator',     'position' => 'NOC / Monitoring',   'department' => 'Teknis & Jaringan', 'role_label' => 'NOC / Monitoring'],
+            ['group' => 'Layanan Internet & Jaringan', 'role' => 'customer-service', 'position' => 'Customer Service',   'department' => 'Layanan Pelanggan', 'role_label' => 'Customer Service'],
+            ['group' => 'Layanan Internet & Jaringan', 'role' => 'finance',          'position' => 'Kasir Billing',      'department' => 'Keuangan & Billing','role_label' => 'Kasir Billing'],
+            ['group' => 'Layanan Internet & Jaringan', 'role' => 'admin',            'position' => 'Marketing Internet', 'department' => 'Penjualan & Kemitraan', 'role_label' => 'Marketing Internet'],
 
-            // MStore Retail & Wash Positions
-            ['group' => 'MStore',    'role' => 'atk-cashier',      'position' => 'Kasir POS ATK',             'department' => 'ATK',               'role_label' => 'Kasir POS ATK'],
-            ['group' => 'MStore',    'role' => 'wash-cashier',     'position' => 'Kasir POS Wash',            'department' => 'Wash',              'role_label' => 'Kasir POS Wash'],
-            ['group' => 'MStore',    'role' => 'wash-operator',    'position' => 'Operator Wash',             'department' => 'Wash',              'role_label' => 'Operator Wash / Tukang Cuci'],
-            ['group' => 'MStore',    'role' => 'warehouse-staff',  'position' => 'Staff Gudang & Logistik',   'department' => 'Operasional',       'role_label' => 'Staf Logistik & Gudang'],
-            ['group' => 'MStore',    'role' => 'finance',          'position' => 'Keuangan / Finance',        'department' => 'Keuangan',          'role_label' => 'Finance / Admin Keuangan'],
-            ['group' => 'MStore',    'role' => 'admin',            'position' => 'Administrasi Kantor',       'department' => 'Administrasi',      'role_label' => 'Administrasi'],
-            ['group' => 'MStore',    'role' => 'customer-service', 'position' => 'Customer Service',          'department' => 'Administrasi',      'role_label' => 'Customer Service'],
-            ['group' => 'MStore',    'role' => 'supervisor',       'position' => 'Supervisor Operasional',    'department' => 'Operasional',       'role_label' => 'Supervisor Operasional'],
-            ['group' => 'MStore',    'role' => 'manager',          'position' => 'Manager',                   'department' => 'Administrasi',      'role_label' => 'Manager'],
-            ['group' => 'MStore',    'role' => 'hrd-manager',      'position' => 'HRD Manager',               'department' => 'Administrasi',      'role_label' => 'HRD Manager'],
-            ['group' => 'MStore',    'role' => 'direktur',         'position' => 'Direktur',                  'department' => 'Administrasi',      'role_label' => 'Direktur'],
+            // MStore GTWash
+            ['group' => 'MStore GTWash', 'role' => 'atk-cashier',      'position' => 'Kasir Toko',       'department' => 'ATK',          'role_label' => 'Kasir Toko'],
+            ['group' => 'MStore GTWash', 'role' => 'wash-operator',    'position' => 'Operator Cuci',     'department' => 'Wash',         'role_label' => 'Operator Cuci'],
+            ['group' => 'MStore GTWash', 'role' => 'warehouse-staff',  'position' => 'Staff Gudang',      'department' => 'Operasional',  'role_label' => 'Staff Gudang'],
+            ['group' => 'MStore GTWash', 'role' => 'admin',            'position' => 'Admin & Keuangan',  'department' => 'Administrasi', 'role_label' => 'Admin & Keuangan'],
 
-            // Legacy mappings
-            ['group' => 'MStore',    'role' => 'atk-cashier',      'position' => 'Kasir ATK',                 'department' => 'ATK',               'role_label' => 'Kasir ATK'],
-            ['group' => 'MStore',    'role' => 'wash-cashier',     'position' => 'Kasir Wash',                'department' => 'Wash',              'role_label' => 'Kasir Wash'],
-            ['group' => 'MStore',    'role' => 'warehouse-staff',  'position' => 'Staff Gudang',              'department' => 'Operasional',       'role_label' => 'Staff Gudang'],
-            ['group' => 'MStore',    'role' => 'finance',          'position' => 'Keuangan',                  'department' => 'Keuangan',          'role_label' => 'Keuangan'],
-            ['group' => 'MStore',    'role' => 'admin',            'position' => 'Administrasi',              'department' => 'Administrasi',      'role_label' => 'Administrasi'],
+            // Legacy & Backward-compatible mappings
+            ['group' => 'Layanan Internet & Jaringan', 'role' => 'noc-operator',     'position' => 'NOC / Monitoring Jaringan', 'department' => 'Teknis & Jaringan', 'role_label' => 'NOC'],
+            ['group' => 'Layanan Internet & Jaringan', 'role' => 'field-leader',     'position' => 'Koordinator Jaringan',       'department' => 'Teknis & Jaringan', 'role_label' => 'Koordinator'],
+            ['group' => 'Layanan Internet & Jaringan', 'role' => 'customer-service', 'position' => 'Customer Service & Helpdesk','department' => 'Layanan Pelanggan', 'role_label' => 'Customer Service'],
+            ['group' => 'Layanan Internet & Jaringan', 'role' => 'finance',          'position' => 'Kasir Loket Billing',       'department' => 'Keuangan & Billing','role_label' => 'Kasir Billing'],
+            ['group' => 'Layanan Internet & Jaringan', 'role' => 'finance',          'position' => 'Kolektor Tagihan Lapangan',  'department' => 'Keuangan & Billing','role_label' => 'Kolektor'],
+            ['group' => 'Layanan Internet & Jaringan', 'role' => 'admin',            'position' => 'Sales / Marketing Internet', 'department' => 'Penjualan & Kemitraan', 'role_label' => 'Sales'],
+            ['group' => 'MStore GTWash', 'role' => 'atk-cashier',      'position' => 'Kasir POS ATK',             'department' => 'ATK',               'role_label' => 'Kasir POS ATK'],
+            ['group' => 'MStore GTWash', 'role' => 'atk-cashier',      'position' => 'Kasir ATK',                 'department' => 'ATK',               'role_label' => 'Kasir ATK'],
+            ['group' => 'MStore GTWash', 'role' => 'wash-cashier',     'position' => 'Kasir POS Wash',            'department' => 'Wash',              'role_label' => 'Kasir POS Wash'],
+            ['group' => 'MStore GTWash', 'role' => 'wash-cashier',     'position' => 'Kasir Wash',                'department' => 'Wash',              'role_label' => 'Kasir Wash'],
+            ['group' => 'MStore GTWash', 'role' => 'wash-operator',    'position' => 'Operator Wash',             'department' => 'Wash',              'role_label' => 'Operator Wash'],
+            ['group' => 'MStore GTWash', 'role' => 'warehouse-staff',  'position' => 'Staff Gudang & Logistik',   'department' => 'Operasional',       'role_label' => 'Staff Gudang'],
+            ['group' => 'MStore GTWash', 'role' => 'finance',          'position' => 'Keuangan / Finance',        'department' => 'Keuangan',          'role_label' => 'Finance'],
+            ['group' => 'MStore GTWash', 'role' => 'finance',          'position' => 'Keuangan',                  'department' => 'Keuangan',          'role_label' => 'Finance'],
+            ['group' => 'MStore GTWash', 'role' => 'admin',            'position' => 'Administrasi Kantor',       'department' => 'Administrasi',      'role_label' => 'Administrasi'],
+            ['group' => 'MStore GTWash', 'role' => 'admin',            'position' => 'Administrasi',              'department' => 'Administrasi',      'role_label' => 'Administrasi'],
+            ['group' => 'MStore GTWash', 'role' => 'supervisor',       'position' => 'Supervisor Operasional',    'department' => 'Operasional',       'role_label' => 'Supervisor'],
+            ['group' => 'MStore GTWash', 'role' => 'manager',          'position' => 'Manager',                   'department' => 'Administrasi',      'role_label' => 'Manager'],
+            ['group' => 'MStore GTWash', 'role' => 'hrd-manager',      'position' => 'HRD Manager',               'department' => 'Administrasi',      'role_label' => 'HRD Manager'],
+            ['group' => 'MStore GTWash', 'role' => 'direktur',         'position' => 'Direktur',                  'department' => 'Administrasi',      'role_label' => 'Direktur'],
         ];
     }
 
     public static function groupedPositions(): array
     {
         return [
-            '🌐 Layanan Internet & Jaringan (dsBilling)' => [
+            'Layanan Internet & Jaringan' => [
                 'Teknisi Lapangan',
-                'NOC / Monitoring Jaringan',
-                'Koordinator Jaringan',
-                'Customer Service & Helpdesk',
-                'Kasir Loket Billing',
-                'Kolektor Tagihan Lapangan',
-                'Sales / Marketing Internet',
-            ],
-            '🏪 MStore (Toko & Jasa Operasional)' => [
-                'Kasir POS ATK',
-                'Kasir POS Wash',
-                'Operator Wash',
-                'Staff Gudang & Logistik',
-                'Keuangan / Finance',
-                'Administrasi Kantor',
+                'NOC / Monitoring',
                 'Customer Service',
-                'Supervisor Operasional',
-                'Manager',
+                'Kasir Billing',
+                'Marketing Internet',
+            ],
+            'MStore GTWash' => [
+                'Kasir Toko',
+                'Operator Cuci',
+                'Staff Gudang',
+                'Admin & Keuangan',
             ],
         ];
     }

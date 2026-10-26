@@ -187,12 +187,12 @@
                 {{-- Bagian 2: Posisi / Lamaran Kerja --}}
                 <div class="form-section-title">
                     <i class="fa-solid fa-briefcase"></i>
-                    <span>{{ __('2. Posisi & Penempatan Kerja') }}</span>
+                    <span>{{ __('2. Posisi & Lamaran Kerja') }}</span>
                 </div>
 
                 <div class="row g-3 mb-4">
                     <div class="col-12 col-md-6">
-                        <label for="position" class="form-label">{{ __('Posisi yang Dilamar / Diminati') }} <span class="text-danger">*</span></label>
+                        <label for="position" class="form-label">{{ __('Posisi yang Dilamar') }} <span class="text-danger">*</span></label>
                         <select class="form-select @error('position') is-invalid @enderror" id="position" name="position" required onchange="handlePositionChange(this)">
                             <option value="">{{ __('-- Pilih Posisi Pekerjaan --') }}</option>
                             @if(isset($groupedPositions) && count($groupedPositions))
@@ -209,21 +209,25 @@
                                 @endforeach
                             @endif
                         </select>
+                        <input type="hidden" id="department" name="department" value="{{ old('department') }}">
+                        <div class="mt-2 small text-muted">
+                            <i class="fa-solid fa-circle-check text-success me-1"></i> Penempatan Divisi: 
+                            <span id="deptPreviewBadge" class="badge bg-light text-primary border fw-semibold">
+                                {{ old('department') ?: 'Otomatis ditentukan' }}
+                            </span>
+                        </div>
+                        @error('position')
+                            <div class="invalid-feedback d-block fw-semibold">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="col-12 col-md-6">
-                        <label for="department" class="form-label">{{ __('Departemen') }}</label>
-                        <select class="form-select @error('department') is-invalid @enderror" id="department" name="department">
-                            @foreach($departments as $dept)
-                                <option value="{{ $dept }}" {{ old('department') === $dept ? 'selected' : '' }}>{{ $dept }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="col-12 col-md-6">
-                        <label for="join_date" class="form-label">{{ __('Tanggal Siap Mulai Bekerja') }}</label>
-                        <input type="date" class="form-control @error('join_date') is-invalid @enderror" id="join_date" name="join_date" value="{{ old('join_date', date('Y-m-d')) }}">
-                        <small class="text-muted">{{ __('Kapan Anda dapat mulai bergabung.') }}</small>
+                        <label for="join_date" class="form-label">{{ __('Tanggal Siap Mulai Bekerja') }} <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control @error('join_date') is-invalid @enderror" id="join_date" name="join_date" value="{{ old('join_date', date('Y-m-d')) }}" required>
+                        <small class="text-muted">{{ __('Kapan Anda siap mulai bergabung.') }}</small>
+                        @error('join_date')
+                            <div class="invalid-feedback d-block fw-semibold">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
 
@@ -312,10 +316,20 @@
 
     function handlePositionChange(select) {
         const val = select.value;
-        const deptSelect = document.getElementById('department');
-        if (posMap && posMap[val] && deptSelect) {
-            deptSelect.value = posMap[val];
+        const deptInput = document.getElementById('department');
+        const deptBadge = document.getElementById('deptPreviewBadge');
+        if (posMap && posMap[val]) {
+            if (deptInput) deptInput.value = posMap[val];
+            if (deptBadge) deptBadge.textContent = posMap[val];
+        } else {
+            if (deptInput) deptInput.value = '';
+            if (deptBadge) deptBadge.textContent = 'Otomatis ditentukan';
         }
+    }
+
+    const posElem = document.getElementById('position');
+    if (posElem && posElem.value) {
+        handlePositionChange(posElem);
     }
 
     if (nameInput && nameFeedback) {
