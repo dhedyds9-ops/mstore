@@ -692,7 +692,10 @@ class EmployeeSyncService
     public function syncToDsBilling(Employee $employee): array
     {
         $apiUrl = config('services.dsbilling.url', env('DSBILLING_API_URL', 'https://mstore.mstore.id/api/v1/employees/sync'));
-        $apiToken = config('services.dsbilling.token', env('DSBILLING_API_TOKEN', 'mstore-sync-secret-2026'));
+        $apiToken = trim((string) (config('services.dsbilling.token') ?: env('DSBILLING_API_TOKEN', 'mstore-sync-secret-2026')));
+        if ($apiToken === '' || $apiToken === 'mstore') {
+            $apiToken = 'mstore-sync-secret-2026';
+        }
 
         if (empty($apiUrl)) {
             return [
@@ -703,6 +706,7 @@ class EmployeeSyncService
 
         try {
             $payload = [
+                'token' => $apiToken,
                 'sync_token' => $apiToken,
                 'api_token' => $apiToken,
                 'nik' => $employee->nik,
