@@ -16,6 +16,7 @@ class EmployeePublicRegisterController extends Controller
      */
     public function create()
     {
+        $groupedPositions = EmployeeSyncService::groupedPositions();
         $positions = EmployeeSyncService::allPositions();
         $departments = EmployeeSyncService::allDepartments();
         $positionDeptMap = collect(EmployeeSyncService::positionRoleDepartmentMap())
@@ -32,6 +33,7 @@ class EmployeePublicRegisterController extends Controller
         }
 
         return view('employees.public_register', compact(
+            'groupedPositions',
             'positions',
             'departments',
             'positionDeptMap',

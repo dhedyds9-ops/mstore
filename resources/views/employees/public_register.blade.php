@@ -195,9 +195,19 @@
                         <label for="position" class="form-label">{{ __('Posisi yang Dilamar / Diminati') }} <span class="text-danger">*</span></label>
                         <select class="form-select @error('position') is-invalid @enderror" id="position" name="position" required onchange="handlePositionChange(this)">
                             <option value="">{{ __('-- Pilih Posisi Pekerjaan --') }}</option>
-                            @foreach($positions as $pos)
-                                <option value="{{ $pos }}" {{ old('position') === $pos ? 'selected' : '' }}>{{ $pos }}</option>
-                            @endforeach
+                            @if(isset($groupedPositions) && count($groupedPositions))
+                                @foreach($groupedPositions as $groupLabel => $groupList)
+                                    <optgroup label="{{ $groupLabel }}">
+                                        @foreach($groupList as $pos)
+                                            <option value="{{ $pos }}" {{ old('position') === $pos ? 'selected' : '' }}>{{ $pos }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                @endforeach
+                            @else
+                                @foreach($positions as $pos)
+                                    <option value="{{ $pos }}" {{ old('position') === $pos ? 'selected' : '' }}>{{ $pos }}</option>
+                                @endforeach
+                            @endif
                         </select>
                     </div>
 

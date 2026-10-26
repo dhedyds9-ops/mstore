@@ -69,10 +69,17 @@
                     <div class="col-12 col-md-6 col-lg-3">
                         <label for="position" class="form-label small fw-semibold text-body-secondary">{{ __('Jabatan Pekerjaan') }} <span class="text-danger">*</span></label>
                         <select name="position" id="position" class="form-select form-select-sm @error('position') is-invalid @enderror" required>
-                            @php $pos = old('position', $employee->position ?? ''); @endphp
+                            @php
+                                $pos = old('position', $employee->position ?? '');
+                                $groupedPos = \App\Services\EmployeeSyncService::groupedPositions();
+                            @endphp
                             <option value="">{{ __('-- Pilih Jabatan --') }}</option>
-                            @foreach($positionOptions as $p)
-                                <option value="{{ $p }}" {{ $pos === $p ? 'selected' : '' }}>{{ $p }}</option>
+                            @foreach($groupedPos as $grpLabel => $grpList)
+                                <optgroup label="{{ $grpLabel }}">
+                                    @foreach($grpList as $p)
+                                        <option value="{{ $p }}" {{ $pos === $p ? 'selected' : '' }}>{{ $p }}</option>
+                                    @endforeach
+                                </optgroup>
                             @endforeach
                             @if($pos && !in_array($pos, $positionOptions))
                                 <option value="{{ $pos }}" selected>{{ $pos }}</option>
