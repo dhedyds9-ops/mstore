@@ -123,11 +123,19 @@
                     <div class="col-12 col-md-8">
                         <label for="full_name" class="form-label">{{ __('Nama Lengkap (Sesuai KTP)') }} <span class="text-danger">*</span></label>
                         <input type="text" class="form-control @error('full_name') is-invalid @enderror" id="full_name" name="full_name" value="{{ old('full_name') }}" placeholder="Contoh: Budi Santoso" required autofocus>
+                        <div id="full_name_feedback" class="small mt-1 text-danger fw-semibold" style="display: none;"></div>
+                        @error('full_name')
+                            <div class="invalid-feedback d-block fw-semibold">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="col-12 col-md-4">
                         <label for="nik" class="form-label">{{ __('Nomor KTP / NIK') }} <span class="text-danger">*</span></label>
                         <input type="text" class="form-control @error('nik') is-invalid @enderror" id="nik" name="nik" value="{{ old('nik') }}" placeholder="16 digit angka NIK" maxlength="32" required>
+                        <div id="nik_feedback" class="small mt-1 text-danger fw-semibold" style="display: none;"></div>
+                        @error('nik')
+                            <div class="invalid-feedback d-block fw-semibold">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="col-12 col-md-4">
@@ -137,11 +145,17 @@
                             <option value="Laki-laki" {{ old('gender') === 'Laki-laki' ? 'selected' : '' }}>{{ __('Laki-laki') }}</option>
                             <option value="Perempuan" {{ old('gender') === 'Perempuan' ? 'selected' : '' }}>{{ __('Perempuan') }}</option>
                         </select>
+                        @error('gender')
+                            <div class="invalid-feedback d-block fw-semibold">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="col-12 col-md-4">
                         <label for="date_of_birth" class="form-label">{{ __('Tanggal Lahir') }} <span class="text-danger">*</span></label>
                         <input type="date" class="form-control @error('date_of_birth') is-invalid @enderror" id="date_of_birth" name="date_of_birth" value="{{ old('date_of_birth') }}" required>
+                        @error('date_of_birth')
+                            <div class="invalid-feedback d-block fw-semibold">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="col-12 col-md-4">
@@ -150,6 +164,9 @@
                             <span class="input-group-text bg-light border-end-0 text-success"><i class="fa-brands fa-whatsapp"></i></span>
                             <input type="tel" class="form-control border-start-0 @error('phone') is-invalid @enderror" id="phone" name="phone" value="{{ old('phone') }}" placeholder="08xxxxxxxxxx" required>
                         </div>
+                        @error('phone')
+                            <div class="invalid-feedback d-block fw-semibold">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="col-12">
@@ -273,6 +290,15 @@
 
 <script>
     const posMap = @json($positionDeptMap);
+    const nameInput = document.getElementById('full_name');
+    const nameFeedback = document.getElementById('full_name_feedback');
+    const nikInput = document.getElementById('nik');
+    const nikFeedback = document.getElementById('nik_feedback');
+    const submitBtn = document.getElementById('btnSubmitForm');
+    const checkUrl = "{{ route('employees.public.register.check') }}";
+
+    let nameTimer = null;
+    let hasDuplicate = false;
 
     function handlePositionChange(select) {
         const val = select.value;
@@ -282,10 +308,73 @@
         }
     }
 
-    document.getElementById('employeeRegisterForm').addEventListener('submit', function() {
-        const btn = document.getElementById('btnSubmitForm');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Sedang Menyimpan Data...';
+    if (nameInput && nameFeedback) {
+        nameInput.addEventListener('blur', function() {
+            checkNameDuplicate(this.value.trim());
+        });
+        nameInput.addEventListener('input', function() {
+            clearTimeout(nameTimer);
+            nameTimer = setTimeout(() => {
+                checkNameDuplicate(nameInput.value.trim());
+            }, 600);
+        });
+    }
+
+    function checkNameDuplicate(val) {
+        if (val.length < 3) {
+            nameFeedback.style.display = 'none';
+            hasDuplicate = false;
+            return;
+        }
+
+        fetch(`${checkUrl}?name=${encodeURIComponent(val)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.exists && data.field === 'full_name') {
+                    nameFeedback.textContent = '⚠️ ' + data.message;
+                    nameFeedback.style.display = 'block';
+                    nameInput.classList.add('is-invalid');
+                    hasDuplicate = true;
+                } else {
+                    nameFeedback.style.display = 'none';
+                    nameInput.classList.remove('is-invalid');
+                    hasDuplicate = false;
+                }
+            })
+            .catch(() => {});
+    }
+
+    if (nikInput && nikFeedback) {
+        nikInput.addEventListener('blur', function() {
+            const val = this.value.trim();
+            if (val.length >= 10) {
+                fetch(`${checkUrl}?nik=${encodeURIComponent(val)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.exists && data.field === 'nik') {
+                            nikFeedback.textContent = '⚠️ ' + data.message;
+                            nikFeedback.style.display = 'block';
+                            nikInput.classList.add('is-invalid');
+                            hasDuplicate = true;
+                        } else {
+                            nikFeedback.style.display = 'none';
+                            nikInput.classList.remove('is-invalid');
+                            hasDuplicate = false;
+                        }
+                    })
+                    .catch(() => {});
+            }
+        });
+    }
+
+    document.getElementById('employeeRegisterForm').addEventListener('submit', function(e) {
+        if (hasDuplicate) {
+            e.preventDefault();
+            alert('Perhatian: Nama atau NIK ini sudah terdaftar di sistem. Mohon periksa kembali.');
+            return false;
+        }
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Sedang Menyimpan Data...';
     });
 </script>
 </body>

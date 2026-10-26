@@ -198,6 +198,8 @@ Route::post('/customers/register', [CustomerPublicRegisterController::class, 'st
     ->name('customers.public.register.store');
 
 // Public Employee Registration (Pendaftaran Calon Karyawan)
+Route::get('/employees/register/check-duplicate', [\App\Http\Controllers\EmployeePublicRegisterController::class, 'checkDuplicate'])
+    ->name('employees.public.register.check');
 Route::get('/employees/register', [\App\Http\Controllers\EmployeePublicRegisterController::class, 'create'])
     ->name('employees.public.register.create');
 Route::post('/employees/register', [\App\Http\Controllers\EmployeePublicRegisterController::class, 'store'])

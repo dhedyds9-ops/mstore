@@ -466,7 +466,7 @@ class EmployeeController extends Controller implements HasMiddleware
         $userId = $id ? Employee::find($id)?->user_id : null;
 
         $rules = [
-            'full_name' => ['required', 'string', 'max:255'],
+            'full_name' => ['required', 'string', 'max:255', Rule::unique('employees', 'full_name')->ignore($id)],
             'user_id' => ['nullable', 'exists:users,id', Rule::unique('employees', 'user_id')->ignore($id)],
             'wash_employee_id' => ['nullable', 'exists:wash_employees,id'],
             'date_of_birth' => ['required', 'date'],
@@ -474,7 +474,7 @@ class EmployeeController extends Controller implements HasMiddleware
             'address' => ['required', 'string'],
             'phone' => ['required', 'string', 'max:30'],
             'email' => ['required', 'email', 'max:255'],
-            'nik' => ['required', 'string', 'max:32'],
+            'nik' => ['required', 'string', 'max:32', Rule::unique('employees', 'nik')->ignore($id)],
             'position' => ['required', 'string', 'max:255'],
             'department' => ['required', 'string', 'max:255'],
             'join_date' => ['required', 'date'],
@@ -503,7 +503,12 @@ class EmployeeController extends Controller implements HasMiddleware
             $rules['id_card_expires_at'] = ['nullable', 'date'];
         }
 
-        return $request->validate($rules);
+        $messages = [
+            'full_name.unique' => 'Nama karyawan ini sudah terdaftar di sistem.',
+            'nik.unique' => 'Nomor KTP/NIK ini sudah terdaftar di sistem.',
+        ];
+
+        return $request->validate($rules, $messages);
     }
 
     private function storeDocument(Request $request): ?string

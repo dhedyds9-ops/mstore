@@ -80,6 +80,62 @@ class EmployeePublicRegisterController extends Controller
         }
         $validated['phone'] = $cleanPhone ?: $validated['phone'];
 
+        // 1. Cek apakah Nama Lengkap sudah terdaftar di sistem
+        $trimmedName = trim((string) $validated['full_name']);
+        $existingByName = Employee::query()
+            ->whereRaw('LOWER(TRIM(full_name)) = ?', [strtolower($trimmedName)])
+            ->first();
+
+        if ($existingByName) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'full_name' => "Nama \"{$existingByName->full_name}\" sudah terdaftar di sistem dengan jabatan {$existingByName->position} (Status: {$existingByName->employment_status}). Jika ini data diri Anda, tidak perlu mendaftar ulang atau silakan hubungi tim HRD.",
+                ]);
+        }
+
+        // 2. Cek apakah NIK sudah terdaftar di sistem
+        $cleanNik = trim((string) $validated['nik']);
+        $existingByNik = Employee::query()
+            ->where('nik', $cleanNik)
+            ->first();
+
+        if ($existingByNik) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'nik' => "Nomor KTP/NIK \"{$cleanNik}\" sudah terdaftar atas nama {$existingByNik->full_name}. Pendaftaran tidak dapat diduplikasi.",
+                ]);
+        }
+
+        // 3. Cek apakah Nomor HP / WhatsApp sudah terdaftar di sistem
+        $existingByPhone = Employee::query()
+            ->where('phone', $validated['phone'])
+            ->first();
+
+        if ($existingByPhone) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'phone' => "Nomor WhatsApp/HP \"{$validated['phone']}\" sudah terdaftar atas nama {$existingByPhone->full_name}.",
+                ]);
+        }
+
+        // 4. Cek apakah Email sudah terdaftar di sistem jika diisi
+        if (! empty($validated['email'])) {
+            $existingByEmail = Employee::query()
+                ->where('email', strtolower(trim($validated['email'])))
+                ->first();
+
+            if ($existingByEmail) {
+                return back()
+                    ->withInput()
+                    ->withErrors([
+                        'email' => "Alamat email ini sudah terdaftar atas nama {$existingByEmail->full_name}.",
+                    ]);
+            }
+        }
+
         // Lengkapi departemen jika tidak terisi
         if (empty($validated['department'])) {
             $positionDeptMap = collect(EmployeeSyncService::positionRoleDepartmentMap())
@@ -133,5 +189,41 @@ class EmployeePublicRegisterController extends Controller
         }
 
         return view('employees.public_success', compact('storeName', 'storeLogo'));
+    }
+
+    /**
+     * Cek apakah nama atau NIK calon karyawan sudah pernah terdaftar (AJAX / Real-time).
+     */
+    public function checkDuplicate(Request $request)
+    {
+        $name = trim((string) $request->query('name', ''));
+        $nik = trim((string) $request->query('nik', ''));
+
+        if ($name !== '' && mb_strlen($name) >= 3) {
+            $existing = Employee::query()
+                ->whereRaw('LOWER(TRIM(full_name)) = ?', [strtolower($name)])
+                ->first();
+
+            if ($existing) {
+                return response()->json([
+                    'exists' => true,
+                    'field' => 'full_name',
+                    'message' => "Nama \"{$existing->full_name}\" sudah terdaftar di sistem sebagai {$existing->position} ({$existing->employment_status}).",
+                ]);
+            }
+        }
+
+        if ($nik !== '' && strlen($nik) >= 10) {
+            $existingNik = Employee::query()->where('nik', $nik)->first();
+            if ($existingNik) {
+                return response()->json([
+                    'exists' => true,
+                    'field' => 'nik',
+                    'message' => "Nomor KTP/NIK ini sudah terdaftar atas nama {$existingNik->full_name}.",
+                ]);
+            }
+        }
+
+        return response()->json(['exists' => false]);
     }
 }
