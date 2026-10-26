@@ -197,6 +197,19 @@ Route::post('/customers/register', [CustomerPublicRegisterController::class, 'st
     ->middleware('throttle:5,1')
     ->name('customers.public.register.store');
 
+// Public Employee Registration (Pendaftaran Calon Karyawan)
+Route::get('/employees/register', [\App\Http\Controllers\EmployeePublicRegisterController::class, 'create'])
+    ->name('employees.public.register.create');
+Route::post('/employees/register', [\App\Http\Controllers\EmployeePublicRegisterController::class, 'store'])
+    ->middleware('throttle:10,1')
+    ->name('employees.public.register.store');
+Route::get('/employees/register/success', [\App\Http\Controllers\EmployeePublicRegisterController::class, 'success'])
+    ->name('employees.public.register.success');
+
+// Indonesian Alias URL Shortcuts
+Route::get('/karyawan/daftar', fn () => redirect()->route('employees.public.register.create'));
+Route::get('/karir/daftar', fn () => redirect()->route('employees.public.register.create'));
+
 Route::post('/ai-public/chat', [\App\Http\Controllers\AiController::class, 'publicChat'])
     ->middleware('throttle:30,1')
     ->name('ai.public.chat');

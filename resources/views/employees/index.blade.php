@@ -12,7 +12,10 @@
             <p class="text-body-secondary small mb-0">Kelola data master biodata, penempatan jabatan, absensi, dan kartu ID Card karyawan.</p>
         </div>
         
-        <div class="d-flex gap-2">
+        <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-sm btn-outline-success shadow-sm" data-bs-toggle="modal" data-bs-target="#registrationLinkModal" title="Bagikan Link Pendaftaran Calon Karyawan">
+                <i class="fa-solid fa-link me-1"></i> Link Pendaftaran
+            </button>
             <form action="{{ route('employees.sync') }}" method="POST" onsubmit="return confirm('Sinkronkan data sekarang?')">
                 @csrf
                 <button type="submit" class="btn btn-sm btn-outline-primary shadow-sm">
@@ -205,10 +208,68 @@
     @endif
     </div>
 </div>
+
+<!-- Modal Link Pendaftaran Calon Karyawan -->
+<div class="modal fade" id="registrationLinkModal" tabindex="-1" aria-labelledby="registrationLinkModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-light border-bottom">
+                <h5 class="modal-title fw-bold" id="registrationLinkModalLabel">
+                    <i class="fa-solid fa-link text-success me-2"></i>{{ __('Link Pendaftaran Calon Karyawan') }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="alert alert-info border-0 rounded-3 mb-3 small">
+                    <i class="fa-solid fa-circle-info me-1"></i>
+                    {{ __('Bagikan link ini kepada calon pelamar kerja. Calon karyawan dapat mengisi biodata, nomor KTP, posisi yang diminati, serta mengunggah foto KTP dan berkas CV secara mandiri.') }}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-muted">{{ __('Tautan Pendaftaran Online:') }}</label>
+                    <div class="input-group">
+                        <input type="text" id="employeePublicRegisterUrl" class="form-control bg-light font-monospace small" value="{{ route('employees.public.register.create') }}" readonly>
+                        <button type="button" class="btn btn-primary" id="btnCopyRegisterLink" onclick="copyEmployeeRegisterLink()">
+                            <i class="fa-solid fa-copy me-1"></i> <span id="btnCopyText">{{ __('Salin') }}</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-column gap-2 pt-2 border-top">
+                    <a href="https://api.whatsapp.com/send?text={{ rawurlencode('Halo! Silakan isi formulir pendaftaran calon karyawan di tautan berikut: ' . route('employees.public.register.create')) }}" target="_blank" class="btn btn-outline-success btn-sm w-100 py-2">
+                        <i class="fa-brands fa-whatsapp me-1"></i> {{ __('Bagikan ke WhatsApp') }}
+                    </a>
+                    <a href="{{ route('employees.public.register.create') }}" target="_blank" class="btn btn-outline-secondary btn-sm w-100 py-2">
+                        <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> {{ __('Buka Tampilan Formulir Pendaftaran') }}
+                    </a>
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-top">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">{{ __('Tutup') }}</button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
 <script>
+function copyEmployeeRegisterLink() {
+    const input = document.getElementById('employeePublicRegisterUrl');
+    input.select();
+    input.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(input.value).then(function() {
+        const btnText = document.getElementById('btnCopyText');
+        btnText.textContent = 'Tersalin!';
+        setTimeout(() => { btnText.textContent = 'Salin'; }, 2000);
+    }).catch(function() {
+        document.execCommand('copy');
+        const btnText = document.getElementById('btnCopyText');
+        btnText.textContent = 'Tersalin!';
+        setTimeout(() => { btnText.textContent = 'Salin'; }, 2000);
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     const checkAll = document.getElementById('checkAllEmployees');
     const checks = Array.from(document.querySelectorAll('.employee-check'));

@@ -69,7 +69,9 @@ class EmployeeController extends Controller implements HasMiddleware
 
         $employees = $query;
         $departments = Employee::query()->select('department')->whereNotNull('department')->distinct()->orderBy('department')->pluck('department');
-        $statuses = ['Tetap', 'Training'];
+        $defaultStatuses = ['Tetap', 'Training', 'Pendaftar'];
+        $dbStatuses = Employee::query()->select('employment_status')->whereNotNull('employment_status')->distinct()->pluck('employment_status')->toArray();
+        $statuses = array_values(array_unique(array_filter(array_merge($defaultStatuses, $dbStatuses))));
 
         return view('employees.index', compact('employees', 'search', 'departments', 'statuses', 'department', 'status'));
     }
@@ -476,7 +478,7 @@ class EmployeeController extends Controller implements HasMiddleware
             'position' => ['required', 'string', 'max:255'],
             'department' => ['required', 'string', 'max:255'],
             'join_date' => ['required', 'date'],
-            'employment_status' => ['required', Rule::in(['Tetap', 'Training'])],
+            'employment_status' => ['required', Rule::in(['Tetap', 'Training', 'Pendaftar', 'Kontrak'])],
             'monthly_salary' => ['nullable', 'numeric', 'min:0'],
             'daily_salary' => ['nullable', 'numeric', 'min:0'],
             'annual_leave_quota' => ['nullable', 'integer', 'min:0'],
