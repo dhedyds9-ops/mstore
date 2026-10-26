@@ -80,8 +80,8 @@ class EmployeeController extends Controller implements HasMiddleware
     {
         $users = $this->employeeUsers();
         $washEmployees = $this->washEmployees();
-        $roleLabels = \App\Models\Role::query()->orderBy('label')->pluck('label')->unique()->toArray();
-        $roles = \App\Models\Role::query()->orderBy('label')->get();
+        $roles = \App\Services\EmployeeSyncService::employeeRolesQuery()->get();
+        $roleLabels = $roles->pluck('label')->unique()->toArray();
         $positions = \App\Services\EmployeeSyncService::allPositions();
         $departments = \App\Services\EmployeeSyncService::allDepartments();
         $positionDeptMap = collect(\App\Services\EmployeeSyncService::positionRoleDepartmentMap())
@@ -139,8 +139,8 @@ class EmployeeController extends Controller implements HasMiddleware
     {
         $users = $this->employeeUsers($employee->id);
         $washEmployees = $this->washEmployees($employee->id);
-        $roleLabels = \App\Models\Role::query()->orderBy('label')->pluck('label')->unique()->toArray();
-        $roles = \App\Models\Role::query()->orderBy('label')->get();
+        $roles = \App\Services\EmployeeSyncService::employeeRolesQuery($employee->user?->role_id)->get();
+        $roleLabels = $roles->pluck('label')->unique()->toArray();
         $positions = \App\Services\EmployeeSyncService::allPositions();
         $departments = \App\Services\EmployeeSyncService::allDepartments();
         $positionDeptMap = collect(\App\Services\EmployeeSyncService::positionRoleDepartmentMap())

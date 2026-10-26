@@ -12,38 +12,58 @@ class EmployeeSyncService
     public static function positionRoleDepartmentMap(): array
     {
         return [
-            ['role' => 'admin',              'position' => 'Administrasi',     'department' => 'Administrasi', 'role_label' => 'Administrator'],
-            ['role' => 'direktur',           'position' => 'Direktur',         'department' => 'Administrasi', 'role_label' => 'Direktur'],
-            ['role' => 'hrd-manager',        'position' => 'HRD Manager',      'department' => 'Administrasi', 'role_label' => 'HRD Manager'],
-            ['role' => 'leader',             'position' => 'Leader',           'department' => 'Operasional',  'role_label' => 'Leader'],
-            ['role' => 'customer-service',   'position' => 'Customer Service', 'department' => 'Administrasi', 'role_label' => 'Customer Service'],
-            ['role' => 'noc-operator',                'position' => 'NOC',              'department' => 'Teknis',      'role_label' => 'Network Operations Center'],
-            ['role' => 'noc-legacy',         'position' => 'NOC',              'department' => 'Teknis',      'role_label' => 'Network Operations Center'],
-            ['role' => 'technician',         'position' => 'Teknisi',          'department' => 'Teknis',      'role_label' => 'Technician'],
-            ['role' => 'field-leader',        'position' => 'Koordinator',      'department' => 'Operasional',  'role_label' => 'Coordinator'],
-            ['role' => 'finance',            'position' => 'Keuangan',         'department' => 'Keuangan',     'role_label' => 'Finance Staff'],
-            ['role' => 'atk-cashier',          'position' => 'Kasir ATK',        'department' => 'ATK',         'role_label' => 'Kasir ATK'],
-            ['role' => 'wash-cashier',         'position' => 'Kasir Wash',       'department' => 'Wash',        'role_label' => 'Kasir Wash'],
-            ['role' => 'wash-operator',      'position' => 'Operator Wash',    'department' => 'Wash',        'role_label' => 'Karyawan Wash'],
-            ['role' => 'wash-operator',       'position' => 'Staff Gudang',     'department' => 'Operasional',  'role_label' => 'Staff Gudang'],
+            ['role' => 'atk-cashier',        'position' => 'Kasir ATK',               'department' => 'ATK',          'role_label' => 'Kasir POS ATK'],
+            ['role' => 'wash-cashier',       'position' => 'Kasir Wash',              'department' => 'Wash',         'role_label' => 'Kasir POS Wash'],
+            ['role' => 'wash-operator',      'position' => 'Operator Wash',           'department' => 'Wash',         'role_label' => 'Operator Wash / Tukang Cuci'],
+            ['role' => 'warehouse-staff',    'position' => 'Staff Gudang',            'department' => 'Operasional',  'role_label' => 'Staf Logistik & Gudang'],
+            ['role' => 'finance',            'position' => 'Keuangan',                'department' => 'Keuangan',     'role_label' => 'Finance / Admin Keuangan'],
+            ['role' => 'admin',              'position' => 'Administrasi',            'department' => 'Administrasi', 'role_label' => 'Administrasi'],
+            ['role' => 'customer-service',   'position' => 'Customer Service',        'department' => 'Administrasi', 'role_label' => 'Customer Service'],
+            ['role' => 'supervisor',         'position' => 'Supervisor Operasional',  'department' => 'Operasional',  'role_label' => 'Supervisor Operasional'],
+            ['role' => 'manager',            'position' => 'Manager',                 'department' => 'Administrasi', 'role_label' => 'Manager'],
+            ['role' => 'hrd-manager',        'position' => 'HRD Manager',             'department' => 'Administrasi', 'role_label' => 'HRD Manager'],
+            ['role' => 'direktur',           'position' => 'Direktur',                'department' => 'Administrasi', 'role_label' => 'Direktur'],
         ];
     }
 
     public static function allPositions(): array
     {
-        $extras = ['Kasir'];
-        $fromMap = collect(self::positionRoleDepartmentMap())
+        return collect(self::positionRoleDepartmentMap())
             ->pluck('position')
             ->unique()
             ->values()
             ->all();
-
-        return array_values(array_unique(array_merge($fromMap, $extras)));
     }
 
     public static function allDepartments(): array
     {
-        return ['Administrasi', 'Keuangan', 'Teknis', 'Wash', 'ATK', 'Operasional'];
+        return ['ATK', 'Wash', 'Operasional', 'Keuangan', 'Administrasi'];
+    }
+
+    public static function employeeRolesQuery(?int $includeRoleId = null)
+    {
+        $excludedRoles = [
+            'customer',
+            'pelanggan',
+            'partner',
+            'mitra',
+            'reseller',
+            'noc-operator',
+            'noc-legacy',
+            'noc',
+            'field-leader',
+            'field-technician',
+            'technician',
+        ];
+
+        return Role::query()
+            ->where(function ($q) use ($excludedRoles, $includeRoleId) {
+                $q->whereNotIn('name', $excludedRoles);
+                if ($includeRoleId) {
+                    $q->orWhere('id', $includeRoleId);
+                }
+            })
+            ->orderBy('label');
     }
 
     public function positionFromRole(?string $roleName): ?string
@@ -266,13 +286,31 @@ class EmployeeSyncService
     public function shouldSyncUser(User $user): bool
     {
         $roleName = strtolower((string) ($user->role?->name ?? ''));
-        return $roleName !== '' && $roleName !== 'customer';
+        if ($roleName === '') {
+            return false;
+        }
+
+        return in_array($roleName, $this->allowedRoles(), true);
     }
 
     public function allowedRoles(): array
     {
+        $excludedRoles = [
+            'customer',
+            'pelanggan',
+            'partner',
+            'mitra',
+            'reseller',
+            'noc-operator',
+            'noc-legacy',
+            'noc',
+            'field-leader',
+            'field-technician',
+            'technician',
+        ];
+
         return Role::query()
-            ->where('name', '!=', 'customer')
+            ->whereNotIn('name', $excludedRoles)
             ->pluck('name')
             ->map(fn ($name) => strtolower((string) $name))
             ->filter()
