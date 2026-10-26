@@ -84,7 +84,25 @@ class Role extends Model
 
     public static function hiddenInUserManagement(): array
     {
-        return (array) config('roles.hidden_in_user_management', ['customer']);
+        $defaultHidden = [
+            'customer',
+            'pelanggan',
+            'partner',
+            'mitra',
+            'reseller',
+            'noc-operator',
+            'noc-legacy',
+            'noc',
+            'field-leader',
+            'field-technician',
+            'technician',
+            'leader',
+        ];
+
+        return array_values(array_unique(array_merge(
+            (array) config('roles.hidden_in_user_management', []),
+            $defaultHidden
+        )));
     }
 
     public static function superAdminRoleNames(): array

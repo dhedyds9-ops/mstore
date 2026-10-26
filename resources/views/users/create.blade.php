@@ -41,7 +41,7 @@
                             </div>
                             <div class="col-12 col-md-6">
                                 <label for="job_title" class="form-label small fw-semibold text-body-secondary">{{ __('Jabatan Pekerjaan') }}</label>
-                                <input type="text" name="job_title" id="job_title" value="{{ old('job_title') }}" class="form-control form-control-sm @error('job_title') is-invalid @enderror" maxlength="255" placeholder="{{ __('Contoh: Team Leader Teknisi, Kasir Utama') }}">
+                                <input type="text" name="job_title" id="job_title" value="{{ old('job_title') }}" class="form-control form-control-sm @error('job_title') is-invalid @enderror" maxlength="255" placeholder="{{ __('Contoh: Kasir Utama, Staff Operasional') }}">
                                 <div class="form-text small">{{ __('Jabatan struktural atau fungsional operasional.') }}</div>
                                 @error('job_title') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
@@ -68,18 +68,12 @@
                     </div>
                     <div class="card-body p-3 p-md-4 border-top">
                         <div class="row g-3">
-                            <div class="col-12 col-md-4">
+                            <div class="col-12 col-md-6">
                                 <label for="username" class="form-label small fw-semibold text-body-secondary">{{ __('Username Login') }} <span class="text-danger">*</span></label>
                                 <input type="text" name="username" id="username" value="{{ old('username') }}" class="form-control form-control-sm @error('username') is-invalid @enderror" required placeholder="username_login">
                                 @error('username') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
-                            <div class="col-12 col-md-4">
-                                <label for="radius_username" class="form-label small fw-semibold text-body-secondary">{{ __('Radius Username (ISP)') }}</label>
-                                <input type="text" name="radius_username" id="radius_username" value="{{ old('radius_username') }}" class="form-control form-control-sm @error('radius_username') is-invalid @enderror" placeholder="Akun PPPoE/Hotspot">
-                                <div class="form-text small">{{ __('Opsional untuk akun jaringan pelanggan/staf ISP.') }}</div>
-                                @error('radius_username') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-                            <div class="col-12 col-md-4">
+                            <div class="col-12 col-md-6">
                                 <label for="role_id" class="form-label small fw-semibold text-body-secondary">{{ __('Peran Sistem (Role)') }} <span class="text-danger">*</span></label>
                                 <select name="role_id" id="role_id" class="form-select form-select-sm @error('role_id') is-invalid @enderror" required>
                                     <option value="">{{ __('-- Pilih Peran --') }}</option>
@@ -154,7 +148,7 @@
                                 @error('bu') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                             </div>
 
-                            <div class="col-12 col-md-4 mt-3">
+                            <div class="col-12 col-md-6 mt-3">
                                 <label for="department" class="form-label small fw-semibold text-body-secondary">{{ __('Departemen') }}</label>
                                 <select name="department" id="department" class="form-select form-select-sm @error('department') is-invalid @enderror">
                                     <option value="">{{ __('— Pilih (opsional) —') }}</option>
@@ -164,7 +158,7 @@
                                 </select>
                                 @error('department') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
-                            <div class="col-12 col-md-4 mt-3">
+                            <div class="col-12 col-md-6 mt-3">
                                 <label for="bu_level" class="form-label small fw-semibold text-body-secondary">{{ __('Level Operasional BU') }}</label>
                                 <select name="bu_level" id="bu_level" class="form-select form-select-sm @error('bu_level') is-invalid @enderror">
                                     <option value="">{{ __('— Pilih (opsional) —') }}</option>
@@ -173,16 +167,6 @@
                                     @endforeach
                                 </select>
                                 @error('bu_level') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                            </div>
-                            <div class="col-12 col-md-4 mt-3">
-                                <label for="field_level" class="form-label small fw-semibold text-body-secondary">{{ __('Level Lapangan') }}</label>
-                                <select name="field_level" id="field_level" class="form-select form-select-sm @error('field_level') is-invalid @enderror">
-                                    <option value="">{{ __('— Pilih (opsional) —') }}</option>
-                                    @foreach($fieldLevelOptions as $flCode => $flLabel)
-                                        <option value="{{ $flCode }}" {{ old('field_level') === $flCode ? 'selected' : '' }}>{{ $flLabel }}</option>
-                                    @endforeach
-                                </select>
-                                @error('field_level') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                         </div>
                     </div>

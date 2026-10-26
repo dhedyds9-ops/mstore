@@ -72,7 +72,7 @@ class UserController extends Controller implements HasMiddleware
         }
 
         $users = $query->paginate($perPage)->withQueryString();
-        $roles = Role::orderBy('label')->get();
+        $roles = Role::whereNotIn('name', $hiddenNames)->orderBy('label')->get();
 
         return view('users.index', compact('users', 'roles'));
     }
@@ -166,10 +166,9 @@ class UserController extends Controller implements HasMiddleware
         $buLevelOptions = config('roles.bu_level_permissions', []);
         $buLevelOptions = is_array($buLevelOptions) ? array_keys($buLevelOptions) : [];
         $departmentOptions = ['HR' => 'HRD', 'Finance' => 'Keuangan', 'Operations' => 'Operasional', 'Support' => 'Support'];
-        $fieldLevelOptions = ['supervisor' => 'Supervisor / Team Leader', 'technician' => 'Teknisi'];
 
         return view('users.create', compact(
-            'roles', 'companies', 'branches', 'buOptions', 'buLevelOptions', 'departmentOptions', 'fieldLevelOptions'
+            'roles', 'companies', 'branches', 'buOptions', 'buLevelOptions', 'departmentOptions'
         ));
     }
 
@@ -179,14 +178,12 @@ class UserController extends Controller implements HasMiddleware
         $buOptions = ['ATK', 'WASH', 'WEDDING', 'CCTV'];
         $buLevelOptions = array_keys((array) config('roles.bu_level_permissions', []));
         $departmentOptions = ['HR', 'Finance', 'Operations', 'Support'];
-        $fieldLevelOptions = ['supervisor', 'technician'];
 
         $rules = [
             'name' => ['required', 'string', 'max:255'],
             'job_title' => ['nullable', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:255', 'unique:users,username'],
             'email' => ['nullable', 'string', 'email', 'max:255', 'unique:users,email'],
-            'radius_username' => ['nullable', 'string', 'max:255', 'unique:users,radius_username'],
             'role_id' => ['required', 'exists:roles,id', Rule::notIn($hiddenRoleIds)],
             'company_id' => ['required', 'exists:companies,id'],
             'company_branch_id' => ['nullable', 'exists:company_branches,id'],
@@ -201,7 +198,6 @@ class UserController extends Controller implements HasMiddleware
             'bu.*' => ['required', 'string', Rule::in($buOptions)],
             'bu_level' => ['nullable', 'string', Rule::in($buLevelOptions)],
             'department' => ['nullable', 'string', Rule::in($departmentOptions)],
-            'field_level' => ['nullable', 'string', Rule::in($fieldLevelOptions)],
         ];
         if ($this->hasAttendanceCardColumn()) {
             $rules['attendance_card_code'] = ['nullable', 'string', 'max:255', 'unique:users,attendance_card_code'];
@@ -229,14 +225,10 @@ class UserController extends Controller implements HasMiddleware
         if (! empty($validated['department'])) {
             $scopeConfig['department'] = $validated['department'];
         }
-        if (! empty($validated['field_level'])) {
-            $scopeConfig['field_level'] = $validated['field_level'];
-        }
 
         // Prevent duplicates by checking name too
         $existing = User::findExistingUser([
             'email' => $validated['email'] ?? null,
-            'radius_username' => $validated['radius_username'] ?? null,
             'attendance_card_code' => $validated['attendance_card_code'] ?? null,
             'name' => $validated['name'],
             'phone' => $validated['phone'] ?? null,
@@ -292,7 +284,12 @@ class UserController extends Controller implements HasMiddleware
     public function edit(User $user)
     {
         $hiddenNames = Role::hiddenInUserManagement();
-        $roles = Role::whereNotIn('name', $hiddenNames)->orderBy('label')->get();
+        $roles = Role::where(function ($q) use ($hiddenNames, $user) {
+            $q->whereNotIn('name', $hiddenNames);
+            if ($user->role_id) {
+                $q->orWhere('id', $user->role_id);
+            }
+        })->orderBy('label')->get();
         $companies = Company::where('is_active', true)->orderBy('name')->get();
         $companyId = (int) old('company_id', $user->company_id ?? ($companies->count() === 1 ? $companies->first()->id : null));
         $branches = $companyId
@@ -303,34 +300,33 @@ class UserController extends Controller implements HasMiddleware
         $buLevelOptions = config('roles.bu_level_permissions', []);
         $buLevelOptions = is_array($buLevelOptions) ? array_keys($buLevelOptions) : [];
         $departmentOptions = ['HR' => 'HRD', 'Finance' => 'Keuangan', 'Operations' => 'Operasional', 'Support' => 'Support'];
-        $fieldLevelOptions = ['supervisor' => 'Supervisor / Team Leader', 'technician' => 'Teknisi'];
 
         $selectedBu = old('bu', $user->bu);
         $selectedBuLevel = old('bu_level', $user->bu_level);
         $selectedDepartment = old('department', $user->department);
-        $selectedFieldLevel = old('field_level', $user->field_level);
 
         return view('users.edit', compact(
             'user', 'roles', 'companies', 'branches',
-            'buOptions', 'buLevelOptions', 'departmentOptions', 'fieldLevelOptions',
-            'selectedBu', 'selectedBuLevel', 'selectedDepartment', 'selectedFieldLevel'
+            'buOptions', 'buLevelOptions', 'departmentOptions',
+            'selectedBu', 'selectedBuLevel', 'selectedDepartment'
         ));
     }
 
     public function update(Request $request, User $user)
     {
-        $hiddenRoleIds = Role::whereIn('name', Role::hiddenInUserManagement())->pluck('id')->toArray();
+        $hiddenRoleIds = Role::whereIn('name', Role::hiddenInUserManagement())
+            ->when($user->role_id, fn ($q) => $q->where('id', '!=', $user->role_id))
+            ->pluck('id')
+            ->toArray();
         $buOptions = ['ATK', 'WASH', 'WEDDING', 'CCTV'];
         $buLevelOptions = array_keys((array) config('roles.bu_level_permissions', []));
         $departmentOptions = ['HR', 'Finance', 'Operations', 'Support'];
-        $fieldLevelOptions = ['supervisor', 'technician'];
 
         $rules = [
             'name' => ['required', 'string', 'max:255'],
             'job_title' => ['nullable', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:255', Rule::unique('users', 'username')->ignore($user->id)],
             'email' => ['nullable', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
-            'radius_username' => ['nullable', 'string', 'max:255', Rule::unique('users', 'radius_username')->ignore($user->id)],
             'role_id' => ['required', 'exists:roles,id', Rule::notIn($hiddenRoleIds)],
             'company_id' => ['required', 'exists:companies,id'],
             'company_branch_id' => ['nullable', 'exists:company_branches,id'],
@@ -345,7 +341,6 @@ class UserController extends Controller implements HasMiddleware
             'bu.*' => ['required', 'string', Rule::in($buOptions)],
             'bu_level' => ['nullable', 'string', Rule::in($buLevelOptions)],
             'department' => ['nullable', 'string', Rule::in($departmentOptions)],
-            'field_level' => ['nullable', 'string', Rule::in($fieldLevelOptions)],
         ];
         if ($this->hasAttendanceCardColumn()) {
             $rules['attendance_card_code'] = ['nullable', 'string', 'max:255', Rule::unique('users', 'attendance_card_code')->ignore($user->id)];
@@ -373,13 +368,9 @@ class UserController extends Controller implements HasMiddleware
         if (! empty($validated['department'])) {
             $scopeConfig['department'] = $validated['department'];
         }
-        if (! empty($validated['field_level'])) {
-            $scopeConfig['field_level'] = $validated['field_level'];
-        }
 
         $existing = User::findExistingUser([
             'email' => $validated['email'] ?? null,
-            'radius_username' => $validated['radius_username'] ?? null,
             'attendance_card_code' => $validated['attendance_card_code'] ?? null,
             'name' => $validated['name'],
             'phone' => $validated['phone'] ?? null,
@@ -398,7 +389,6 @@ class UserController extends Controller implements HasMiddleware
             'job_title' => $validated['job_title'] ?? null,
             'email' => $validated['email'] ?? null,
             'username' => $username,
-            'radius_username' => $validated['radius_username'] ?? null,
             'role_id' => $validated['role_id'],
             'company_id' => $validated['company_id'],
             'company_branch_id' => $companyBranchId,

@@ -81,7 +81,6 @@
                                         $buList = $user->bu;
                                         $buLevel = $user->bu_level;
                                         $dept = $user->department;
-                                        $fieldLevel = $user->field_level;
                                     @endphp
                                     <div class="d-flex flex-wrap gap-1">
                                         @if(!empty($buList))
@@ -101,12 +100,7 @@
                                                 <i class="fa-solid fa-building me-1"></i>{{ $dept }}
                                             </span>
                                         @endif
-                                        @if(!empty($fieldLevel))
-                                            <span class="badge bg-teal-subtle text-teal-emphasis border border-teal-subtle small" style="background:#e0f2f1;color:#004d40;border-color:#b2dfdb;">
-                                                <i class="fa-solid fa-hard-hat me-1"></i>{{ $fieldLevel }}
-                                            </span>
-                                        @endif
-                                        @if(empty($buList) && empty($buLevel) && empty($dept) && empty($fieldLevel))
+                                        @if(empty($buList) && empty($buLevel) && empty($dept))
                                             <span class="small text-muted">—</span>
                                         @endif
                                     </div>

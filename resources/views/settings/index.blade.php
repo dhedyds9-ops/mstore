@@ -113,6 +113,7 @@
                                 <i class="fa-solid fa-globe me-1"></i> Landing Page
                             </button>
                         </li>
+                        @if(\App\Support\ModuleGate::isEnabled('isp'))
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" id="tab-mixradius" data-bs-toggle="tab" data-bs-target="#content-mixradius" type="button" role="tab">
                                 <i class="fa-solid fa-wifi me-1"></i> MixRADIUS
@@ -123,6 +124,7 @@
                                 <i class="fa-solid fa-ethernet me-1"></i> TR-069 (GenieACS)
                             </button>
                         </li>
+                        @endif
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" id="tab-other" data-bs-toggle="tab" data-bs-target="#content-other" type="button" role="tab">
                                 <i class="fa-solid fa-layer-group me-1"></i> Lainnya
@@ -350,6 +352,7 @@
                             </div>
                         </div>
 
+                        @if(\App\Support\ModuleGate::isEnabled('isp'))
                         <!-- MixRADIUS -->
                         <div class="tab-pane fade" id="content-mixradius" role="tabpanel">
                             <div class="mb-4 pb-3">
@@ -418,6 +421,7 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
 
                         <!-- Lainnya -->
                         <div class="tab-pane fade" id="content-other" role="tabpanel">
