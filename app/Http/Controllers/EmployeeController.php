@@ -632,10 +632,23 @@ class EmployeeController extends Controller implements HasMiddleware
         ];
 
         if (empty($user->company_id)) {
-            $data['company_id'] = auth()->user()?->company_id
+            $companyId = auth()->user()?->company_id
                 ?? \App\Models\Company::query()->where('is_active', true)->value('id')
-                ?? \App\Models\Company::query()->value('id')
-                ?? 1;
+                ?? \App\Models\Company::query()->value('id');
+
+            if (! $companyId) {
+                $company = \App\Models\Company::create([
+                    'code' => 'MSTORE',
+                    'name' => \App\Models\Setting::getValue('store_name', config('app.name', 'MStore')),
+                    'currency' => 'IDR',
+                    'country' => 'ID',
+                    'is_active' => true,
+                    'subscription_status' => 'active',
+                ]);
+                $companyId = $company->id;
+            }
+
+            $data['company_id'] = $companyId;
         }
 
         if (! empty($validated['role_id'])) {

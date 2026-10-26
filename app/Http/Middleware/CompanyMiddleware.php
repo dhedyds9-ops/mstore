@@ -22,6 +22,17 @@ class CompanyMiddleware
             $defaultCompany = \App\Models\Company::query()->where('is_active', true)->first()
                 ?? \App\Models\Company::query()->first();
 
+            if (! $defaultCompany) {
+                $defaultCompany = \App\Models\Company::create([
+                    'code' => 'MSTORE',
+                    'name' => \App\Models\Setting::getValue('store_name', config('app.name', 'MStore')),
+                    'currency' => 'IDR',
+                    'country' => 'ID',
+                    'is_active' => true,
+                    'subscription_status' => 'active',
+                ]);
+            }
+
             if ($defaultCompany) {
                 $user->company_id = $defaultCompany->id;
                 $user->saveQuietly();
