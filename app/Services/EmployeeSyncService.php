@@ -720,12 +720,15 @@ class EmployeeSyncService
                 'bank_name' => $employee->bank_name,
                 'bank_account' => $employee->bank_account_number,
                 'status' => 'active',
+                'tenant' => 'mstore',
             ];
 
             $response = \Illuminate\Support\Facades\Http::timeout(10)
                 ->withHeaders([
                     'X-DSBILLING-TOKEN' => $apiToken,
                     'X-MSTORE-TOKEN' => $apiToken,
+                    'X-Tenant' => 'mstore',
+                    'X-Forwarded-Host' => 'mstore.mstore.id',
                     'Authorization' => 'Bearer ' . $apiToken,
                     'Accept' => 'application/json',
                 ])
