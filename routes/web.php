@@ -207,9 +207,11 @@ Route::get('/employees/register/success', [\App\Http\Controllers\EmployeePublicR
     ->name('employees.public.register.success');
 
 // Indonesian Alias URL Shortcuts
+Route::get('/employees/daftar', fn () => redirect()->route('employees.public.register.create'));
 Route::get('/karyawan/daftar', fn () => redirect()->route('employees.public.register.create'));
 Route::get('/karyawan/register', fn () => redirect()->route('employees.public.register.create'));
 Route::get('/karir/daftar', fn () => redirect()->route('employees.public.register.create'));
+Route::get('/daftar-karyawan', fn () => redirect()->route('employees.public.register.create'));
 
 Route::post('/ai-public/chat', [\App\Http\Controllers\AiController::class, 'publicChat'])
     ->middleware('throttle:30,1')
