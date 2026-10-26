@@ -631,6 +631,13 @@ class EmployeeController extends Controller implements HasMiddleware
             'is_active' => true,
         ];
 
+        if (empty($user->company_id)) {
+            $data['company_id'] = auth()->user()?->company_id
+                ?? \App\Models\Company::query()->where('is_active', true)->value('id')
+                ?? \App\Models\Company::query()->value('id')
+                ?? 1;
+        }
+
         if (! empty($validated['role_id'])) {
             $data['role_id'] = $validated['role_id'];
         }

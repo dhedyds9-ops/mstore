@@ -18,8 +18,17 @@ class CompanyMiddleware
                 return $next($request);
             }
 
-            // Jangan auto-assign ke company pertama — ini celah keamanan multi-tenant.
-            // Arahkan user ke halaman error atau onboarding.
+            // Auto-assign ke perusahaan aktif utama jika akun belum terhubung ke perusahaan
+            $defaultCompany = \App\Models\Company::query()->where('is_active', true)->first()
+                ?? \App\Models\Company::query()->first();
+
+            if ($defaultCompany) {
+                $user->company_id = $defaultCompany->id;
+                $user->saveQuietly();
+
+                return $next($request);
+            }
+
             if ($request->expectsJson()) {
                 return response()->json([
                     'error'   => 'Akun belum memiliki perusahaan yang dikonfigurasi.',
