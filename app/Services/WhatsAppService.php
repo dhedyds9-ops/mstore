@@ -29,7 +29,10 @@ class WhatsAppService
         if ($rawBaseUrl !== '' && ! preg_match('#^https?://#i', $rawBaseUrl)) {
             $rawBaseUrl = 'https://'.$rawBaseUrl;
         }
-        $this->baseUrl = rtrim($rawBaseUrl, '/');
+        $rawBaseUrl = rtrim($rawBaseUrl, '/');
+        // Auto-strip trailing endpoint paths if user included them (e.g. /send, /device, /status)
+        $rawBaseUrl = preg_replace('#/(send|send-message|device|status)$#i', '', $rawBaseUrl);
+        $this->baseUrl = $rawBaseUrl;
         if (empty($this->baseUrl) && ! empty($this->apiKey)) {
             $this->baseUrl = 'https://api.fonnte.com';
         }

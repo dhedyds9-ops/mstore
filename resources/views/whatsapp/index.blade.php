@@ -144,27 +144,6 @@
         elPrev.textContent = result;
     }
     
-    // Show/Hide API Key
-    let apiKeyVisible = false;
-    function toggleApiKey() {
-        const displayInput = document.getElementById('whatsapp_api_key_display');
-        const toggleBtn = document.getElementById('toggle_api_key');
-        const hiddenInput = document.getElementById('whatsapp_api_key_hidden');
-        
-        if (!displayInput || !toggleBtn || !hiddenInput) return;
-        
-        if (apiKeyVisible) {
-            displayInput.type = 'password';
-            toggleBtn.innerHTML = '<i class="fa-solid fa-eye"></i>';
-            hiddenInput.value = '';
-        } else {
-            displayInput.type = 'text';
-            toggleBtn.innerHTML = '<i class="fa-solid fa-eye-slash"></i>';
-            hiddenInput.value = displayInput.value;
-        }
-        apiKeyVisible = !apiKeyVisible;
-    }
-    
     document.addEventListener('DOMContentLoaded', function () {
         updatePreview('atkTpl', 'atkPreview', atkVars);
         updatePreview('washTpl', 'washPreview', washVars);
@@ -173,19 +152,17 @@
         if (atkEl) atkEl.addEventListener('input', () => updatePreview('atkTpl', 'atkPreview', atkVars));
         if (washEl) washEl.addEventListener('input', () => updatePreview('washTpl', 'washPreview', washVars));
         
-        // Attach show/hide API key listener
+        // Show/Hide API Key Toggle
         const toggleBtn = document.getElementById('toggle_api_key');
-        if (toggleBtn) {
-            toggleBtn.addEventListener('click', toggleApiKey);
-        }
-        
-        // Update hidden input when display input changes
-        const displayInput = document.getElementById('whatsapp_api_key_display');
-        const hiddenInput = document.getElementById('whatsapp_api_key_hidden');
-        if (displayInput && hiddenInput) {
-            displayInput.addEventListener('input', () => {
-                if (apiKeyVisible) {
-                    hiddenInput.value = displayInput.value;
+        const apiKeyInput = document.getElementById('whatsapp_api_key');
+        if (toggleBtn && apiKeyInput) {
+            toggleBtn.addEventListener('click', function () {
+                if (apiKeyInput.type === 'password') {
+                    apiKeyInput.type = 'text';
+                    toggleBtn.innerHTML = '<i class="fa-solid fa-eye-slash"></i>';
+                } else {
+                    apiKeyInput.type = 'password';
+                    toggleBtn.innerHTML = '<i class="fa-solid fa-eye"></i>';
                 }
             });
         }

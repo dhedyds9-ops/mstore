@@ -143,13 +143,15 @@ class WhatsAppController extends Controller implements HasMiddleware
         if ($request->has('whatsapp_api_url')) {
             $url = trim((string) $request->whatsapp_api_url);
             $url = rtrim($url, '/');
+            // Auto-strip trailing endpoint paths if user included them (e.g. /send or /device)
+            $url = preg_replace('#/(send|send-message|device|status)$#i', '', $url);
             if ($url !== '' && filter_var($url, FILTER_VALIDATE_URL) === false) {
                 return redirect()->back()->withErrors(['whatsapp_api_url' => __('URL WhatsApp API tidak valid')]);
             }
             $this->upsertWhatsappSetting('whatsapp_api_url', $url, 'text', 'WhatsApp API URL');
         }
         $apiKeyInput = $request->input('whatsapp_api_key');
-        if (!empty($apiKeyInput)) {
+        if ($apiKeyInput !== null && $apiKeyInput !== '') {
             $key = trim((string) $apiKeyInput);
             $this->upsertWhatsappSetting('whatsapp_api_key', $key, 'password', 'WhatsApp API Key');
         }

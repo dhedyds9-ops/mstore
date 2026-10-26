@@ -47,13 +47,12 @@
         <div class="mb-3">
             <label>API Key</label>
             <div class="input-group">
-                <input type="password" class="form-control" id="whatsapp_api_key_display" value="{{ $settings['whatsapp_api_key']->value }}" placeholder="API key WhatsApp">
+                <input type="password" class="form-control" id="whatsapp_api_key" name="whatsapp_api_key" value="{{ $settings['whatsapp_api_key']->value }}" placeholder="API key WhatsApp" autocomplete="off">
                 <button class="btn btn-outline-secondary" type="button" id="toggle_api_key">
                     <i class="fa-solid fa-eye"></i>
                 </button>
             </div>
-            <div class="form-text">Klik mata untuk melihat/menyembunyikan API key. Isi baru jika ingin mengganti.</div>
-            <input type="hidden" name="whatsapp_api_key" id="whatsapp_api_key_hidden" value="">
+            <div class="form-text">Klik mata untuk melihat/menyembunyikan API key. Masukkan token dari Fonnte lalu klik Simpan Konfigurasi.</div>
         </div>
         <div class="mb-3">
             <label>WABLAS Secret Key (Opsional)</label>
