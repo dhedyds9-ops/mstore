@@ -168,6 +168,12 @@
                             </td>
                             <td class="text-end pe-3">
                                 <div class="d-flex justify-content-end gap-1">
+                                    <form action="{{ route('employees.sync-dsbilling', $employee) }}" method="POST" class="d-inline" onsubmit="return confirm('Kirim dan sinkronkan data karyawan {{ $employee->full_name }} ke aplikasi dsBilling (https://mstore.mstore.id/admin/employee)?')">
+                                        @csrf
+                                        <button class="btn btn-sm btn-outline-info" type="submit" title="Kirim ke dsBilling">
+                                            <i class="fa-solid fa-satellite-dish"></i>
+                                        </button>
+                                    </form>
                                     <a href="{{ route('employees.id-card', $employee) }}" class="btn btn-sm btn-outline-dark" title="ID Card">
                                         <i class="fa-solid fa-id-card"></i>
                                     </a>

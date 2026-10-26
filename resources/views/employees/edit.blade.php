@@ -16,6 +16,12 @@
             <a href="{{ route('employees.index') }}" class="btn btn-outline-secondary btn-sm shadow-sm">
                 <i class="fa-solid fa-arrow-left me-1"></i> {{ __('Kembali ke Daftar') }}
             </a>
+            <form action="{{ route('employees.sync-dsbilling', $employee) }}" method="POST" class="d-inline" onsubmit="return confirm('Kirim dan sinkronkan data karyawan ini ke aplikasi dsBilling (https://mstore.mstore.id/admin/employee)?')">
+                @csrf
+                <button type="submit" class="btn btn-outline-info btn-sm shadow-sm">
+                    <i class="fa-solid fa-satellite-dish me-1"></i> {{ __('Kirim ke dsBilling') }}
+                </button>
+            </form>
             <a href="{{ route('employees.id-card', $employee) }}" class="btn btn-outline-primary btn-sm shadow-sm" target="_blank">
                 <i class="fa-solid fa-id-badge me-1"></i> {{ __('Cetak ID Card') }}
             </a>

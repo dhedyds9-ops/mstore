@@ -67,4 +67,9 @@ return [
         'sandbox' => env('DUITKU_SANDBOX', true),
     ],
 
+    'dsbilling' => [
+        'url' => env('DSBILLING_API_URL', 'https://mstore.mstore.id/api/v1/employees/sync'),
+        'token' => env('DSBILLING_API_TOKEN', 'mstore-sync-secret-2026'),
+    ],
+
 ];

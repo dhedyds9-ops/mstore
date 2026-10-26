@@ -461,6 +461,20 @@ class EmployeeController extends Controller implements HasMiddleware
         return redirect()->route('employees.index')->with('success', 'Sinkronisasi data karyawan dari teknisi/wash/user berhasil.');
     }
 
+    /**
+     * Kirim & sinkronkan data karyawan ke dsBilling (https://mstore.mstore.id/admin/employee).
+     */
+    public function syncToDsBilling(Employee $employee)
+    {
+        $result = $this->employeeSyncService->syncToDsBilling($employee);
+
+        if ($result['success']) {
+            return back()->with('success', $result['message']);
+        }
+
+        return back()->with('error', $result['message']);
+    }
+
     private function validateEmployee(Request $request, ?int $id = null): array
     {
         $userId = $id ? Employee::find($id)?->user_id : null;

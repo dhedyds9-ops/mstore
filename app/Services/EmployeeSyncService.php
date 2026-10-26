@@ -685,4 +685,71 @@ class EmployeeSyncService
 
         return $score;
     }
+
+    /**
+     * Kirim data karyawan ke aplikasi dsBilling (https://mstore.mstore.id/admin/employee).
+     */
+    public function syncToDsBilling(Employee $employee): array
+    {
+        $apiUrl = config('services.dsbilling.url', env('DSBILLING_API_URL', 'https://mstore.mstore.id/api/v1/employees/sync'));
+        $apiToken = config('services.dsbilling.token', env('DSBILLING_API_TOKEN', 'mstore-sync-secret-2026'));
+
+        if (empty($apiUrl)) {
+            return [
+                'success' => false,
+                'message' => 'URL API dsBilling belum dikonfigurasi di file .env (DSBILLING_API_URL).',
+            ];
+        }
+
+        try {
+            $payload = [
+                'nik' => $employee->nik,
+                'name' => $employee->full_name,
+                'position' => $employee->position,
+                'department' => $employee->department,
+                'phone' => $employee->phone,
+                'email' => $employee->email,
+                'join_date' => optional($employee->join_date)->format('Y-m-d') ?: now()->format('Y-m-d'),
+                'base_salary' => $employee->base_salary ?: 0,
+                'bank_name' => $employee->bank_name,
+                'bank_account' => $employee->bank_account_number,
+                'status' => 'active',
+            ];
+
+            $response = \Illuminate\Support\Facades\Http::timeout(10)
+                ->withHeaders([
+                    'X-DSBILLING-TOKEN' => $apiToken,
+                    'Accept' => 'application/json',
+                ])
+                ->post($apiUrl, $payload);
+
+            if ($response->successful()) {
+                $data = $response->json();
+
+                // Jika statusnya Pendaftar, ubah menjadi Tetap setelah berhasil disinkronkan
+                if ($employee->employment_status === 'Pendaftar') {
+                    $employee->employment_status = 'Tetap';
+                    $employee->saveQuietly();
+                }
+
+                return [
+                    'success' => true,
+                    'message' => $data['message'] ?? "Data karyawan '{$employee->full_name}' berhasil disinkronkan ke dsBilling.",
+                    'data' => $data,
+                ];
+            }
+
+            $errorMessage = $response->json('message') ?? 'HTTP ' . $response->status() . ': ' . $response->body();
+
+            return [
+                'success' => false,
+                'message' => 'Gagal sinkron ke dsBilling: ' . $errorMessage,
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'success' => false,
+                'message' => 'Gagal menghubungi server dsBilling: ' . $e->getMessage(),
+            ];
+        }
+    }
 }
