@@ -208,6 +208,7 @@ Route::get('/employees/register/success', [\App\Http\Controllers\EmployeePublicR
 
 // Indonesian Alias URL Shortcuts
 Route::get('/karyawan/daftar', fn () => redirect()->route('employees.public.register.create'));
+Route::get('/karyawan/register', fn () => redirect()->route('employees.public.register.create'));
 Route::get('/karir/daftar', fn () => redirect()->route('employees.public.register.create'));
 
 Route::post('/ai-public/chat', [\App\Http\Controllers\AiController::class, 'publicChat'])
@@ -506,8 +507,8 @@ Route::get('/webhooks/payment/return', [\App\Http\Controllers\PaymentController:
     Route::get('employees-export/excel', [EmployeeController::class, 'exportExcel'])->name('employees.export.excel');
     Route::get('employees-print/id-cards', [EmployeeController::class, 'printCards'])->name('employees.print.cards');
     Route::post('employees-sync', [EmployeeController::class, 'syncExisting'])->name('employees.sync');
-    Route::get('employees/{employee}/id-card', [EmployeeController::class, 'idCard'])->name('employees.id-card');
-    Route::resource('employees', EmployeeController::class)->except(['show']);
+    Route::get('employees/{employee}/id-card', [EmployeeController::class, 'idCard'])->name('employees.id-card')->whereNumber('employee');
+    Route::resource('employees', EmployeeController::class)->except(['show'])->where(['employee' => '[0-9]+']);
 
     Route::get('investors/export/pdf', [InvestorController::class, 'exportPdf'])->name('investors.export.pdf');
     Route::get('investors/export/excel', [InvestorController::class, 'exportExcel'])->name('investors.export.excel');
