@@ -28,6 +28,7 @@ return [
         'cctv',       // Solusi CCTV
         'hr',         // Manajemen SDM & Karyawan
         'inventory',  // Inventaris & Stok
+        'messaging',  // WhatsApp & Telegram Gateway, Bot, Chat
     ],
 
     // Section sidebar yang dimatikan total bila modulnya tidak aktif.
@@ -74,7 +75,7 @@ return [
             'tickets', 'sla', 'escalation', 'api.tickets',
         ],
         'messaging' => [
-            'chat', 'ai', 'whatsapp', 'telegram', 'api.whatsapp',
+            'chat', 'ai', 'telegram',
         ],
         'wedding' => [
             'wedding', 'reports.wedding',
@@ -108,7 +109,7 @@ return [
             'tickets', 'sla', 'escalation',
         ],
         'messaging' => [
-            'chat', 'ai', 'whatsapp', 'telegram',
+            'chat', 'ai', 'telegram',
         ],
         'wedding' => [
             'wedding', 'reports/wedding',

@@ -48,11 +48,11 @@ class Company extends Model
     public static function defaultModulesForPlan(string $plan): array
     {
         return match ($plan) {
-            self::PLAN_STARTER => ['pos', 'accounting', 'hr'],
-            self::PLAN_SERVICE => ['wash', 'accounting', 'hr'],
-            self::PLAN_PRO => ['pos', 'wash', 'wedding', 'accounting', 'finance', 'hr'],
-            self::PLAN_ENTERPRISE => ['pos', 'wash', 'wedding', 'accounting', 'finance', 'hr', 'cctv', 'isp', 'ticketing'],
-            default => ['pos', 'wash', 'wedding', 'accounting', 'finance', 'hr'],
+            self::PLAN_STARTER => ['pos', 'accounting', 'hr', 'messaging'],
+            self::PLAN_SERVICE => ['wash', 'accounting', 'hr', 'messaging'],
+            self::PLAN_PRO => ['pos', 'wash', 'wedding', 'accounting', 'finance', 'hr', 'messaging'],
+            self::PLAN_ENTERPRISE => ['pos', 'wash', 'wedding', 'accounting', 'finance', 'hr', 'cctv', 'isp', 'ticketing', 'messaging'],
+            default => ['pos', 'wash', 'wedding', 'accounting', 'finance', 'hr', 'messaging'],
         };
     }
 

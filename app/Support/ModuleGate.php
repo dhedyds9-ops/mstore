@@ -17,10 +17,10 @@ class ModuleGate
         if ($user && $user->company_id) {
             $company = $user->company;
             if ($company) {
-                if (method_exists($user, 'hasRole') && $user->hasRole(\App\Models\Role::SUPER_ADMIN)) {
+                if (method_exists($user, 'hasRole') && ($user->hasRole(\App\Models\Role::SUPER_ADMIN) || $user->hasRole(\App\Models\Role::ADMIN))) {
                     return (array) config('module_gating.enabled', []);
                 }
-                return $company->getEffectiveModules();
+                return array_unique(array_merge(['core', 'messaging'], $company->getEffectiveModules()));
             }
         }
 

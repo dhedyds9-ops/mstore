@@ -554,19 +554,20 @@ Route::get('/webhooks/payment/return', [\App\Http\Controllers\PaymentController:
 
     // WhatsApp Settings
     Route::get('/whatsapp', [\App\Http\Controllers\WhatsAppController::class, 'index'])
-        ->middleware('permission:chat.view')
+        ->middleware('permission:chat.view|setting.view')
         ->name('whatsapp.index');
+    Route::get('/settings/whatsapp', fn () => redirect()->route('whatsapp.index'));
     Route::get('/whatsapp/logs', [\App\Http\Controllers\WhatsAppController::class, 'logs'])
-        ->middleware('permission:chat.view')
+        ->middleware('permission:chat.view|setting.view')
         ->name('whatsapp.logs');
     Route::post('/whatsapp/update', [\App\Http\Controllers\WhatsAppController::class, 'update'])
-        ->middleware('permission:chat.manage')
+        ->middleware('permission:chat.manage|setting.manage|setting.edit|setting.view')
         ->name('whatsapp.update');
     Route::post('/whatsapp/test', [\App\Http\Controllers\WhatsAppController::class, 'test'])
-        ->middleware('permission:chat.manage')
+        ->middleware('permission:chat.manage|setting.manage|setting.edit|setting.view')
         ->name('whatsapp.test');
     Route::post('/whatsapp/check-status', [\App\Http\Controllers\WhatsAppController::class, 'checkStatus'])
-        ->middleware('permission:chat.manage')
+        ->middleware('permission:chat.manage|setting.manage|setting.edit|setting.view')
         ->name('whatsapp.check-status');
 
     // WhatsApp Bot Builder
