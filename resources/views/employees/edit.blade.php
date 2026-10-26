@@ -16,7 +16,7 @@
             <a href="{{ route('employees.index') }}" class="btn btn-outline-secondary btn-sm shadow-sm">
                 <i class="fa-solid fa-arrow-left me-1"></i> {{ __('Kembali ke Daftar') }}
             </a>
-            <a href="{{ route('employees.idCard', $employee) }}" class="btn btn-outline-primary btn-sm shadow-sm" target="_blank">
+            <a href="{{ route('employees.id-card', $employee) }}" class="btn btn-outline-primary btn-sm shadow-sm" target="_blank">
                 <i class="fa-solid fa-id-badge me-1"></i> {{ __('Cetak ID Card') }}
             </a>
         </div>

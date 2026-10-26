@@ -510,6 +510,7 @@ Route::get('/webhooks/payment/return', [\App\Http\Controllers\PaymentController:
     Route::get('employees-print/id-cards', [EmployeeController::class, 'printCards'])->name('employees.print.cards');
     Route::post('employees-sync', [EmployeeController::class, 'syncExisting'])->name('employees.sync');
     Route::get('employees/{employee}/id-card', [EmployeeController::class, 'idCard'])->name('employees.id-card')->whereNumber('employee');
+    Route::get('employees/{employee}/idcard', [EmployeeController::class, 'idCard'])->name('employees.idCard')->whereNumber('employee');
     Route::resource('employees', EmployeeController::class)->except(['show'])->where(['employee' => '[0-9]+']);
 
     Route::get('investors/export/pdf', [InvestorController::class, 'exportPdf'])->name('investors.export.pdf');
