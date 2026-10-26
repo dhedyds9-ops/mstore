@@ -24,9 +24,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 
     <!-- Custom Dashboard CSS -->
-    <link href="{{ app()->environment('production') ? secure_asset('css/dashboard-custom.css') : asset('css/dashboard-custom.css') }}" rel="stylesheet">
-    <link href="{{ app()->environment('production') ? secure_asset('css/app-android.css') : asset('css/app-android.css') }}" rel="stylesheet">
-    <link href="{{ app()->environment('production') ? secure_asset('css/mstore-components.css') : asset('css/mstore-components.css') }}" rel="stylesheet">
+    <link href="/css/dashboard-custom.css" rel="stylesheet">
+    <link href="/css/app-android.css" rel="stylesheet">
+    <link href="/css/mstore-components.css" rel="stylesheet">
 
     @vite(['resources/js/app.js'])
 

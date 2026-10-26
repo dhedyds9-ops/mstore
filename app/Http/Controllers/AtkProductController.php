@@ -454,30 +454,93 @@ class AtkProductController extends Controller implements HasMiddleware
 
     public function index(Request $request)
     {
-        $categories = ['ATK', 'JASA POTOCOPY', 'JASA TRANSFER BANK'];
+        $defaultCategories = ['ATK', 'JASA POTOCOPY', 'JASA TRANSFER BANK'];
+        $dbCategories = AtkProduct::whereNotNull('category')
+            ->where('category', '!=', '')
+            ->distinct()
+            ->pluck('category')
+            ->toArray();
+        try {
+            $catModelNames = \App\Models\AtkCategory::pluck('name')->toArray();
+        } catch (\Throwable $e) {
+            $catModelNames = [];
+        }
+        $categories = array_values(array_unique(array_filter(array_merge($defaultCategories, $dbCategories, $catModelNames))));
+        sort($categories);
+
         $query = AtkProduct::query();
 
+        // 1. Pencarian (Nama, Kode, Barcode, Deskripsi)
         if ($request->filled('search')) {
-            $search = $request->get('search');
+            $search = trim($request->get('search'));
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('code', 'like', "%{$search}%");
+                    ->orWhere('code', 'like', "%{$search}%")
+                    ->orWhere('barcode', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
+        // 2. Kategori
         if ($request->filled('category')) {
-            $query->where('category', $request->get('category'));
+            $cat = trim($request->get('category'));
+            $query->where(function ($q) use ($cat) {
+                $q->where('category', $cat)
+                    ->orWhereHas('categoryModel', fn ($cq) => $cq->where('name', $cat));
+            });
         }
+
+        // 3. Status Stok
+        if ($request->filled('stock_status')) {
+            $stockStatus = $request->get('stock_status');
+            if ($stockStatus === 'out') {
+                $query->where('stock', '<=', 0);
+            } elseif ($stockStatus === 'low') {
+                $query->where('stock', '<=', 5)->where('stock', '>', 0);
+            } elseif ($stockStatus === 'in') {
+                $query->where('stock', '>', 5);
+            }
+        }
+
+        // 4. Pengurutan / Sort
+        $sort = $request->get('sort', 'latest');
+        switch ($sort) {
+            case 'name_asc':
+                $query->orderBy('name', 'asc');
+                break;
+            case 'name_desc':
+                $query->orderBy('name', 'desc');
+                break;
+            case 'price_asc':
+                $query->orderBy('price', 'asc');
+                break;
+            case 'price_desc':
+                $query->orderBy('price', 'desc');
+                break;
+            case 'stock_asc':
+                $query->orderBy('stock', 'asc');
+                break;
+            case 'stock_desc':
+                $query->orderBy('stock', 'desc');
+                break;
+            case 'latest':
+            default:
+                $query->latest();
+                break;
+        }
+
+        // 5. Pagination / Per Page
         $per = $request->get('per_page', '10');
         if ($per === 'all') {
-            $perPage = max(1, (int) $query->count());
+            $perPage = max(1, (int) (clone $query)->count());
         } else {
             $perPage = (int) $per;
-            if (! in_array($perPage, [10, 50, 100], true)) {
+            if (! in_array($perPage, [10, 25, 50, 100], true)) {
                 $perPage = 10;
             }
         }
-        $products = $query->latest()->paginate($perPage)->appends($request->query());
+
+        $products = $query->paginate($perPage)->appends($request->query());
 
         $stats = [
             'total_items' => AtkProduct::count(),

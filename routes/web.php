@@ -756,6 +756,15 @@ Route::get('/webhooks/payment/return', [\App\Http\Controllers\PaymentController:
         Route::get('/', [\App\Http\Controllers\WashStockController::class, 'index'])
             ->middleware('permission:wash.view')
             ->name('index');
+        Route::get('/export', [\App\Http\Controllers\WashStockController::class, 'export'])
+            ->middleware('permission:wash.view')
+            ->name('export');
+        Route::get('/template', [\App\Http\Controllers\WashStockController::class, 'downloadTemplate'])
+            ->middleware('permission:wash.manage')
+            ->name('template');
+        Route::post('/import', [\App\Http\Controllers\WashStockController::class, 'import'])
+            ->middleware('permission:wash.manage')
+            ->name('import');
         Route::get('/create', [\App\Http\Controllers\WashStockController::class, 'create'])->name('create');
         Route::post('/', [\App\Http\Controllers\WashStockController::class, 'store'])->name('store');
         Route::get('/{stockItem}', [\App\Http\Controllers\WashStockController::class, 'show'])->name('show');

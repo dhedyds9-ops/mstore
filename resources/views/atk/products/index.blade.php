@@ -5,7 +5,7 @@
 @section('content')
 <div class="container-fluid px-3 px-md-4 py-3">
     {{-- Header Halaman & Aksi Cepat --}}
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
         <div>
             <h1 class="h4 mb-1 fw-bold text-gray-800 d-flex align-items-center gap-2">
                 <i class="fa-solid fa-boxes-stacked text-primary"></i>
@@ -52,16 +52,6 @@
                 <i class="fa-solid fa-plus me-1"></i>
                 <span>{{ __('Tambah Produk') }}</span>
             </a>
-
-            <form id="bulkDeleteForm" action="{{ route('atk.products.bulk_destroy') }}" method="POST" class="d-inline">
-                @csrf
-                @method('DELETE')
-                <button type="submit" id="btnBulkDelete" class="btn btn-sm btn-outline-danger" disabled title="{{ __('Hapus Terpilih') }}" onclick="return confirm('Hapus semua produk yang dipilih?')">
-                    <i class="fa-solid fa-trash-can me-1"></i>
-                    <span id="bulkDeleteCount" class="badge bg-danger text-white rounded-pill d-none">0</span>
-                    <span class="d-none d-md-inline ms-1">{{ __('Hapus') }}</span>
-                </button>
-            </form>
         </div>
     </div>
 
@@ -77,7 +67,8 @@
                             <li><strong>{{ __('Tambah & Edit Produk:') }}</strong> Gunakan tombol "Tambah Produk" untuk input manual, atau klik tombol pensil di baris produk untuk mengubah harga/stok.</li>
                             <li><strong>{{ __('Impor Excel/CSV:') }}</strong> Unduh template resmi melalui menu "Impor / Ekspor", isi data produk Anda, lalu unggah kembali untuk impor massal cepat.</li>
                             <li><strong>{{ __('Scan Barcode Kasir:') }}</strong> Klik ikon barcode pada kolom pencarian untuk mendeteksi barang lewat kamera handphone/laptop secara langsung.</li>
-                            <li><strong>{{ __('Hapus Massal:') }}</strong> Centang kotak pilihan pada produk yang ingin dihapus, lalu klik tombol "Hapus" merah di pojok kanan atas.</li>
+                            <li><strong>{{ __('Filter Cepat & Stok:') }}</strong> Klik kartu statistik (Total Produk, Stok Aman, Stok Menipis, Stok Habis) untuk filter instan.</li>
+                            <li><strong>{{ __('Hapus Massal:') }}</strong> Centang kotak pilihan produk yang ingin dihapus, bilah aksi akan muncul secara otomatis.</li>
                         </ul>
                     </div>
                 </div>
@@ -85,59 +76,67 @@
         </div>
     </div>
 
-    {{-- Mini Metric Stat Cards --}}
+    {{-- Mini Metric Stat Cards (Interaktif Filter) --}}
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm rounded-3 h-100">
-                <div class="card-body p-3 d-flex align-items-center gap-3">
-                    <div class="rounded-3 p-3 bg-primary-subtle text-primary fs-5">
-                        <i class="fa-solid fa-boxes-stacked"></i>
-                    </div>
-                    <div>
-                        <div class="text-muted small fw-medium">{{ __('Total Produk') }}</div>
-                        <div class="fs-5 fw-bold text-gray-800">{{ number_format($stats['total_items'] ?? $products->total(), 0, ',', '.') }}</div>
+            <a href="{{ route('atk.products.index', array_merge(request()->except(['stock_status', 'page']))) }}" class="text-decoration-none">
+                <div class="card border-0 shadow-sm rounded-3 h-100 {{ !request('stock_status') ? 'border-start border-4 border-primary' : '' }}">
+                    <div class="card-body p-3 d-flex align-items-center gap-3">
+                        <div class="rounded-3 p-3 bg-primary-subtle text-primary fs-5">
+                            <i class="fa-solid fa-boxes-stacked"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted small fw-medium">{{ __('Total Produk') }}</div>
+                            <div class="fs-5 fw-bold text-gray-800">{{ number_format($stats['total_items'] ?? $products->total(), 0, ',', '.') }}</div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm rounded-3 h-100">
-                <div class="card-body p-3 d-flex align-items-center gap-3">
-                    <div class="rounded-3 p-3 bg-success-subtle text-success fs-5">
-                        <i class="fa-solid fa-cubes"></i>
-                    </div>
-                    <div>
-                        <div class="text-muted small fw-medium">{{ __('Total Stok Fisik') }}</div>
-                        <div class="fs-5 fw-bold text-success">{{ number_format($stats['total_stock'] ?? 0, 0, ',', '.') }}</div>
+            <a href="{{ route('atk.products.index', array_merge(request()->except(['page']), ['stock_status' => 'in'])) }}" class="text-decoration-none">
+                <div class="card border-0 shadow-sm rounded-3 h-100 {{ request('stock_status') === 'in' ? 'border-start border-4 border-success' : '' }}">
+                    <div class="card-body p-3 d-flex align-items-center gap-3">
+                        <div class="rounded-3 p-3 bg-success-subtle text-success fs-5">
+                            <i class="fa-solid fa-cubes"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted small fw-medium">{{ __('Stok Aman (> 5)') }}</div>
+                            <div class="fs-5 fw-bold text-success">{{ number_format($stats['total_stock'] ?? 0, 0, ',', '.') }} <span class="small fw-normal text-muted">unit</span></div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm rounded-3 h-100">
-                <div class="card-body p-3 d-flex align-items-center gap-3">
-                    <div class="rounded-3 p-3 bg-warning-subtle text-warning-emphasis fs-5">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-                    </div>
-                    <div>
-                        <div class="text-muted small fw-medium">{{ __('Stok Menipis (<= 5)') }}</div>
-                        <div class="fs-5 fw-bold text-warning-emphasis">{{ number_format($stats['low_stock'] ?? 0, 0, ',', '.') }}</div>
+            <a href="{{ route('atk.products.index', array_merge(request()->except(['page']), ['stock_status' => 'low'])) }}" class="text-decoration-none">
+                <div class="card border-0 shadow-sm rounded-3 h-100 {{ request('stock_status') === 'low' ? 'border-start border-4 border-warning' : '' }}">
+                    <div class="card-body p-3 d-flex align-items-center gap-3">
+                        <div class="rounded-3 p-3 bg-warning-subtle text-warning-emphasis fs-5">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted small fw-medium">{{ __('Stok Menipis (<= 5)') }}</div>
+                            <div class="fs-5 fw-bold text-warning-emphasis">{{ number_format($stats['low_stock'] ?? 0, 0, ',', '.') }}</div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm rounded-3 h-100">
-                <div class="card-body p-3 d-flex align-items-center gap-3">
-                    <div class="rounded-3 p-3 bg-danger-subtle text-danger fs-5">
-                        <i class="fa-solid fa-circle-xmark"></i>
-                    </div>
-                    <div>
-                        <div class="text-muted small fw-medium">{{ __('Stok Habis (0)') }}</div>
-                        <div class="fs-5 fw-bold text-danger">{{ number_format($stats['out_of_stock'] ?? 0, 0, ',', '.') }}</div>
+            <a href="{{ route('atk.products.index', array_merge(request()->except(['page']), ['stock_status' => 'out'])) }}" class="text-decoration-none">
+                <div class="card border-0 shadow-sm rounded-3 h-100 {{ request('stock_status') === 'out' ? 'border-start border-4 border-danger' : '' }}">
+                    <div class="card-body p-3 d-flex align-items-center gap-3">
+                        <div class="rounded-3 p-3 bg-danger-subtle text-danger fs-5">
+                            <i class="fa-solid fa-circle-xmark"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted small fw-medium">{{ __('Stok Habis (0)') }}</div>
+                            <div class="fs-5 fw-bold text-danger">{{ number_format($stats['out_of_stock'] ?? 0, 0, ',', '.') }}</div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </a>
         </div>
     </div>
 
@@ -145,60 +144,150 @@
     <div class="card border-0 shadow-sm rounded-4 mb-4">
         {{-- Filter Bar --}}
         <div class="card-header bg-white border-bottom py-3 px-3 px-md-4">
-            <form method="GET" action="{{ route('atk.products.index') }}" class="row g-2 align-items-center">
-                <div class="col-12 col-md-5 col-lg-4">
-                    <div class="input-group">
-                        <span class="input-group-text bg-light border-end-0 text-muted">
-                            <i class="fa-solid fa-magnifying-glass"></i>
-                        </span>
-                        <input type="text" name="search" id="productSearch" class="form-control bg-light border-start-0 border-end-0" placeholder="{{ __('Cari nama produk atau barcode...') }}" value="{{ request('search') }}" autofocus>
-                        <button type="button" class="btn btn-light border border-start-0 text-primary" id="openAtkBarcodeScan" title="{{ __('Scan Barcode via Kamera') }}">
-                            <i class="fa-solid fa-barcode"></i>
+            <form method="GET" action="{{ route('atk.products.index') }}" id="filterForm">
+                <div class="row g-2 align-items-center">
+                    {{-- Pencarian --}}
+                    <div class="col-12 col-md-4 col-lg-3">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                            </span>
+                            <input type="text" name="search" id="productSearch" class="form-control bg-light border-start-0 border-end-0" placeholder="{{ __('Cari nama, kode, barcode...') }}" value="{{ request('search') }}">
+                            @if(request('search'))
+                                <a href="{{ route('atk.products.index', array_merge(request()->except(['search', 'page']))) }}" class="btn btn-light border-top border-bottom border-0 text-muted" title="{{ __('Hapus Pencarian') }}">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </a>
+                            @endif
+                            <button type="button" class="btn btn-light border border-start-0 text-primary" id="openAtkBarcodeScan" title="{{ __('Scan Barcode via Kamera') }}">
+                                <i class="fa-solid fa-barcode"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- Kategori --}}
+                    <div class="col-6 col-md-3 col-lg-2">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted small"><i class="fa-solid fa-layer-group"></i></span>
+                            <select name="category" class="form-select bg-light" onchange="this.form.submit()">
+                                <option value="">{{ __('Semua Kategori') }}</option>
+                                @foreach($categories as $opt)
+                                    <option value="{{ $opt }}" {{ request('category') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    {{-- Status Stok --}}
+                    <div class="col-6 col-md-3 col-lg-2">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted small"><i class="fa-solid fa-boxes-stacked"></i></span>
+                            <select name="stock_status" class="form-select bg-light" onchange="this.form.submit()">
+                                <option value="">{{ __('Semua Status Stok') }}</option>
+                                <option value="in" {{ request('stock_status') === 'in' ? 'selected' : '' }}>{{ __('Stok Aman (> 5)') }}</option>
+                                <option value="low" {{ request('stock_status') === 'low' ? 'selected' : '' }}>{{ __('Stok Menipis (<= 5)') }}</option>
+                                <option value="out" {{ request('stock_status') === 'out' ? 'selected' : '' }}>{{ __('Stok Habis (0)') }}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {{-- Urutkan / Sort --}}
+                    <div class="col-6 col-md-3 col-lg-2">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted small"><i class="fa-solid fa-arrow-down-short-wide"></i></span>
+                            <select name="sort" class="form-select bg-light" onchange="this.form.submit()">
+                                <option value="latest" {{ request('sort', 'latest') === 'latest' ? 'selected' : '' }}>{{ __('Terbaru') }}</option>
+                                <option value="name_asc" {{ request('sort') === 'name_asc' ? 'selected' : '' }}>{{ __('Nama (A - Z)') }}</option>
+                                <option value="name_desc" {{ request('sort') === 'name_desc' ? 'selected' : '' }}>{{ __('Nama (Z - A)') }}</option>
+                                <option value="price_asc" {{ request('sort') === 'price_asc' ? 'selected' : '' }}>{{ __('Harga Terendah') }}</option>
+                                <option value="price_desc" {{ request('sort') === 'price_desc' ? 'selected' : '' }}>{{ __('Harga Tertinggi') }}</option>
+                                <option value="stock_asc" {{ request('sort') === 'stock_asc' ? 'selected' : '' }}>{{ __('Stok Tersedikit') }}</option>
+                                <option value="stock_desc" {{ request('sort') === 'stock_desc' ? 'selected' : '' }}>{{ __('Stok Terbanyak') }}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {{-- Per Page --}}
+                    <div class="col-6 col-md-2 col-lg-1">
+                        <select name="per_page" id="per_page" class="form-select bg-light" onchange="this.form.submit()" title="{{ __('Jumlah per halaman') }}">
+                            @php $pp = request('per_page', '10'); @endphp
+                            <option value="10" {{ $pp == '10' ? 'selected' : '' }}>10 / hal</option>
+                            <option value="25" {{ $pp == '25' ? 'selected' : '' }}>25 / hal</option>
+                            <option value="50" {{ $pp == '50' ? 'selected' : '' }}>50 / hal</option>
+                            <option value="100" {{ $pp == '100' ? 'selected' : '' }}>100 / hal</option>
+                            <option value="all" {{ $pp == 'all' ? 'selected' : '' }}>Semua</option>
+                        </select>
+                    </div>
+
+                    {{-- Tombol Filter & Reset --}}
+                    <div class="col-12 col-md-3 col-lg-2 d-flex gap-2 justify-content-md-end">
+                        <button type="submit" class="btn btn-primary btn-sm flex-fill flex-md-grow-0 px-3" title="{{ __('Terapkan Filter') }}">
+                            <i class="fa-solid fa-filter me-1"></i>{{ __('Filter') }}
                         </button>
+                        @if(request('search') || request('category') || request('stock_status') || (request('sort') && request('sort') !== 'latest') || (request('per_page') && request('per_page') != '10'))
+                            <a href="{{ route('atk.products.index') }}" class="btn btn-outline-secondary btn-sm px-2" title="{{ __('Reset Semua Filter') }}">
+                                <i class="fa-solid fa-rotate-left"></i>
+                            </a>
+                        @endif
                     </div>
                 </div>
 
-                <div class="col-6 col-md-3 col-lg-3">
-                    <div class="input-group">
-                        <span class="input-group-text bg-light text-muted small"><i class="fa-solid fa-layer-group"></i></span>
-                        <select name="category" class="form-select bg-light" onchange="this.form.submit()">
-                            <option value="">{{ __('Semua Kategori') }}</option>
+                {{-- Filter Aktif Indicators --}}
+                @if(request('search') || request('category') || request('stock_status') || (request('sort') && request('sort') !== 'latest'))
+                    <div class="d-flex flex-wrap align-items-center gap-2 mt-3 pt-2 border-top">
+                        <span class="small text-muted me-1"><i class="fa-solid fa-tags me-1"></i>{{ __('Filter Aktif:') }}</span>
+                        @if(request('search'))
+                            <span class="badge bg-light text-dark border d-inline-flex align-items-center gap-1 py-1 px-2">
+                                {{ __('Cari:') }} "{{ request('search') }}"
+                                <a href="{{ route('atk.products.index', array_merge(request()->except(['search', 'page']))) }}" class="text-danger ms-1 text-decoration-none fw-bold">&times;</a>
+                            </span>
+                        @endif
+                        @if(request('category'))
+                            <span class="badge bg-light text-dark border d-inline-flex align-items-center gap-1 py-1 px-2">
+                                {{ __('Kategori:') }} {{ request('category') }}
+                                <a href="{{ route('atk.products.index', array_merge(request()->except(['category', 'page']))) }}" class="text-danger ms-1 text-decoration-none fw-bold">&times;</a>
+                            </span>
+                        @endif
+                        @if(request('stock_status'))
                             @php
-                                $opts = isset($categories) ? $categories : ['ATK','JASA POTOCOPY','JASA TRANSFER BANK'];
+                                $statusLabels = ['in' => 'Stok Aman (> 5)', 'low' => 'Stok Menipis (<= 5)', 'out' => 'Stok Habis (0)'];
                             @endphp
-                            @foreach($opts as $opt)
-                                <option value="{{ $opt }}" {{ request('category')===$opt ? 'selected' : '' }}>{{ $opt }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-
-                <div class="col-6 col-md-2 col-lg-2">
-                    <div class="input-group">
-                        <label class="input-group-text bg-light text-muted small" for="per_page">{{ __('Tampil') }}</label>
-                        <select name="per_page" id="per_page" class="form-select bg-light" onchange="this.form.submit()">
-                            @php
-                                $pp = request('per_page','10');
-                            @endphp
-                            <option value="10" {{ $pp=='10' ? 'selected' : '' }}>10</option>
-                            <option value="50" {{ $pp=='50' ? 'selected' : '' }}>50</option>
-                            <option value="100" {{ $pp=='100' ? 'selected' : '' }}>100</option>
-                            <option value="all" {{ $pp=='all' ? 'selected' : '' }}>Semua</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="col-12 col-md-2 col-lg-3 d-flex gap-2 justify-content-md-end">
-                    <button type="submit" class="btn btn-primary btn-sm px-3 flex-fill flex-md-grow-0" title="{{ __('Terapkan Filter') }}">
-                        <i class="fa-solid fa-filter me-1"></i>{{ __('Filter') }}
-                    </button>
-                    @if(request('search') || request('category') || request('per_page'))
-                        <a href="{{ route('atk.products.index') }}" class="btn btn-outline-secondary btn-sm px-2" title="{{ __('Reset Filter') }}">
-                            <i class="fa-solid fa-rotate-left"></i>
+                            <span class="badge bg-light text-dark border d-inline-flex align-items-center gap-1 py-1 px-2">
+                                {{ __('Status Stok:') }} {{ $statusLabels[request('stock_status')] ?? request('stock_status') }}
+                                <a href="{{ route('atk.products.index', array_merge(request()->except(['stock_status', 'page']))) }}" class="text-danger ms-1 text-decoration-none fw-bold">&times;</a>
+                            </span>
+                        @endif
+                        @if(request('sort') && request('sort') !== 'latest')
+                            <span class="badge bg-light text-dark border d-inline-flex align-items-center gap-1 py-1 px-2">
+                                {{ __('Urutan:') }} {{ request('sort') }}
+                                <a href="{{ route('atk.products.index', array_merge(request()->except(['sort', 'page']))) }}" class="text-danger ms-1 text-decoration-none fw-bold">&times;</a>
+                            </span>
+                        @endif
+                        <a href="{{ route('atk.products.index') }}" class="btn btn-link btn-sm p-0 text-decoration-none text-danger small ms-auto">
+                            <i class="fa-solid fa-xmark me-1"></i>{{ __('Reset Semua Filter') }}
                         </a>
-                    @endif
-                </div>
+                    </div>
+                @endif
             </form>
+        </div>
+
+        {{-- Contextual Bulk Action Bar --}}
+        <div id="bulkActionBar" class="alert alert-primary d-none mx-3 my-2 py-2 px-3 align-items-center justify-content-between rounded-3 border-primary-subtle shadow-xs">
+            <div class="d-flex align-items-center gap-2">
+                <i class="fa-solid fa-circle-check text-primary fs-5"></i>
+                <span class="fw-semibold text-dark"><span id="bulkSelectedCount">0</span> {{ __('produk dipilih') }}</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" id="btnCancelBulk" class="btn btn-sm btn-outline-secondary">{{ __('Batal Pilih') }}</button>
+                <form id="bulkDeleteForm" action="{{ route('atk.products.bulk_destroy') }}" method="POST" class="d-inline">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" id="btnBulkDelete" class="btn btn-sm btn-danger shadow-xs" onclick="return confirm('Hapus semua produk yang dipilih?')">
+                        <i class="fa-solid fa-trash-can me-1"></i>
+                        <span id="bulkDeleteCount" class="badge bg-white text-danger rounded-pill me-1 d-none">0</span>
+                        <span>{{ __('Hapus Terpilih') }}</span>
+                    </button>
+                </form>
+            </div>
         </div>
 
         {{-- Table Content --}}
@@ -310,10 +399,21 @@
                             <div class="text-muted">
                                 <i class="fa-solid fa-boxes-stacked fs-1 text-secondary-subtle mb-3 d-block"></i>
                                 <h6 class="fw-bold mb-1">{{ __('Tidak ada produk ditemukan') }}</h6>
-                                <p class="small mb-3">{{ __('Coba ubah kata kunci pencarian atau tambahkan produk baru ke dalam katalog.') }}</p>
-                                <a href="{{ route('atk.products.create') }}" class="btn btn-sm btn-primary">
-                                    <i class="fa-solid fa-plus me-1"></i>{{ __('Tambah Produk Baru') }}
-                                </a>
+                                <p class="small mb-3">{{ __('Coba ubah kata kunci pencarian atau sesuaikan filter.') }}</p>
+                                @if(request('search') || request('category') || request('stock_status'))
+                                    <div class="d-flex gap-2 justify-content-center">
+                                        <a href="{{ route('atk.products.index') }}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fa-solid fa-rotate-left me-1"></i>{{ __('Reset Filter') }}
+                                        </a>
+                                        <a href="{{ route('atk.products.create') }}" class="btn btn-sm btn-primary">
+                                            <i class="fa-solid fa-plus me-1"></i>{{ __('Tambah Produk Baru') }}
+                                        </a>
+                                    </div>
+                                @else
+                                    <a href="{{ route('atk.products.create') }}" class="btn btn-sm btn-primary">
+                                        <i class="fa-solid fa-plus me-1"></i>{{ __('Tambah Produk Baru') }}
+                                    </a>
+                                @endif
                             </div>
                         </td>
                     </tr>
@@ -428,6 +528,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnSelectAll = document.getElementById('btnSelectAll');
 
     const bulkDeleteCount = document.getElementById('bulkDeleteCount');
+    const bulkActionBar = document.getElementById('bulkActionBar');
+    const bulkSelectedCount = document.getElementById('bulkSelectedCount');
+    const btnCancelBulk = document.getElementById('btnCancelBulk');
 
     function updateBulkState() {
         const selected = rowChecks.filter(cb => cb.checked).map(cb => cb.value);
@@ -452,10 +555,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 bulkDeleteCount.classList.add('d-none');
             }
         }
+        if (bulkActionBar && bulkSelectedCount) {
+            bulkSelectedCount.textContent = selected.length;
+            if (selected.length > 0) {
+                bulkActionBar.classList.remove('d-none');
+                bulkActionBar.classList.add('d-flex');
+            } else {
+                bulkActionBar.classList.add('d-none');
+                bulkActionBar.classList.remove('d-flex');
+            }
+        }
         if (checkAll) {
             checkAll.checked = selected.length > 0 && selected.length === rowChecks.length;
             checkAll.indeterminate = selected.length > 0 && selected.length < rowChecks.length;
         }
+    }
+    if (btnCancelBulk) {
+        btnCancelBulk.addEventListener('click', function() {
+            rowChecks.forEach(cb => cb.checked = false);
+            updateBulkState();
+        });
     }
     if (checkAll) {
         checkAll.addEventListener('change', function() {

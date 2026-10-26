@@ -15,9 +15,12 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        $adminRole = Role::where('name', 'admin')->first();
-        $nocRole = Role::where('name', 'noc-operator')->first();
-        $techRole = Role::where('name', 'technician')->first();
+        $adminRole = Role::whereIn('name', ['admin', 'super-admin'])->first()
+            ?? Role::firstOrCreate(['name' => 'super-admin'], ['label' => 'Super Administrator']);
+        $nocRole = Role::whereIn('name', ['noc-operator', 'noc'])->first()
+            ?? Role::firstOrCreate(['name' => 'noc-operator'], ['label' => 'NOC Operator']);
+        $techRole = Role::whereIn('name', ['field-technician', 'technician'])->first()
+            ?? Role::firstOrCreate(['name' => 'field-technician'], ['label' => 'Teknisi Lapangan']);
         $defaultCompanyId = Company::where('is_active', true)->orderBy('id')->value('id');
 
         User::updateOrCreate(
@@ -26,7 +29,7 @@ class UserSeeder extends Seeder
                 'name' => 'Super Admin',
                 'username' => 'admin',
                 'password' => Hash::make('password'),
-                'role_id' => $adminRole->id,
+                'role_id' => $adminRole?->id,
                 'company_id' => $defaultCompanyId,
                 'is_active' => true,
             ]
@@ -38,7 +41,7 @@ class UserSeeder extends Seeder
                 'name' => 'NOC Officer',
                 'username' => 'noc-operator',
                 'password' => Hash::make('password'),
-                'role_id' => $nocRole->id,
+                'role_id' => $nocRole?->id,
                 'company_id' => $defaultCompanyId,
                 'is_active' => true,
             ]
@@ -50,7 +53,7 @@ class UserSeeder extends Seeder
                 'name' => 'Technician One',
                 'username' => 'tech1',
                 'password' => Hash::make('password'),
-                'role_id' => $techRole->id,
+                'role_id' => $techRole?->id,
                 'company_id' => $defaultCompanyId,
                 'is_active' => true,
             ]
@@ -62,7 +65,7 @@ class UserSeeder extends Seeder
                 'name' => 'Test User',
                 'username' => 'testuser',
                 'password' => Hash::make('Test12345!'),
-                'role_id' => $adminRole->id,
+                'role_id' => $adminRole?->id,
                 'company_id' => $defaultCompanyId,
                 'is_active' => true,
             ]

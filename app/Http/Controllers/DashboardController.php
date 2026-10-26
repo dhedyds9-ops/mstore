@@ -305,13 +305,13 @@ class DashboardController extends Controller
                 'wash_today' => WashTransaction::where('created_at', '>=', $today)->count(),
                 'wash_month_revenue' => WashTransaction::where('created_at', '>=', $currentMonthStart)->sum('total_amount'),
                 'wedding_today' => WeddingPayment::where('status', 'paid')->where(function ($q) use ($today) {
-                    $q->where('payment_date', '>=', $today)->orWhere(function ($sq) use ($today) {
-                        $sq->whereNull('payment_date')->where('created_at', '>=', $today);
+                    $q->where('paid_at', '>=', $today)->orWhere(function ($sq) use ($today) {
+                        $sq->whereNull('paid_at')->where('created_at', '>=', $today);
                     });
                 })->count(),
                 'wedding_month_revenue' => WeddingPayment::where('status', 'paid')->where(function ($q) use ($currentMonthStart) {
-                    $q->where('payment_date', '>=', $currentMonthStart)->orWhere(function ($sq) use ($currentMonthStart) {
-                        $sq->whereNull('payment_date')->where('created_at', '>=', $currentMonthStart);
+                    $q->where('paid_at', '>=', $currentMonthStart)->orWhere(function ($sq) use ($currentMonthStart) {
+                        $sq->whereNull('paid_at')->where('created_at', '>=', $currentMonthStart);
                     });
                 })->sum('amount'),
                 'technician_total' => $technicianTotal,

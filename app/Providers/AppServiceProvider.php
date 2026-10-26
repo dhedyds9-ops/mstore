@@ -72,7 +72,9 @@ class AppServiceProvider extends ServiceProvider
             return $this->paginate($perPage);
         });
 
-        $shouldForceHttps = app()->environment('production') || (bool) env('FORCE_HTTPS', false);
+        $shouldForceHttps = app()->environment('production')
+            || (bool) env('FORCE_HTTPS', false)
+            || str_starts_with((string) config('app.url'), 'https://');
         if ($shouldForceHttps) {
             URL::forceScheme('https');
             $root = config('app.url');
