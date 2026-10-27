@@ -22,7 +22,7 @@ class ReportingCenterController extends Controller implements HasMiddleware
         return [
             new Middleware('permission:report.whatsapp.export', only: ['whatsapp', 'whatsappPdf', 'whatsappExcel']),
             new Middleware('permission:report.sla.export', only: ['sla', 'slaPdf', 'slaExcel']),
-            new Middleware('permission:report.wedding.export', only: ['wedding', 'weddingPdf', 'weddingExcel']),
+            new Middleware('permission:report.wedding.export|wedding.report', only: ['wedding', 'weddingPdf', 'weddingExcel']),
             new Middleware('permission:report.cctv.export', only: ['cctv', 'cctvPdf', 'cctvExcel']),
         ];
     }

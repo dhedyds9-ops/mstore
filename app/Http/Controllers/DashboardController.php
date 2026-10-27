@@ -49,11 +49,20 @@ class DashboardController extends Controller
 
             // Jika role lain tapi tidak punya izin melihat dashboard utama
             if (!$user->hasPermission('dashboard.view')) {
-                if ($user->hasPermission('atk.pos')) {
+                if ($user->hasPermission('atk.pos') || $user->hasPermission('atk.view')) {
                     return redirect()->route('atk.dashboard');
                 }
-                if ($user->hasPermission('wash.pos') && $user->hasPermission('wash.view')) {
+                if ($user->hasPermission('wash.pos') || $user->hasPermission('wash.view')) {
                     return redirect()->route('wash.dashboard');
+                }
+                if ($user->hasPermission('wedding.view')) {
+                    return redirect()->route('wedding.dashboard');
+                }
+                if ($user->hasPermission('finance.view')) {
+                    return redirect()->route('finance.index');
+                }
+                if ($user->hasPermission('attendance.view') || $user->hasPermission('leave.view')) {
+                    return redirect()->route('attendance.daily');
                 }
                 abort(403);
             }

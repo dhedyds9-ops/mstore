@@ -243,7 +243,7 @@ Route::middleware('auth')->group(function () {
             ->middleware('permission:admin.dashboard.view')
             ->name('admin.dashboard');
         Route::get('admin/audit-trail', [\App\Http\Controllers\AdminDashboardController::class, 'auditTrail'])
-            ->middleware('permission:dashboard.view')
+            ->middleware('permission:audit.view')
             ->name('admin.audit-trail');
     
     // AI Center
@@ -320,13 +320,13 @@ Route::middleware('auth')->group(function () {
             ->name('sla.excel');
 
         Route::get('/wedding', [\App\Http\Controllers\ReportingCenterController::class, 'wedding'])
-            ->middleware('permission:report.wedding.export')
+            ->middleware('permission:report.wedding.export|wedding.report')
             ->name('wedding');
         Route::get('/wedding/pdf', [\App\Http\Controllers\ReportingCenterController::class, 'weddingPdf'])
-            ->middleware('permission:report.wedding.export')
+            ->middleware('permission:report.wedding.export|wedding.report')
             ->name('wedding.pdf');
         Route::get('/wedding/excel', [\App\Http\Controllers\ReportingCenterController::class, 'weddingExcel'])
-            ->middleware('permission:report.wedding.export')
+            ->middleware('permission:report.wedding.export|wedding.report')
             ->name('wedding.excel');
 
         Route::get('/cctv', [\App\Http\Controllers\ReportingCenterController::class, 'cctv'])
@@ -386,8 +386,8 @@ Route::get('/webhooks/payment/return', [\App\Http\Controllers\PaymentController:
     Route::post('/settings/wash', [SettingController::class, 'update'])->name('settings.wash.update');
 
     // SaaS Tenant Subscription & Billing
-    Route::get('/subscription', [SubscriptionController::class, 'index'])->name('subscription.index');
-    Route::post('/subscription/upgrade', [SubscriptionController::class, 'upgrade'])->name('subscription.upgrade');
+    Route::get('/subscription', [SubscriptionController::class, 'index'])->middleware('permission:setting.view')->name('subscription.index');
+    Route::post('/subscription/upgrade', [SubscriptionController::class, 'upgrade'])->middleware('permission:setting.view')->name('subscription.upgrade');
 
     // Payment Gateway Management
     Route::middleware(['permission:payment.view'])->prefix('payment-gateway')->group(function () {

@@ -44,7 +44,7 @@ class SidebarMenu
                         self::link('wash-shifts', 'Shift Kerja', 'wash.shifts.index', permissions: ['wash.shift.view']),
                         self::link('wash-cash-registers', 'Laci Kasir', 'wash.cash-registers.index', permissions: ['wash.cash.view']),
                         self::link('wash-cash-movements', 'Mutasi Kas', 'wash.cash-movements.index', permissions: ['wash.cash.view']),
-                        self::link('wash-expenses', 'Pengeluaran', 'wash.expenses.index', permissions: ['wash.expense.view', 'wash.report']),
+                        self::link('wash-expenses', 'Pengeluaran', 'wash.expenses.index', permissions: ['wash.expense.view', 'wash.report', 'wash.manage']),
                         self::link('wash-stock', 'Stok Barang', 'wash.stock.index', permissions: ['wash.view']),
                         self::link('wash-suppliers', 'Supplier', 'wash.suppliers.index', permissions: ['wash.supplier.view']),
                         self::link('wash-members', 'Member', 'wash.members.index', permissions: ['wash.member.view']),
@@ -65,7 +65,7 @@ class SidebarMenu
                         self::link('wedding-schedule', 'Jadwal Acara', 'wedding.schedule.index', permissions: ['wedding.view']),
                         self::link('wedding-payments', 'Pembayaran', 'wedding.payments.index', permissions: ['wedding.payment']),
                         self::link('wedding-gallery', 'Galeri', 'wedding.gallery.index', permissions: ['wedding.view']),
-                        self::link('wedding-reports', 'Laporan', 'reports.wedding', permissions: ['report.wedding.export']),
+                        self::link('wedding-reports', 'Laporan', 'reports.wedding', permissions: ['report.wedding.export', 'wedding.report']),
                     ], permissions: ['wedding.view']),
                 ],
             ],
@@ -100,14 +100,15 @@ class SidebarMenu
                 'items' => [
                     self::group('hr-staff', 'Kepegawaian', [
                         self::link('employees', 'Data Karyawan', 'employees.index', permissions: ['employee.view']),
-                        self::link('employee-leave', 'Pengajuan Cuti', 'admin.leave-requests', permissions: ['attendance.view']),
-                    ], permissions: ['employee.view', 'attendance.view']),
+                        self::link('employee-leave', 'Pengajuan Cuti', 'employee.leave-requests', permissions: ['leave.view']),
+                        self::link('admin-leave', 'Kelola Cuti', 'admin.leave-requests', permissions: ['leave.manage']),
+                    ], permissions: ['employee.view', 'leave.view', 'leave.manage']),
                     self::group('hr-attendance', 'Presensi & Payroll', [
-                        self::link('attendance-kiosk', 'Kiosk Presensi', 'attendance.kiosk', permissions: ['attendance.view', 'setting.view']),
+                        self::link('attendance-kiosk', 'Kiosk Presensi', 'attendance.kiosk', permissions: ['attendance.create']),
                         self::link('attendance-daily', 'Presensi Harian', 'attendance.daily', permissions: ['attendance.view']),
                         self::link('attendance-payslip', 'Slip Gaji', 'attendance.payslip', permissions: ['attendance.view']),
                         self::link('attendance-recap', 'Rekap Presensi', 'attendance.index', permissions: ['attendance.view']),
-                    ], permissions: ['attendance.view']),
+                    ], permissions: ['attendance.view', 'attendance.create']),
                 ],
             ],
             [
@@ -117,7 +118,7 @@ class SidebarMenu
                 'items' => [
                     self::group('sys-settings', 'Pengaturan Usaha', [
                         self::link('settings', 'Profil Usaha', 'settings.index', permissions: ['setting.view']),
-                        self::link('subscription', 'Langganan Usaha', 'subscription.index'),
+                        self::link('subscription', 'Langganan Usaha', 'subscription.index', permissions: ['setting.view'], roles: ['super-admin', 'manager']),
                         self::link('atk-settings', 'Setting Toko', 'settings.atk.index', permissions: ['setting.view']),
                         self::link('wash-settings', 'Setting Layanan', 'settings.wash.index', permissions: ['setting.view']),
                         self::link('attendance-settings', 'Setting Presensi', 'settings.attendance.index', permissions: ['setting.view']),
@@ -131,9 +132,9 @@ class SidebarMenu
                     self::group('sys-users', 'Akses & Pengguna', [
                         self::link('users', 'Pengguna', 'users.index', permissions: ['user.view']),
                         self::link('roles', 'Role & Izin', 'roles.index', permissions: ['role.view']),
-                        self::link('audit-trail', 'Audit Trail', 'admin.audit-trail', permissions: ['dashboard.view']),
+                        self::link('audit-trail', 'Audit Trail', 'admin.audit-trail', permissions: ['audit.view']),
                         self::link('api-keys', 'API Keys', 'apikeys.index', permissions: ['apikey.view']),
-                    ], permissions: ['user.view', 'role.view', 'audit.view', 'apikey.view', 'dashboard.view']),
+                    ], permissions: ['user.view', 'role.view', 'audit.view', 'apikey.view']),
                 ],
             ],
         ];

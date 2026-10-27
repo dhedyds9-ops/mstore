@@ -51,6 +51,8 @@ return [
         'schedule'            => 'hr',
         'leave-my'            => 'hr',
         'leave-manage'        => 'hr',
+        'employee-leave'      => 'hr',
+        'admin-leave'         => 'hr',
         'kasbon'              => 'hr',
         'payslip'             => 'hr',
         'asset'               => 'inventory',
