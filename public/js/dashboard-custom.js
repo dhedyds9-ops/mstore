@@ -84,6 +84,15 @@ document.addEventListener('DOMContentLoaded', function() {
             body.classList.remove('sb-sidenav-toggled');
         });
     }
+
+    // Auto close sidebar on mobile when navigating to another page
+    document.querySelectorAll('#sidebar-wrapper a.sidebar-item:not([data-bs-toggle]), #sidebar-wrapper a.sidebar-tree-link').forEach(function(link) {
+        link.addEventListener('click', function() {
+            if (window.innerWidth < 992) {
+                body.classList.remove('sb-sidenav-toggled');
+            }
+        });
+    });
     if (window.bootstrap && bootstrap.Tooltip) {
         var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
         tooltipTriggerList.map(function (tooltipTriggerEl) { return new bootstrap.Tooltip(tooltipTriggerEl); });

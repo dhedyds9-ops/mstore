@@ -24,9 +24,14 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 
     <!-- Custom Dashboard CSS -->
-    <link href="/css/dashboard-custom.css" rel="stylesheet">
-    <link href="/css/app-android.css" rel="stylesheet">
-    <link href="/css/mstore-components.css" rel="stylesheet">
+    @php
+        $dashCssVer = file_exists(public_path('css/dashboard-custom.css')) ? filemtime(public_path('css/dashboard-custom.css')) : '1.3';
+        $androidCssVer = file_exists(public_path('css/app-android.css')) ? filemtime(public_path('css/app-android.css')) : '1.3';
+        $compCssVer = file_exists(public_path('css/mstore-components.css')) ? filemtime(public_path('css/mstore-components.css')) : '1.3';
+    @endphp
+    <link href="{{ asset('css/dashboard-custom.css') }}?v={{ $dashCssVer }}" rel="stylesheet">
+    <link href="{{ asset('css/app-android.css') }}?v={{ $androidCssVer }}" rel="stylesheet">
+    <link href="{{ asset('css/mstore-components.css') }}?v={{ $compCssVer }}" rel="stylesheet">
 
     @vite(['resources/js/app.js'])
 
@@ -183,7 +188,7 @@
                             $routeName = (string) ($node['route'] ?? '');
                             $routeParams = $node['route_params'] ?? [];
                             $href = \Illuminate\Support\Facades\Route::has($routeName) ? route($routeName, $routeParams) : '#';
-                            $html .= '<a href="'.e($href).'" class="sidebar-item'.($active ? ' active' : '').'">';
+                            $html .= '<a href="'.e($href).'" class="sidebar-item text-decoration-none'.($active ? ' active' : '').'">';
                             $html .= $iconHtml.'<span>'.e($label).'</span>';
                             $html .= '</a>';
                             continue;
@@ -193,7 +198,7 @@
                             $id = (string) ($node['id'] ?? uniqid('grp_', false));
                             $collapseId = 'sidebarCollapse_'.$id;
                             
-                            $html .= '<a class="sidebar-item sidebar-group-btn'.($active ? ' active' : '').'" data-bs-toggle="collapse" href="#'.e($collapseId).'" role="button" aria-expanded="'.($active ? 'true' : 'false').'" aria-controls="'.e($collapseId).'">';
+                            $html .= '<a class="sidebar-item sidebar-group-btn text-decoration-none'.($active ? ' active' : '').'" data-bs-toggle="collapse" href="#'.e($collapseId).'" role="button" aria-expanded="'.($active ? 'true' : 'false').'" aria-controls="'.e($collapseId).'">';
                             $html .= '<div class="d-flex align-items-center flex-grow-1 overflow-hidden me-2">'.$iconHtml.'<span class="text-truncate">'.e($label).'</span></div>';
                             $html .= '<i class="fa-solid fa-chevron-right group-chevron-icon ms-auto"></i>';
                             $html .= '</a>';
@@ -213,7 +218,7 @@
                                 $childLabel = (string) ($child['label'] ?? '');
                                 
                                 $html .= '<li class="sidebar-tree-item'.($childActive ? ' active' : '').'">';
-                                $html .= '<a href="'.e($childHref).'" class="sidebar-tree-link'.($childActive ? ' active' : '').'">';
+                                $html .= '<a href="'.e($childHref).'" class="sidebar-tree-link text-decoration-none'.($childActive ? ' active' : '').'">';
                                 $html .= '<span class="tree-bullet"></span>';
                                 $html .= '<span class="tree-label">'.e($childLabel).'</span>';
                                 $html .= '</a>';
@@ -269,13 +274,12 @@
                 @endphp
                 @if($sectionVisible)
                     <div class="sidebar-category-card">
-                        <a class="sidebar-category-header{{ $sectionActive ? ' active' : '' }}" data-bs-toggle="collapse" href="#{{ $secCollapseId }}" role="button" aria-expanded="{{ $sectionActive ? 'true' : 'false' }}" aria-controls="{{ $secCollapseId }}">
+                        <button type="button" class="sidebar-category-header w-100 text-start border-0 text-decoration-none{{ $sectionActive ? ' active' : '' }}" data-bs-toggle="collapse" data-bs-target="#{{ $secCollapseId }}" aria-expanded="{{ $sectionActive ? 'true' : 'false' }}" aria-controls="{{ $secCollapseId }}">
                             <span class="category-title">{{ __($section['label'] ?? '') }}</span>
                             <span class="category-toggle-icon">
-                                <i class="fa-solid fa-plus icon-collapsed"></i>
-                                <i class="fa-solid fa-minus icon-expanded"></i>
+                                <i class="fa-solid fa-chevron-down category-chevron"></i>
                             </span>
-                        </a>
+                        </button>
                         <div class="collapse{{ $sectionActive ? ' show' : '' }}" id="{{ $secCollapseId }}">
                             <div class="sidebar-category-body">
                                 {!! $renderNodes($section['items'] ?? []) !!}
@@ -910,8 +914,12 @@
 </script>
 
 <!-- Custom Dashboard JS -->
-<script src="{{ app()->environment('production') ? secure_asset('js/dashboard-custom.js') : asset('js/dashboard-custom.js') }}"></script>
-<script src="{{ app()->environment('production') ? secure_asset('js/android-interact.js') : asset('js/android-interact.js') }}"></script>
+@php
+    $dashJsVer = file_exists(public_path('js/dashboard-custom.js')) ? filemtime(public_path('js/dashboard-custom.js')) : '1.3';
+    $androidJsVer = file_exists(public_path('js/android-interact.js')) ? filemtime(public_path('js/android-interact.js')) : '1.3';
+@endphp
+<script src="{{ (app()->environment('production') ? secure_asset('js/dashboard-custom.js') : asset('js/dashboard-custom.js')) }}?v={{ $dashJsVer }}"></script>
+<script src="{{ (app()->environment('production') ? secure_asset('js/android-interact.js') : asset('js/android-interact.js')) }}?v={{ $androidJsVer }}"></script>
 
 {{-- ========================================== --}}
 {{-- SCRIPT 7: FEATHER ICONS & RESPONSIVE TABLE --}}

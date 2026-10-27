@@ -232,6 +232,7 @@ input, textarea, select {
   to { transform: translate(-50%, -50%) scale(40); opacity: 0; }
 }
 
+.card,
 .route-wash .card,
 .route-accounting .card {
   border-radius: 16px;
@@ -239,16 +240,21 @@ input, textarea, select {
   overflow: hidden;
 }
 
+.card .card-header,
 .route-wash .card .card-header,
 .route-accounting .card .card-header {
   border-bottom: 1px solid rgba(59, 130, 246, 0.14);
 }
 
+.btn,
 .route-wash .btn,
 .route-accounting .btn {
   border-radius: 12px;
 }
 
+.form-control,
+.form-select,
+.input-group-text,
 .route-wash .form-control,
 .route-wash .form-select,
 .route-wash .input-group-text,
@@ -259,6 +265,8 @@ input, textarea, select {
   min-height: 44px;
 }
 
+.table td,
+.table th,
 .route-wash .table td,
 .route-wash .table th,
 .route-accounting .table td,
@@ -413,17 +421,21 @@ input, textarea, select {
   }
 }
 
+[data-bs-theme="dark"] .card,
 [data-bs-theme="dark"] .route-wash .card,
 [data-bs-theme="dark"] .route-accounting .card {
   border-color: rgba(96, 165, 250, 0.28);
   box-shadow: 0 8px 22px rgba(2, 6, 23, 0.45);
 }
 
+[data-bs-theme="dark"] .card .card-header,
 [data-bs-theme="dark"] .route-wash .card .card-header,
 [data-bs-theme="dark"] .route-accounting .card .card-header {
   border-bottom-color: rgba(96, 165, 250, 0.24);
 }
 
+[data-bs-theme="dark"] .table-responsive,
+[data-bs-theme="dark"] .table-responsive-mobile,
 [data-bs-theme="dark"] .route-wash .table-responsive-mobile,
 [data-bs-theme="dark"] .route-accounting .table-responsive-mobile,
 [data-bs-theme="dark"] .route-finance .table-responsive-mobile {
