@@ -35,7 +35,7 @@
         <form method="GET" class="row g-2 align-items-center">
             <div class="col-md-4">
                 <div class="input-group input-group-sm">
-                    <span class="input-group-text bg-white border-end-0 text-muted">
+                    <span class="input-group-text bg-transparent border-end-0 text-muted">
                         <i class="fa-solid fa-magnifying-glass"></i>
                     </span>
                     <input type="text" class="form-control border-start-0 ps-0" name="search" value="{{ $search }}" placeholder="Cari nama, NIK, jabatan...">
@@ -89,7 +89,7 @@
 </div>
 
 <div class="card shadow-sm border-0 mb-4 overflow-hidden">
-    <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+    <div class="card-header bg-transparent py-3 border-0 d-flex justify-content-between align-items-center">
         <h6 class="mb-0 fw-bold text-dark">Daftar Karyawan</h6>
         <form method="GET" action="{{ route('employees.print.cards') }}" target="_blank" id="printSelectedForm" class="m-0">
             <input type="hidden" name="search" value="{{ $search }}">
@@ -242,7 +242,7 @@
         </div>
     </div>
     @if($employees->hasPages())
-        <div class="card-footer bg-white py-2 border-0">
+        <div class="card-footer bg-transparent py-2 border-0">
             {{ $employees->appends(request()->query())->links() }}
         </div>
     @endif
