@@ -8,8 +8,8 @@
     <title>@yield('title', config('app.name', 'Mstore Gt Wash'))</title>
     
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="{{ app()->environment('production') ? secure_asset('favicon.svg') : asset('favicon.svg') }}">
-    <link rel="alternate icon" href="{{ app()->environment('production') ? secure_asset('favicon.ico') : asset('favicon.ico') }}">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" href="/favicon.ico">
 
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -29,9 +29,9 @@
         $androidCssVer = file_exists(public_path('css/app-android.css')) ? filemtime(public_path('css/app-android.css')) : '1.3';
         $compCssVer = file_exists(public_path('css/mstore-components.css')) ? filemtime(public_path('css/mstore-components.css')) : '1.3';
     @endphp
-    <link href="{{ asset('css/dashboard-custom.css') }}?v={{ $dashCssVer }}" rel="stylesheet">
-    <link href="{{ asset('css/app-android.css') }}?v={{ $androidCssVer }}" rel="stylesheet">
-    <link href="{{ asset('css/mstore-components.css') }}?v={{ $compCssVer }}" rel="stylesheet">
+    <link href="/css/dashboard-custom.css?v={{ $dashCssVer }}" rel="stylesheet">
+    <link href="/css/app-android.css?v={{ $androidCssVer }}" rel="stylesheet">
+    <link href="/css/mstore-components.css?v={{ $compCssVer }}" rel="stylesheet">
 
     @vite(['resources/js/app.js'])
 
@@ -61,7 +61,7 @@
         <div class="sidebar-heading py-3 px-3 position-relative d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center">
                 <div class="sidebar-brand-icon">
-                    <img src="{{ app()->environment('production') ? secure_asset('img/logo.png') : asset('img/logo.png') }}" alt="MSTORE.NET" class="img-fluid" style="max-height: 28px;">
+                    <img src="/img/logo.png" alt="MSTORE.NET" class="img-fluid" style="max-height: 28px;">
                 </div>
                 <span class="sidebar-brand-text ms-2 fw-bold" style="font-size: 1.15rem; color: var(--text-main);">MStore</span>
             </div>
@@ -189,7 +189,8 @@
                             $routeParams = $node['route_params'] ?? [];
                             $href = \Illuminate\Support\Facades\Route::has($routeName) ? route($routeName, $routeParams) : '#';
                             $html .= '<a href="'.e($href).'" class="sidebar-item text-decoration-none'.($active ? ' active' : '').'">';
-                            $html .= $iconHtml.'<span>'.e($label).'</span>';
+                            $html .= '<span class="sidebar-icon">'.$iconHtml.'</span>';
+                            $html .= '<span class="sidebar-label">'.e($label).'</span>';
                             $html .= '</a>';
                             continue;
                         }
@@ -198,34 +199,38 @@
                             $id = (string) ($node['id'] ?? uniqid('grp_', false));
                             $collapseId = 'sidebarCollapse_'.$id;
                             
-                            $html .= '<a class="sidebar-item sidebar-group-btn text-decoration-none'.($active ? ' active' : '').'" data-bs-toggle="collapse" href="#'.e($collapseId).'" role="button" aria-expanded="'.($active ? 'true' : 'false').'" aria-controls="'.e($collapseId).'">';
-                            $html .= '<div class="d-flex align-items-center flex-grow-1 overflow-hidden me-2">'.$iconHtml.'<span class="text-truncate">'.e($label).'</span></div>';
-                            $html .= '<i class="fa-solid fa-chevron-right group-chevron-icon ms-auto"></i>';
-                            $html .= '</a>';
+                            $html .= '<button type="button" class="sidebar-item sidebar-group-btn text-decoration-none w-100'.($active ? ' active' : '').'" data-bs-toggle="collapse" data-bs-target="#'.e($collapseId).'" aria-expanded="'.($active ? 'true' : 'false').'" aria-controls="'.e($collapseId).'">';
+                            $html .= '<span class="sidebar-icon">'.$iconHtml.'</span>';
+                            $html .= '<span class="sidebar-label flex-grow-1 text-start text-truncate">'.e($label).'</span>';
+                            $html .= '<i class="fa-solid fa-chevron-down group-chevron-icon ms-auto"></i>';
+                            $html .= '</button>';
                             
                             $html .= '<div class="collapse'.($active ? ' show' : '').'" id="'.e($collapseId).'">';
                             $html .= '<div class="sidebar-tree-container">';
-                            $html .= '<ul class="sidebar-tree-list">';
                             
-                            foreach (($node['children'] ?? []) as $child) {
-                                if (! is_array($child) || ! $nodeVisible($child)) {
-                                    continue;
-                                }
+                            $children = array_values(array_filter(($node['children'] ?? []), static fn($c) => is_array($c) && $nodeVisible($c)));
+                            $childCount = count($children);
+
+                            foreach ($children as $index => $child) {
                                 $childActive = $nodeActive($child);
                                 $childRoute = (string) ($child['route'] ?? '');
                                 $childParams = $child['route_params'] ?? [];
                                 $childHref = \Illuminate\Support\Facades\Route::has($childRoute) ? route($childRoute, $childParams) : '#';
                                 $childLabel = (string) ($child['label'] ?? '');
+                                $isLast = ($index === $childCount - 1);
                                 
-                                $html .= '<li class="sidebar-tree-item'.($childActive ? ' active' : '').'">';
+                                $html .= '<div class="sidebar-tree-item position-relative">';
+                                $html .= '<div class="tree-line-v'.($isLast ? ' is-last' : '').'"></div>';
+                                $html .= '<div class="tree-line-h"></div>';
+                                if ($childActive) {
+                                    $html .= '<div class="tree-active-dot"></div>';
+                                }
                                 $html .= '<a href="'.e($childHref).'" class="sidebar-tree-link text-decoration-none'.($childActive ? ' active' : '').'">';
-                                $html .= '<span class="tree-bullet"></span>';
                                 $html .= '<span class="tree-label">'.e($childLabel).'</span>';
                                 $html .= '</a>';
-                                $html .= '</li>';
+                                $html .= '</div>';
                             }
                             
-                            $html .= '</ul>';
                             $html .= '</div>';
                             $html .= '</div>';
                         }
@@ -259,31 +264,17 @@
                         }
                         $sectionVisible = $sectionVisible && $hasAnyItem;
                     }
-
-                    $sectionActive = false;
-                    if ($sectionVisible) {
-                        foreach (($section['items'] ?? []) as $it) {
-                            if ($nodeActive($it)) {
-                                $sectionActive = true;
-                                break;
-                            }
-                        }
-                    }
-                    $secId = (string) ($section['id'] ?? uniqid('sec_', false));
-                    $secCollapseId = 'secCollapse_' . $secId;
+                    $sectionLabel = trim((string) ($section['label'] ?? ''));
                 @endphp
                 @if($sectionVisible)
-                    <div class="sidebar-category-card">
-                        <button type="button" class="sidebar-category-header w-100 text-start border-0 text-decoration-none{{ $sectionActive ? ' active' : '' }}" data-bs-toggle="collapse" data-bs-target="#{{ $secCollapseId }}" aria-expanded="{{ $sectionActive ? 'true' : 'false' }}" aria-controls="{{ $secCollapseId }}">
-                            <span class="category-title">{{ __($section['label'] ?? '') }}</span>
-                            <span class="category-toggle-icon">
-                                <i class="fa-solid fa-chevron-down category-chevron"></i>
-                            </span>
-                        </button>
-                        <div class="collapse{{ $sectionActive ? ' show' : '' }}" id="{{ $secCollapseId }}">
-                            <div class="sidebar-category-body">
-                                {!! $renderNodes($section['items'] ?? []) !!}
+                    <div class="sidebar-section-group mb-2">
+                        @if($sectionLabel !== '' && !in_array(strtolower($sectionLabel), ['dashboard', 'dashboard reseller', 'general']))
+                            <div class="sidebar-section-header px-3 mb-1">
+                                <p class="sidebar-section-title">{{ __($sectionLabel) }}</p>
                             </div>
+                        @endif
+                        <div class="sidebar-section-items">
+                            {!! $renderNodes($section['items'] ?? []) !!}
                         </div>
                     </div>
                 @endif
@@ -489,8 +480,8 @@
         }
 
         const items = Array.from(sidebar.querySelectorAll('a.sidebar-item, a.sidebar-tree-link'));
-        const categoryCards = Array.from(sidebar.querySelectorAll('.sidebar-category-card'));
-        const headers = Array.from(sidebar.querySelectorAll('.sidebar-header'));
+        const sectionGroups = Array.from(sidebar.querySelectorAll('.sidebar-section-group'));
+        const headers = Array.from(sidebar.querySelectorAll('.sidebar-section-header'));
         const collapses = Array.from(sidebar.querySelectorAll('.collapse'));
         collapses.forEach(function (el) {
             el.dataset.initialShow = el.classList.contains('show') ? '1' : '0';
@@ -528,7 +519,7 @@
                 items.forEach(function (el) {
                     el.classList.remove('d-none');
                 });
-                categoryCards.forEach(function (el) {
+                sectionGroups.forEach(function (el) {
                     el.classList.remove('d-none');
                 });
                 headers.forEach(function (el) {
@@ -563,7 +554,7 @@
                 const matchSelf = leafMatchesQuery(toggle, q);
                 let matchChild = false;
 
-                const href = toggle.getAttribute('href') || '';
+                const href = toggle.getAttribute('href') || toggle.getAttribute('data-bs-target') || '';
                 if (href.startsWith('#')) {
                     const target = sidebar.querySelector(href);
                     if (target) {
@@ -577,12 +568,12 @@
                 toggle.classList.toggle('d-none', !matchSelf && !matchChild);
             });
 
-            // Filter category cards
-            categoryCards.forEach(function (card) {
-                const header = card.querySelector('.sidebar-category-header');
+            // Filter section groups
+            sectionGroups.forEach(function (group) {
+                const header = group.querySelector('.sidebar-section-title');
                 const matchHeader = header ? leafMatchesQuery(header, q) : false;
-                const visibleChild = card.querySelector('a.sidebar-item:not(.d-none), a.sidebar-tree-link:not(.d-none)');
-                card.classList.toggle('d-none', !matchHeader && !visibleChild);
+                const visibleChild = group.querySelector('a.sidebar-item:not(.d-none), a.sidebar-tree-link:not(.d-none)');
+                group.classList.toggle('d-none', !matchHeader && !visibleChild);
             });
         };
 
@@ -918,8 +909,8 @@
     $dashJsVer = file_exists(public_path('js/dashboard-custom.js')) ? filemtime(public_path('js/dashboard-custom.js')) : '1.3';
     $androidJsVer = file_exists(public_path('js/android-interact.js')) ? filemtime(public_path('js/android-interact.js')) : '1.3';
 @endphp
-<script src="{{ (app()->environment('production') ? secure_asset('js/dashboard-custom.js') : asset('js/dashboard-custom.js')) }}?v={{ $dashJsVer }}"></script>
-<script src="{{ (app()->environment('production') ? secure_asset('js/android-interact.js') : asset('js/android-interact.js')) }}?v={{ $androidJsVer }}"></script>
+<script src="/js/dashboard-custom.js?v={{ $dashJsVer }}"></script>
+<script src="/js/android-interact.js?v={{ $androidJsVer }}"></script>
 
 {{-- ========================================== --}}
 {{-- SCRIPT 7: FEATHER ICONS & RESPONSIVE TABLE --}}
