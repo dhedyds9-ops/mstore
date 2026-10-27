@@ -547,6 +547,7 @@ Route::get('/webhooks/payment/return', [\App\Http\Controllers\PaymentController:
     Route::get('/telegram', [\App\Http\Controllers\TelegramController::class, 'index'])
         ->middleware('permission:telegram.view|setting.view')
         ->name('telegram.index');
+    Route::get('/settings/telegram', fn () => redirect()->route('telegram.index'));
     Route::post('/telegram/update', [\App\Http\Controllers\TelegramController::class, 'update'])->name('telegram.update');
     Route::post('/telegram/test', [\App\Http\Controllers\TelegramController::class, 'test'])->name('telegram.test');
     Route::post('/telegram/test-ip-down', [\App\Http\Controllers\TelegramController::class, 'testIpDown'])->name('telegram.test_ip_down');

@@ -231,9 +231,14 @@
                     </div>
 
                     <div class="mb-4">
-                        <h6 class="fw-bold text-primary text-uppercase mb-3">
-                            <i class="fa-brands fa-telegram me-1"></i> Notifikasi Telegram
-                        </h6>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold text-primary text-uppercase mb-0">
+                                <i class="fa-brands fa-telegram me-1"></i> Notifikasi Telegram
+                            </h6>
+                            <a href="{{ route('telegram.index') }}" class="btn btn-sm btn-outline-info">
+                                <i class="fa-brands fa-telegram me-1"></i> Buka Pengaturan Bot Telegram
+                            </a>
+                        </div>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <div class="form-check">

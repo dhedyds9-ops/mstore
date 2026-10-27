@@ -11,16 +11,30 @@
             </div>
 
             <div class="card-body">
-                <div class="mb-4 pb-3 border-bottom d-flex justify-content-between align-items-center">
+                <div class="mb-4 pb-3 border-bottom d-flex flex-wrap gap-2 justify-content-between align-items-center">
                     <div>
                         <h6 class="fw-bold text-primary text-uppercase mb-1">
-                            <i class="fa-solid fa-database me-1"></i> Pemeliharaan Sistem
+                            <i class="fa-solid fa-sliders me-1"></i> Pengaturan & Integrasi
                         </h6>
-                        <p class="text-muted small mb-0">Cadangkan database Anda secara berkala untuk keamanan data.</p>
+                        <p class="text-muted small mb-0">Kelola profil usaha, integrasi bot pesan, dan pemeliharaan sistem.</p>
                     </div>
-                    <a href="{{ route('settings.backup') }}" class="btn btn-outline-primary">
-                        <i class="fa-solid fa-download me-1"></i> Backup Database
-                    </a>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{{ route('telegram.index') }}" class="btn btn-outline-info btn-sm">
+                            <i class="fa-brands fa-telegram me-1"></i> Bot Telegram
+                        </a>
+                        <a href="{{ route('whatsapp.index') }}" class="btn btn-outline-success btn-sm">
+                            <i class="fa-brands fa-whatsapp me-1"></i> Gateway WhatsApp
+                        </a>
+                        <a href="{{ route('settings.wash.index') }}" class="btn btn-outline-secondary btn-sm">
+                            <i class="fa-solid fa-spray-can-sparkles me-1"></i> Setting Cuci
+                        </a>
+                        <a href="{{ route('settings.attendance.index') }}" class="btn btn-outline-secondary btn-sm">
+                            <i class="fa-solid fa-fingerprint me-1"></i> Setting Presensi
+                        </a>
+                        <a href="{{ route('settings.backup') }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fa-solid fa-download me-1"></i> Backup Database
+                        </a>
+                    </div>
                 </div>
 
                 <form action="{{ route('settings.update') }}" method="POST" enctype="multipart/form-data">
