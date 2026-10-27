@@ -188,6 +188,8 @@ class SettingController extends Controller implements HasMiddleware
             'whatsapp_attendance_group_id' => 'nullable|string|max:255',
             'telegram_attendance_notification_enabled' => 'nullable|in:0,1',
             'telegram_attendance_group_id' => 'nullable|string|max:255',
+            'telegram_wash_notification_enabled' => 'nullable|in:0,1',
+            'telegram_wash_group_id' => 'nullable|string|max:255',
             'attendance_photo_required' => 'nullable|in:0,1',
         ]);
 
