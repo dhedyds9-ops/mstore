@@ -15,8 +15,8 @@ class TelegramController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:telegram.view', only: ['index']),
-            new Middleware('permission:telegram.manage', only: ['update', 'test', 'testIpDown', 'testIpUp', 'previewIpDown', 'previewIpUp']),
+            new Middleware('permission:telegram.view|setting.view', only: ['index']),
+            new Middleware('permission:telegram.manage|setting.view', only: ['update', 'test', 'testIpDown', 'testIpUp', 'previewIpDown', 'previewIpUp']),
         ];
     }
 

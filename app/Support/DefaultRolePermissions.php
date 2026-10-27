@@ -38,6 +38,7 @@ class DefaultRolePermissions
                     'profile.update',
                     'notification.view',
                     'notification.manage',
+                    'telegram.*',
                     'kasbon.view',
                     'kasbon.manage',
                 ],
@@ -64,6 +65,7 @@ class DefaultRolePermissions
                     'profile.update',
                     'notification.view',
                     'notification.manage',
+                    'telegram.*',
                 ],
             ],
 
@@ -95,6 +97,7 @@ class DefaultRolePermissions
                     'profile.update',
                     'notification.view',
                     'notification.manage',
+                    'telegram.*',
                 ],
             ],
 

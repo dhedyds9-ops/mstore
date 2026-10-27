@@ -14,6 +14,7 @@ use App\Jobs\Attendance\SendManualAttendanceNotificationJob;
 use App\Models\LeaveRequest;
 use App\Models\SalaryAdjustment;
 use App\Models\Setting;
+use App\Models\Role;
 use App\Models\TechnicianAttendance;
 use App\Models\Transaction;
 use App\Models\User;
@@ -101,7 +102,7 @@ class TechnicianAttendanceController extends Controller implements HasMiddleware
         }
 
         $usersQuery = \App\Models\User::whereHas('role', function ($q) {
-            $q->whereNotIn('name', ['customer', 'partner', 'super-admin', 'manager', 'field-leader']);
+            $q->whereNotIn('name', array_merge(Role::hiddenInUserManagement(), ['super-admin', 'manager']));
         })->where('is_active', true)
             ->with(['role', 'employee'])
             ->orderBy('name');
@@ -173,7 +174,7 @@ class TechnicianAttendanceController extends Controller implements HasMiddleware
         $attendances = $query->latest('clock_in')->customPaginate()->withQueryString();
 
         $techniciansQuery = \App\Models\User::whereHas('role', function ($q) {
-            $q->whereNotIn('name', ['customer', 'partner', 'super-admin', 'manager', 'field-leader']);
+            $q->whereNotIn('name', array_merge(Role::hiddenInUserManagement(), ['super-admin', 'manager']));
         })->where('is_active', true)
             ->with(['role', 'employee']);
 
@@ -201,7 +202,7 @@ class TechnicianAttendanceController extends Controller implements HasMiddleware
         }
 
         $techniciansQuery = \App\Models\User::whereHas('role', function ($q) {
-            $q->whereNotIn('name', ['customer', 'partner', 'super-admin', 'manager', 'field-leader']);
+            $q->whereNotIn('name', array_merge(Role::hiddenInUserManagement(), ['super-admin', 'manager']));
         })->where('is_active', true)
             ->with(['role', 'employee']);
 
@@ -248,7 +249,7 @@ class TechnicianAttendanceController extends Controller implements HasMiddleware
             }
 
             $usersQuery = \App\Models\User::whereHas('role', function ($q) {
-                $q->whereNotIn('name', ['customer', 'partner', 'super-admin', 'manager', 'field-leader']);
+                $q->whereNotIn('name', array_merge(Role::hiddenInUserManagement(), ['super-admin', 'manager']));
             })->where('is_active', true)
                 ->with('role')
                 ->orderBy('name');

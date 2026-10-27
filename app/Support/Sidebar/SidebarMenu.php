@@ -123,6 +123,7 @@ class SidebarMenu
                         self::link('wash-settings', 'Setting Layanan', 'settings.wash.index', permissions: ['setting.view']),
                         self::link('attendance-settings', 'Setting Presensi', 'settings.attendance.index', permissions: ['setting.view']),
                         self::link('whatsapp-settings', 'Gateway WhatsApp', 'whatsapp.index', permissions: ['chat.view', 'setting.view']),
+                        self::link('telegram-settings', 'Bot Telegram', 'telegram.index', permissions: ['telegram.view', 'setting.view']),
                     ], permissions: ['setting.view']),
                     self::group('sys-payment', 'Payment Gateway', [
                         self::link('payment-dashboard', 'Status Gateway', 'payment.dashboard', permissions: ['payment.view']),
