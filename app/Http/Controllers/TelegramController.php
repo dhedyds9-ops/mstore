@@ -262,6 +262,16 @@ class TelegramController extends Controller implements HasMiddleware
             ['value' => '', 'group' => 'telegram', 'type' => 'text', 'label' => 'Telegram Router Group ID']
         );
 
+        // Get GT Wash notification settings
+        $notifyWash = Setting::firstOrCreate(
+            ['key' => 'telegram_wash_notification_enabled'],
+            ['value' => '0', 'group' => 'telegram', 'type' => 'boolean', 'label' => 'Telegram Wash Notification Enabled']
+        );
+        $washGroupId = Setting::firstOrCreate(
+            ['key' => 'telegram_wash_group_id'],
+            ['value' => '', 'group' => 'telegram', 'type' => 'text', 'label' => 'Telegram Wash Group ID']
+        );
+
         return view('telegram.index', array_merge(
             compact(
                 'setting',
@@ -277,7 +287,9 @@ class TelegramController extends Controller implements HasMiddleware
                 'telegramRetryBackoffMinutes',
                 'telegramMonitorDetailLimit',
                 'notifyRouter',
-                'routerGroupId'
+                'routerGroupId',
+                'notifyWash',
+                'washGroupId'
             ),
             $templateObjects
         ));
@@ -304,6 +316,8 @@ class TelegramController extends Controller implements HasMiddleware
             'telegram_monitor_detail_list_limit' => 'nullable|integer|min:5|max:100',
             'telegram_router_notification_enabled' => 'nullable|boolean',
             'telegram_router_group_id' => 'nullable|string',
+            'telegram_wash_notification_enabled' => 'nullable|boolean',
+            'telegram_wash_group_id' => 'nullable|string',
             // New ticket templates
             'ticket_created_telegram_template' => 'nullable|string',
             'ticket_assigned_telegram_template' => 'nullable|string',
@@ -408,6 +422,20 @@ class TelegramController extends Controller implements HasMiddleware
             'group' => 'telegram',
             'type' => 'text',
             'label' => 'Telegram Router Group ID',
+        ]);
+
+        Setting::updateOrCreate(['key' => 'telegram_wash_notification_enabled'], [
+            'value' => $request->boolean('telegram_wash_notification_enabled') ? '1' : '0',
+            'group' => 'telegram',
+            'type' => 'boolean',
+            'label' => 'Telegram Wash Notification Enabled',
+        ]);
+
+        Setting::updateOrCreate(['key' => 'telegram_wash_group_id'], [
+            'value' => $request->telegram_wash_group_id,
+            'group' => 'telegram',
+            'type' => 'text',
+            'label' => 'Telegram Wash Group ID',
         ]);
 
         Setting::updateOrCreate(['key' => 'telegram_ticket_template'], [

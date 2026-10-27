@@ -4,8 +4,19 @@
 <div class="row">
     <div class="col-12">
         <div class="card shadow-sm border-0 border-top border-4 border-info">
-            <div class="card-header py-3">
-                <h5 class="mb-0 fw-bold"><i class="fa-brands fa-telegram me-2"></i>{{ __('Telegram Settings') }}</h5>
+            <div class="card-header py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <h5 class="mb-0 fw-bold"><i class="fa-brands fa-telegram me-2 text-info"></i>{{ __('Telegram Settings & Notifikasi') }}</h5>
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{{ route('settings.wash.index') }}" class="btn btn-outline-primary btn-sm">
+                        <i class="fa-solid fa-spray-can-sparkles me-1"></i> {{ __('Setting Layanan Wash') }}
+                    </a>
+                    <a href="{{ route('whatsapp.index') }}" class="btn btn-outline-success btn-sm">
+                        <i class="fa-brands fa-whatsapp me-1"></i> {{ __('Gateway WhatsApp') }}
+                    </a>
+                    <a href="{{ route('settings.index') }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fa-solid fa-gear me-1"></i> {{ __('Pengaturan Usaha') }}
+                    </a>
+                </div>
             </div>
 
             <div class="card-body">
@@ -177,6 +188,30 @@
                                             <input type="text" name="telegram_router_group_id" id="telegram_router_group_id" value="{{ \App\Models\Setting::getValue('telegram_router_group_id') }}" class="form-control" placeholder="-100xxxxxxxxx">
                                         </div>
                                         <div class="form-text small">{{ __('ID Grup Telegram untuk notifikasi status router (ONLINE/OFFLINE).') }}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="card bg-light border-0 mb-3 border-start border-4 border-info">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <label for="telegram_wash_group_id" class="form-label fw-bold mb-0">
+                                                <i class="fa-solid fa-spray-can-sparkles text-info me-1"></i> {{ __('GT Wash Notification') }}
+                                            </label>
+                                            <a href="{{ route('settings.wash.index') }}" class="badge bg-info text-decoration-none" title="{{ __('Buka Setting Layanan GT Wash') }}">
+                                                <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Setting Wash
+                                            </a>
+                                        </div>
+                                        <div class="form-check form-switch mb-2">
+                                            <input class="form-check-input" type="checkbox" role="switch" id="telegram_wash_notification_enabled" name="telegram_wash_notification_enabled" value="1" {{ \App\Models\Setting::getValue('telegram_wash_notification_enabled', '0') == '1' ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="telegram_wash_notification_enabled">{{ __('Aktifkan Notifikasi Transaksi GT Wash') }}</label>
+                                        </div>
+                                        <div class="input-group mb-2">
+                                            <span class="input-group-text"><i class="fa-solid fa-users"></i></span>
+                                            <input type="text" name="telegram_wash_group_id" id="telegram_wash_group_id" value="{{ \App\Models\Setting::getValue('telegram_wash_group_id', '') }}" class="form-control" placeholder="-100xxxxxxxxx">
+                                        </div>
+                                        <div class="form-text small">{{ __('ID Grup Telegram untuk notifikasi transaksi cuci baru otomatis.') }}</div>
                                     </div>
                                 </div>
                             </div>
