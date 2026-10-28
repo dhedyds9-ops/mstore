@@ -31,10 +31,23 @@ trait HasAttendanceFilters
                     ->orWhereBetween('clock_in', [$start . ' 00:00:00', $end . ' 23:59:59']);
             });
         } elseif ($request->filled('date')) {
-            $query->whereDate('clock_in', $request->date);
+            $date = $request->date;
+            $query->where(function ($q) use ($date) {
+                $q->whereDate('work_date', $date)
+                    ->orWhereDate('clock_in', $date);
+            });
         } elseif ($request->filled('month')) {
-            $query->whereMonth('clock_in', date('m', strtotime($request->month)))
-                ->whereYear('clock_in', date('Y', strtotime($request->month)));
+            $m = date('m', strtotime($request->month));
+            $y = date('Y', strtotime($request->month));
+            $query->where(function ($q) use ($m, $y) {
+                $q->where(function ($sub) use ($m, $y) {
+                    $sub->whereMonth('work_date', $m)->whereYear('work_date', $y);
+                })->orWhere(function ($sub) use ($m, $y) {
+                    $sub->whereNull('work_date')
+                        ->whereMonth('clock_in', $m)
+                        ->whereYear('clock_in', $y);
+                });
+            });
         }
 
         if ($request->filled('status')) {

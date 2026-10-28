@@ -48,7 +48,7 @@
                         </div>
                         <div class="col-6 col-md-2">
                             <label class="form-label small fw-bold text-muted mb-1">{{ __('Bulan') }}</label>
-                            <input type="month" name="month" value="{{ request('month') }}" class="form-control form-control-sm">
+                            <input type="month" name="month" value="{{ $month }}" class="form-control form-control-sm">
                         </div>
                         <div class="col-6 col-md-2">
                             <label class="form-label small fw-bold text-muted mb-1">{{ __('Dari Tanggal') }}</label>
@@ -62,7 +62,7 @@
                             <button type="submit" class="btn btn-primary btn-sm px-3">
                                 <i class="fa-solid fa-filter me-1"></i>{{ __('Filter') }}
                             </button>
-                            <a href="{{ route('attendance.payslip') }}" class="btn btn-outline-secondary btn-sm" title="Reset">
+                            <a href="{{ route('attendance.payslip') }}" class="btn btn-outline-secondary btn-sm" title="Reset ke Bulan Ini">
                                 <i class="fa-solid fa-rotate-left"></i>
                             </a>
                         </div>
@@ -73,14 +73,14 @@
                         $activeFilters = [];
                         if(request('user_id')) {
                             $user = $technicians->where('id', request('user_id'))->first();
-                            $activeFilters[] = 'Pengguna: ' . ($user->name ?? '-');
+                            $activeFilters[] = 'Karyawan: ' . ($user->employee?->full_name ?? $user->name ?? '-');
                         }
                         if(request('start_date') && request('end_date')) {
                             $activeFilters[] = 'Periode: ' . \Carbon\Carbon::parse(request('start_date'))->translatedFormat('d M Y') . ' - ' . \Carbon\Carbon::parse(request('end_date'))->translatedFormat('d M Y');
-                        } elseif(request('month')) {
-                            $activeFilters[] = 'Bulan: ' . \Carbon\Carbon::parse(request('month'))->translatedFormat('F Y');
                         } elseif(request('date')) {
                             $activeFilters[] = 'Tanggal: ' . \Carbon\Carbon::parse(request('date'))->translatedFormat('d M Y');
+                        } elseif(!empty($month)) {
+                            $activeFilters[] = 'Bulan: ' . \Carbon\Carbon::parse($month)->translatedFormat('F Y');
                         }
                     @endphp
                     @if(count($activeFilters) > 0)

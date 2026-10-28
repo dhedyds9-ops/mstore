@@ -157,6 +157,17 @@ class TechnicianAttendanceController extends Controller implements HasMiddleware
             abort(403, 'Anda tidak diizinkan mengakses halaman ini.');
         }
 
+        $hasCustomDateFilter = ($request->filled('start_date') && $request->filled('end_date'))
+            || $request->filled('date')
+            || $request->filled('month');
+
+        if (! $hasCustomDateFilter && $request->query('all') !== '1') {
+            $month = now()->format('Y-m');
+            $request->merge(['month' => $month]);
+        } else {
+            $month = (string) $request->query('month', '');
+        }
+
         $query = $this->getFilteredAttendanceQuery($request);
         $statsQuery = clone $query;
         $allAttendances = $statsQuery->get();
@@ -189,9 +200,21 @@ class TechnicianAttendanceController extends Controller implements HasMiddleware
         $date = (string) $request->query('date', '');
         $start_date = (string) $request->query('start_date', '');
         $end_date = (string) $request->query('end_date', '');
-        $month = (string) $request->query('month', '');
 
-        return view('technicians.attendance.index', compact('attendances', 'technicians', 'stats', 'status', 'search', 'user_id', 'date', 'start_date', 'end_date', 'month'));
+        // Determine human-readable period label
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $periodLabel = Carbon::parse($start_date)->translatedFormat('d M Y') . ' - ' . Carbon::parse($end_date)->translatedFormat('d M Y');
+        } elseif ($request->filled('date')) {
+            $periodLabel = Carbon::parse($date)->translatedFormat('d F Y');
+        } elseif ($month) {
+            $periodLabel = Carbon::parse($month)->translatedFormat('F Y');
+        } else {
+            $periodLabel = __('Semua Periode');
+        }
+
+        return view('technicians.attendance.index', compact(
+            'attendances', 'technicians', 'stats', 'status', 'search', 'user_id', 'date', 'start_date', 'end_date', 'month', 'periodLabel'
+        ));
     }
 
     public function payslip(Request $request)
@@ -199,6 +222,17 @@ class TechnicianAttendanceController extends Controller implements HasMiddleware
         $user = Auth::user();
         if ($this->attendanceService->isUserCoordinator($user)) {
             abort(403, 'Anda tidak diizinkan mengakses halaman ini.');
+        }
+
+        $hasCustomDateFilter = ($request->filled('start_date') && $request->filled('end_date'))
+            || $request->filled('date')
+            || $request->filled('month');
+
+        if (! $hasCustomDateFilter && $request->query('all') !== '1') {
+            $month = now()->format('Y-m');
+            $request->merge(['month' => $month]);
+        } else {
+            $month = (string) $request->query('month', '');
         }
 
         $techniciansQuery = \App\Models\User::whereHas('role', function ($q) {
@@ -222,7 +256,6 @@ class TechnicianAttendanceController extends Controller implements HasMiddleware
         $date = (string) $request->query('date', '');
         $start_date = (string) $request->query('start_date', '');
         $end_date = (string) $request->query('end_date', '');
-        $month = (string) $request->query('month', '');
 
         return view('technicians.attendance.payslip', compact('summary', 'request', 'technicians', 'status', 'search', 'user_id', 'date', 'start_date', 'end_date', 'month'));
     }
@@ -232,6 +265,14 @@ class TechnicianAttendanceController extends Controller implements HasMiddleware
         $user = Auth::user();
         if ($this->attendanceService->isUserCoordinator($user)) {
             abort(403, 'Anda tidak diizinkan mengakses halaman ini.');
+        }
+
+        $hasCustomDateFilter = ($request->filled('start_date') && $request->filled('end_date'))
+            || $request->filled('date')
+            || $request->filled('month');
+
+        if (! $hasCustomDateFilter && $request->query('all') !== '1') {
+            $request->merge(['month' => now()->format('Y-m')]);
         }
 
         if ($request->query('scope') === 'daily') {
@@ -305,6 +346,14 @@ class TechnicianAttendanceController extends Controller implements HasMiddleware
         $user = Auth::user();
         if (!$this->attendanceService->isAdminOrHrdManager($user)) {
             abort(403, 'Unauthorized');
+        }
+
+        $hasCustomDateFilter = ($request->filled('start_date') && $request->filled('end_date'))
+            || $request->filled('date')
+            || $request->filled('month');
+
+        if (! $hasCustomDateFilter && $request->query('all') !== '1') {
+            $request->merge(['month' => now()->format('Y-m')]);
         }
 
         $attendances = $this->getFilteredAttendanceQuery($request)->oldest('clock_in')->get();

@@ -78,6 +78,17 @@
     </div>
 
     <!-- Ringkasan Statistik Presensi (KPI Cards) -->
+    <div class="d-flex align-items-center justify-content-between mb-2">
+        <span class="text-muted small fw-semibold">
+            <i class="fa-solid fa-calendar-days text-primary me-1"></i>
+            {{ __('Statistik Periode:') }} <strong class="text-body">{{ $periodLabel }}</strong>
+        </span>
+        @if(request('status'))
+            <a href="{{ route('attendance.index', array_merge(request()->except('status'))) }}" class="text-decoration-none small text-danger fw-semibold">
+                <i class="fa-solid fa-xmark me-1"></i>{{ __('Reset Filter Status') }}
+            </a>
+        @endif
+    </div>
     <div class="row g-2 g-md-3 mb-4">
         @php
             $statCards = [
@@ -117,7 +128,7 @@
         <div class="card-body p-3">
             <form action="{{ route('attendance.index') }}" method="GET" id="attendanceFilterForm">
                 <div class="row g-2 align-items-end">
-                    <div class="col-12 col-md-3">
+                    <div class="col-12 col-md-6 col-xl-3">
                         <label class="form-label x-small fw-bold text-muted mb-1 text-uppercase">{{ __('Karyawan') }}</label>
                         <select name="user_id" class="form-select form-select-sm js-search-select">
                             <option value="">{{ __('Semua Karyawan') }}</option>
@@ -128,7 +139,7 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-6 col-md-2">
+                    <div class="col-6 col-md-3 col-xl-2">
                         <label class="form-label x-small fw-bold text-muted mb-1 text-uppercase">{{ __('Status') }}</label>
                         <select name="status" class="form-select form-select-sm">
                             <option value="">{{ __('Semua Status') }}</option>
@@ -140,23 +151,23 @@
                             <option value="alpha" {{ request('status') === 'alpha' ? 'selected' : '' }}>{{ __('Alpha') }}</option>
                         </select>
                     </div>
-                    <div class="col-6 col-md-2">
+                    <div class="col-6 col-md-3 col-xl-2">
                         <label class="form-label x-small fw-bold text-muted mb-1 text-uppercase">{{ __('Bulan') }}</label>
-                        <input type="month" name="month" value="{{ request('month') }}" class="form-control form-control-sm">
+                        <input type="month" name="month" value="{{ $month }}" class="form-control form-control-sm">
                     </div>
-                    <div class="col-6 col-md-2">
+                    <div class="col-6 col-md-4 col-xl-2">
                         <label class="form-label x-small fw-bold text-muted mb-1 text-uppercase">{{ __('Dari Tanggal') }}</label>
                         <input type="date" name="start_date" value="{{ request('start_date') }}" class="form-control form-control-sm">
                     </div>
-                    <div class="col-6 col-md-2">
+                    <div class="col-6 col-md-4 col-xl-2">
                         <label class="form-label x-small fw-bold text-muted mb-1 text-uppercase">{{ __('Sampai Tanggal') }}</label>
                         <input type="date" name="end_date" value="{{ request('end_date') }}" class="form-control form-control-sm">
                     </div>
-                    <div class="col-12 col-md-1 d-flex gap-1">
-                        <button type="submit" class="btn btn-primary btn-sm w-100" id="btnFilterSubmit" title="{{ __('Terapkan Filter') }}">
+                    <div class="col-12 col-md-4 col-xl-1 d-flex gap-1">
+                        <button type="submit" class="btn btn-primary btn-sm flex-fill" id="btnFilterSubmit" title="{{ __('Terapkan Filter') }}">
                             <i class="fa-solid fa-filter me-1"></i>{{ __('Filter') }}
                         </button>
-                        <a href="{{ route('attendance.index') }}" class="btn btn-outline-secondary btn-sm" title="{{ __('Reset Filter') }}">
+                        <a href="{{ route('attendance.index') }}" class="btn btn-outline-secondary btn-sm" title="{{ __('Reset ke Bulan Ini') }}">
                             <i class="fa-solid fa-rotate-left"></i>
                         </a>
                     </div>
@@ -182,10 +193,10 @@
                     }
                     if(request('start_date') && request('end_date')) {
                         $activeFilters['date_range'] = 'Periode: ' . \Carbon\Carbon::parse(request('start_date'))->translatedFormat('d M Y') . ' - ' . \Carbon\Carbon::parse(request('end_date'))->translatedFormat('d M Y');
-                    } elseif(request('month')) {
-                        $activeFilters['month'] = 'Bulan: ' . \Carbon\Carbon::parse(request('month'))->translatedFormat('F Y');
                     } elseif(request('date')) {
                         $activeFilters['date'] = 'Tanggal: ' . \Carbon\Carbon::parse(request('date'))->translatedFormat('d M Y');
+                    } elseif(!empty($month)) {
+                        $activeFilters['month'] = 'Bulan: ' . \Carbon\Carbon::parse($month)->translatedFormat('F Y');
                     }
                 @endphp
                 @if(count($activeFilters) > 0)
@@ -197,7 +208,7 @@
                             </span>
                         @endforeach
                         <a href="{{ route('attendance.index') }}" class="badge bg-danger bg-opacity-10 text-danger text-decoration-none px-2 py-1 fw-medium">
-                            <i class="fa-solid fa-xmark me-1"></i>{{ __('Hapus Semua') }}
+                            <i class="fa-solid fa-rotate-left me-1"></i>{{ __('Reset ke Bulan Ini') }}
                         </a>
                     </div>
                 @endif
@@ -230,11 +241,14 @@
     <!-- Tabel Data Rekap Presensi -->
     <div class="card border-0 shadow-sm rounded-3">
         <div class="card-header bg-transparent py-3 border-0">
-            <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
                 <h6 class="fw-bold mb-0 text-body d-flex align-items-center gap-2">
                     <i class="fa-solid fa-list text-primary"></i>{{ __('Data Riwayat Presensi') }}
                     <span class="badge bg-secondary bg-opacity-10 text-secondary fw-semibold rounded-pill px-2">
                         {{ $attendances->total() }} {{ __('Data') }}
+                    </span>
+                    <span class="badge bg-primary bg-opacity-10 text-primary fw-normal rounded-pill px-2">
+                        {{ $periodLabel }}
                     </span>
                 </h6>
             </div>
