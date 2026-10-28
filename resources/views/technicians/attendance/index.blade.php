@@ -127,8 +127,8 @@
             ];
             $currentStatus = (string) request('status', '');
         @endphp
-        <div class="bg-light-subtle border-bottom px-3 pt-2">
-            <ul class="nav nav-tabs border-bottom-0 gap-1 flex-nowrap overflow-x-auto" style="scrollbar-width: thin;">
+        <div class="bg-light-subtle border-bottom px-3 py-2">
+            <div class="d-flex align-items-center gap-1.5 flex-wrap">
                 @foreach($statTabs as $stVal => $stMeta)
                     @php
                         $isActive = ($currentStatus === (string)$stVal);
@@ -136,17 +136,15 @@
                             ? route('attendance.index', request()->except('status')) 
                             : route('attendance.index', array_merge(request()->query(), ['status' => $stVal]));
                     @endphp
-                    <li class="nav-item">
-                        <a class="nav-link py-2 px-3 small d-flex align-items-center gap-1.5 border-0 rounded-top-3 text-nowrap {{ $isActive ? 'active bg-white fw-bold text-primary shadow-xs' : 'text-body-secondary bg-transparent' }}" 
-                           href="{{ $targetUrl }}">
-                            <span>{{ $stMeta['label'] }}</span>
-                            <span class="badge {{ $isActive ? 'bg-primary text-white' : 'bg-secondary-subtle text-secondary-emphasis' }} rounded-pill" style="font-size: 0.72rem;">
-                                {{ number_format($stMeta['count']) }}
-                            </span>
-                        </a>
-                    </li>
+                    <a class="btn btn-sm py-1 px-2.5 rounded-pill text-nowrap d-inline-flex align-items-center gap-1.5 {{ $isActive ? 'btn-primary fw-semibold shadow-xs' : 'btn-outline-secondary border-0 text-body bg-transparent' }}" 
+                       href="{{ $targetUrl }}">
+                        <span>{{ $stMeta['label'] }}</span>
+                        <span class="badge {{ $isActive ? 'bg-white text-dark' : 'bg-secondary-subtle text-secondary-emphasis' }} rounded-pill" style="font-size: 0.72rem;">
+                            {{ number_format($stMeta['count']) }}
+                        </span>
+                    </a>
                 @endforeach
-            </ul>
+            </div>
         </div>
 
         {{-- 2. Filter Toolbar (Satu Baris Efisien, Ramping & Bersih) --}}
@@ -158,45 +156,35 @@
                 
                 <div class="row g-2 align-items-center">
                     {{-- Dropdown Karyawan --}}
-                    <div class="col-12 col-md-4 col-xl-3">
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-transparent border-end-0 text-muted">
-                                <i class="fa-solid fa-user"></i>
-                            </span>
-                            <select name="user_id" class="form-select form-select-sm border-start-0 ps-0 js-search-select" onchange="this.form.submit()">
-                                <option value="">{{ __('Semua Karyawan') }}</option>
-                                @foreach($technicians as $tech)
-                                    <option value="{{ $tech->id }}" {{ (string)request('user_id') === (string)$tech->id ? 'selected' : '' }}>
-                                        {{ $tech->employee?->full_name ?? $tech->name }} ({{ $tech->employee?->position ?? $tech->role->name ?? __('Staff') }})
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
+                    <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                        <select name="user_id" class="form-select form-select-sm js-search-select" onchange="this.form.submit()">
+                            <option value="">{{ __('Semua Karyawan') }}</option>
+                            @foreach($technicians as $tech)
+                                <option value="{{ $tech->id }}" {{ (string)request('user_id') === (string)$tech->id ? 'selected' : '' }}>
+                                    {{ $tech->employee?->full_name ?? $tech->name }} ({{ $tech->employee?->position ?? $tech->role->name ?? __('Staff') }})
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
 
                     {{-- Filter Bulan --}}
-                    <div class="col-6 col-md-3 col-xl-2">
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-transparent border-end-0 text-muted">
-                                <i class="fa-solid fa-calendar"></i>
-                            </span>
-                            <input type="month" name="month" value="{{ $month }}" class="form-control form-control-sm border-start-0 ps-0" onchange="this.form.submit()" title="{{ __('Pilih Bulan') }}">
-                        </div>
+                    <div class="col-6 col-sm-4 col-md-3 col-xl-2">
+                        <input type="month" name="month" value="{{ $month }}" class="form-control form-control-sm" onchange="this.form.submit()" title="{{ __('Pilih Bulan') }}">
                     </div>
 
                     {{-- Tombol Toggle Rentang Tanggal Khusus --}}
-                    <div class="col-6 col-md-auto">
-                        <button type="button" class="btn btn-sm btn-outline-secondary w-100 text-nowrap {{ (request('start_date') || request('end_date')) ? 'active border-primary text-primary' : '' }}" 
+                    <div class="col-6 col-sm-auto">
+                        <button type="button" class="btn btn-sm btn-outline-secondary text-nowrap {{ (request('start_date') || request('end_date')) ? 'active border-primary text-primary' : '' }}" 
                                 data-bs-toggle="collapse" data-bs-target="#customDateRangeCollapse" aria-expanded="{{ (request('start_date') || request('end_date')) ? 'true' : 'false' }}">
-                            <i class="fa-solid fa-sliders me-1"></i>
-                            {{ (request('start_date') || request('end_date')) ? __('Rentang Khusus: Aktif') : __('Rentang Tanggal') }}
+                            <i class="fa-solid fa-calendar-week me-1"></i>
+                            {{ (request('start_date') || request('end_date')) ? __('Rentang: Aktif') : __('Rentang Tanggal') }}
                         </button>
                     </div>
 
                     {{-- Tombol Reset --}}
                     @if(request('user_id') || request('status') || request('start_date') || request('end_date') || (request('month') && request('month') !== now()->format('Y-m')))
                         <div class="col-auto">
-                            <a href="{{ route('attendance.index') }}" class="btn btn-sm btn-outline-danger px-2.5" title="{{ __('Reset Semua Filter') }}">
+                            <a href="{{ route('attendance.index') }}" class="btn btn-sm btn-outline-danger" title="{{ __('Reset Semua Filter') }}">
                                 <i class="fa-solid fa-rotate-left me-1"></i>{{ __('Reset') }}
                             </a>
                         </div>
