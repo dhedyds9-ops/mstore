@@ -8,65 +8,88 @@
     $isAdmin = $authUser && $authUser->hasAnyRole(['super-admin', 'manager', 'finance']);
 @endphp
 
-<div class="container-fluid px-2 px-md-4 py-3">
-    {{-- Header & Top Action Bar --}}
-    <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between gap-3 mb-3">
+<div class="container-fluid py-4 px-3 px-md-4">
+    {{-- Header Bersih & Rapi (Satu Baris) --}}
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-3">
         <div>
-            <div class="d-flex align-items-center gap-2 mb-1">
-                <h4 class="fw-bold mb-0 text-body-emphasis">{{ __('Rekap Presensi Karyawan') }}</h4>
-                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 small fw-medium">
+            <div class="d-flex align-items-center gap-2">
+                <h4 class="fw-bold mb-0 text-body-emphasis">
+                    <i class="fa-solid fa-clipboard-user text-primary me-2"></i>{{ __('Rekap Presensi Karyawan') }}
+                </h4>
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 small fw-semibold">
                     <i class="fa-regular fa-calendar-check me-1"></i>{{ $periodLabel }}
                 </span>
             </div>
-            <p class="text-body-secondary small mb-0">{{ __('Pantau riwayat kehadiran, jam kerja, status absensi, dan kalkulasi penggajian karyawan.') }}</p>
+            <p class="text-muted small mb-0">{{ __('Pantau riwayat kehadiran, jam kerja, status absensi, dan cut-off payroll karyawan.') }}</p>
         </div>
 
-        {{-- Navigasi Menu & Tombol Utama --}}
+        {{-- Action Buttons & Navigation (Sejajar Satu Baris) --}}
         <div class="d-flex flex-wrap align-items-center gap-2">
-            {{-- Navigasi Halaman Presensi --}}
-            <div class="btn-group btn-group-sm p-1 bg-body-tertiary rounded-3 border" role="group">
-                <a href="{{ route('attendance.index') }}" class="btn btn-primary fw-semibold rounded-2 px-3">
-                    <i class="fa-solid fa-clipboard-list me-1"></i>{{ __('Rekap') }}
+            {{-- Navigasi View --}}
+            <div class="btn-group btn-group-sm" role="group">
+                <a href="{{ route('attendance.index') }}" class="btn btn-primary fw-semibold px-2.5 active">
+                    <i class="fa-solid fa-list me-1"></i>{{ __('Rekap') }}
                 </a>
-                <a href="{{ route('attendance.daily') }}" class="btn btn-ghost text-body-secondary fw-medium rounded-2 px-3">
+                <a href="{{ route('attendance.daily') }}" class="btn btn-outline-secondary px-2.5">
                     <i class="fa-solid fa-calendar-day me-1"></i>{{ __('Harian') }}
                 </a>
-                <a href="{{ route('attendance.kiosk') }}" class="btn btn-ghost text-body-secondary fw-medium rounded-2 px-3">
+                <a href="{{ route('attendance.kiosk') }}" class="btn btn-outline-secondary px-2.5">
                     <i class="fa-solid fa-barcode me-1"></i>{{ __('Kiosk') }}
-                </a>
-                <a href="{{ route('attendance.payslip', request()->all()) }}" class="btn btn-ghost text-body-secondary fw-medium rounded-2 px-3" target="_blank">
-                    <i class="fa-solid fa-receipt me-1 text-primary"></i>{{ __('Slip Gaji') }}
                 </a>
             </div>
 
-            {{-- Tombol Aksi Admin --}}
-            <div class="d-flex align-items-center gap-2">
-                @if($isAdmin)
-                    <button type="button" class="btn btn-primary btn-sm shadow-xs" data-bs-toggle="modal" data-bs-target="#manualAttendanceModal">
-                        <i class="fa-solid fa-plus me-1"></i>{{ __('Absen Manual') }}
-                    </button>
-                    <button type="button" class="btn btn-outline-success btn-sm" data-bs-toggle="modal" data-bs-target="#salaryAdjustmentModal">
-                        <i class="fa-solid fa-money-bill-transfer me-1"></i>{{ __('Bonus / Kasbon') }}
-                    </button>
-                    <button type="button" class="btn btn-warning btn-sm text-dark fw-bold shadow-xs" onclick="confirmRecapFinance()">
-                        <i class="fa-solid fa-file-invoice-dollar me-1"></i>{{ __('Catat ke Kas') }}
-                    </button>
-                @endif
-                <a href="{{ route('attendance.excel', array_merge(request()->all(), ['download' => 'details'])) }}" class="btn btn-outline-secondary btn-sm" title="{{ __('Download Excel') }}" target="_blank">
-                    <i class="fa-solid fa-file-excel text-success me-1"></i>{{ __('Excel') }}
-                </a>
-                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="collapse" data-bs-target="#guideCollapse" aria-expanded="false" title="{{ __('Buka Panduan') }}">
-                    <i class="fa-solid fa-circle-question"></i>
+            {{-- Tombol Utama Admin --}}
+            @if($isAdmin)
+                <button type="button" class="btn btn-sm btn-primary shadow-sm text-nowrap" data-bs-toggle="modal" data-bs-target="#manualAttendanceModal">
+                    <i class="fa-solid fa-user-plus me-1"></i>{{ __('Tambah Absen') }}
                 </button>
+            @endif
+
+            {{-- Dropdown Menu Aksi & Ekspor (Menggabungkan semua tombol agar tidak berantakan) --}}
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fa-solid fa-ellipsis-vertical me-1"></i>{{ __('Menu & Ekspor') }}
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-2">
+                    <li>
+                        <a class="dropdown-item py-2 small" href="{{ route('attendance.payslip', request()->all()) }}" target="_blank">
+                            <i class="fa-solid fa-receipt me-2 text-primary"></i>{{ __('Buka Slip Gaji Otomatis') }}
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item py-2 small" href="{{ route('attendance.excel', array_merge(request()->all(), ['download' => 'details'])) }}" target="_blank">
+                            <i class="fa-solid fa-file-excel me-2 text-success"></i>{{ __('Download Rekap Excel') }}
+                        </a>
+                    </li>
+                    @if($isAdmin)
+                        <li><hr class="dropdown-divider my-1"></li>
+                        <li>
+                            <a class="dropdown-item py-2 small" href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#salaryAdjustmentModal">
+                                <i class="fa-solid fa-money-bill-transfer me-2 text-info"></i>{{ __('Input Bonus / Kasbon') }}
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item py-2 small text-warning-emphasis fw-semibold" href="javascript:void(0)" onclick="confirmRecapFinance()">
+                                <i class="fa-solid fa-money-bill-wave me-2 text-warning"></i>{{ __('Catat Gaji ke Kas / Keuangan') }}
+                            </a>
+                        </li>
+                    @endif
+                    <li><hr class="dropdown-divider my-1"></li>
+                    <li>
+                        <a class="dropdown-item py-2 small text-muted" href="javascript:void(0)" data-bs-toggle="collapse" data-bs-target="#guideCollapse">
+                            <i class="fa-solid fa-circle-question me-2"></i>{{ __('Petunjuk & Panduan') }}
+                        </a>
+                    </li>
+                </ul>
             </div>
         </div>
     </div>
 
     {{-- Panduan Penggunaan (Collapsible) --}}
     <div class="collapse mb-3" id="guideCollapse">
-        <div class="border rounded-3 p-3 bg-body-tertiary">
+        <div class="alert alert-info border-0 shadow-sm rounded-3 py-3 mb-0">
             <div class="d-flex align-items-center justify-content-between mb-2">
-                <h6 class="fw-bold text-info mb-0 d-flex align-items-center gap-2">
+                <h6 class="fw-bold mb-0 text-info-emphasis d-flex align-items-center gap-2">
                     <i class="fa-solid fa-circle-info"></i>{{ __('Panduan Rekap Presensi & Payroll') }}
                 </h6>
                 <button type="button" class="btn-close btn-sm" data-bs-toggle="collapse" data-bs-target="#guideCollapse" aria-label="Close"></button>
@@ -74,204 +97,173 @@
             <div class="row g-3 small">
                 <div class="col-12 col-md-4">
                     <span class="fw-bold text-primary d-block mb-1"><i class="fa-solid fa-calendar-check me-1"></i> {{ __('Filter Periode') }}</span>
-                    <span class="text-body-secondary">{{ __('Gunakan filter "Bulan" untuk siklus bulanan, atau tentukan rentang "Dari Tanggal" s/d "Sampai Tanggal" (misal: 26 Des - 25 Jan) untuk cut-off payroll.') }}</span>
+                    <span class="text-body-secondary">{{ __('Pilih Bulan untuk siklus bulanan, atau buka "Rentang Tanggal" untuk menentukan cut-off payroll (misal: 26 Des - 25 Jan).') }}</span>
                 </div>
                 <div class="col-12 col-md-4">
                     <span class="fw-bold text-success d-block mb-1"><i class="fa-solid fa-receipt me-1"></i> {{ __('Slip Gaji Otomatis') }}</span>
-                    <span class="text-body-secondary">{{ __('Tombol "Slip Gaji" otomatis mengkalkulasi kehadiran harian, penambahan bonus disiplin/absensi, serta pemotongan kasbon karyawan.') }}</span>
+                    <span class="text-body-secondary">{{ __('Kalkulasi kompensasi kehadiran harian serta penambahan bonus dan pemotongan kasbon karyawan secara otomatis.') }}</span>
                 </div>
                 <div class="col-12 col-md-4">
                     <span class="fw-bold text-warning d-block mb-1"><i class="fa-solid fa-money-bill-wave me-1"></i> {{ __('Catat Gaji ke Keuangan') }}</span>
-                    <span class="text-body-secondary">{{ __('Admin dapat langsung membukukan total beban gaji ke modul Keuangan & Kas secara instan melalui tombol "Catat ke Kas".') }}</span>
+                    <span class="text-body-secondary">{{ __('Membukukan beban gaji karyawan ke buku kas dan jurnal pengeluaran modul Keuangan secara otomatis.') }}</span>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Ringkasan Statistik Presensi: Inline Pills (TANPA CARD) --}}
-    @php
-        $statChips = [
-            'all'     => ['label' => __('Semua'), 'icon' => 'fa-list-check', 'color' => 'secondary', 'val' => $attendances->total()],
-            'present' => ['label' => __('Hadir'), 'icon' => 'fa-circle-check', 'color' => 'success', 'val' => $stats['present'] ?? 0],
-            'late'    => ['label' => __('Terlambat'), 'icon' => 'fa-clock-rotate-left', 'color' => 'warning', 'val' => $stats['late'] ?? 0],
-            'leave'   => ['label' => __('Cuti'), 'icon' => 'fa-plane-departure', 'color' => 'info', 'val' => $stats['leave'] ?? 0],
-            'permit'  => ['label' => __('Izin'), 'icon' => 'fa-envelope-open-text', 'color' => 'primary', 'val' => $stats['permit'] ?? 0],
-            'sick'    => ['label' => __('Sakit'), 'icon' => 'fa-notes-medical', 'color' => 'secondary', 'val' => $stats['sick'] ?? 0],
-            'alpha'   => ['label' => __('Alpha'), 'icon' => 'fa-circle-xmark', 'color' => 'danger', 'val' => $stats['alpha'] ?? 0],
-        ];
-    @endphp
-    <div class="d-flex flex-wrap align-items-center gap-1.5 mb-3 py-1">
-        @foreach($statChips as $chipKey => $chipData)
-            @php
-                $isCurrent = ($chipKey === 'all' && !request('status')) || (request('status') === $chipKey);
-                $queryTarget = $chipKey === 'all' 
-                    ? array_merge(request()->except('status'))
-                    : array_merge(request()->query(), ['status' => $chipKey]);
-            @endphp
-            <a href="{{ route('attendance.index', $queryTarget) }}" 
-               class="btn btn-sm d-inline-flex align-items-center gap-1.5 rounded-pill px-2.5 py-1 transition-all {{ $isCurrent ? 'btn-' . ($chipData['color'] === 'secondary' ? 'dark' : $chipData['color']) . ' fw-bold shadow-xs' : 'btn-outline-secondary border-opacity-50 text-body bg-body' }}">
-                <i class="fa-solid {{ $chipData['icon'] }} small {{ $isCurrent ? 'text-white' : 'text-' . $chipData['color'] }}"></i>
-                <span class="small">{{ $chipData['label'] }}</span>
-                <span class="badge {{ $isCurrent ? 'bg-white text-dark' : 'bg-' . $chipData['color'] . '-subtle text-' . $chipData['color'] . '-emphasis' }} rounded-pill px-1.5 py-0.5" style="font-size: 0.72rem;">
-                    {{ number_format($chipData['val']) }}
-                </span>
-            </a>
-        @endforeach
-
-        @if(request('status'))
-            <a href="{{ route('attendance.index', array_merge(request()->except('status'))) }}" class="btn btn-link btn-sm text-danger text-decoration-none px-2 py-1 ms-auto small" title="{{ __('Hapus Filter Status') }}">
-                <i class="fa-solid fa-xmark me-1"></i>{{ __('Reset Status') }}
-            </a>
-        @endif
-    </div>
-
-    {{-- Filter Form Toolbar (Integrated, Tanpa Card) --}}
-    <div class="border rounded-3 p-3 bg-body mb-3">
-        <form action="{{ route('attendance.index') }}" method="GET" id="attendanceFilterForm">
-            <div class="row g-2 align-items-end">
-                <div class="col-12 col-md-5 col-xl-3">
-                    <label class="form-label small text-body-secondary fw-semibold mb-1">{{ __('Karyawan') }}</label>
-                    <select name="user_id" class="form-select form-select-sm js-search-select">
-                        <option value="">{{ __('Semua Karyawan') }}</option>
-                        @foreach($technicians as $tech)
-                            <option value="{{ $tech->id }}" {{ (string)request('user_id') === (string)$tech->id ? 'selected' : '' }}>
-                                {{ $tech->employee?->full_name ?? $tech->name }} ({{ $tech->employee?->position ?? $tech->role->name ?? __('Staff') }})
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-6 col-md-3 col-xl-2">
-                    <label class="form-label small text-body-secondary fw-semibold mb-1">{{ __('Status') }}</label>
-                    <select name="status" class="form-select form-select-sm">
-                        <option value="">{{ __('Semua Status') }}</option>
-                        <option value="present" {{ request('status') === 'present' ? 'selected' : '' }}>{{ __('Hadir') }}</option>
-                        <option value="late" {{ request('status') === 'late' ? 'selected' : '' }}>{{ __('Terlambat') }}</option>
-                        <option value="leave" {{ request('status') === 'leave' ? 'selected' : '' }}>{{ __('Cuti') }}</option>
-                        <option value="permit" {{ request('status') === 'permit' ? 'selected' : '' }}>{{ __('Izin') }}</option>
-                        <option value="sick" {{ request('status') === 'sick' ? 'selected' : '' }}>{{ __('Sakit') }}</option>
-                        <option value="alpha" {{ request('status') === 'alpha' ? 'selected' : '' }}>{{ __('Alpha') }}</option>
-                    </select>
-                </div>
-                <div class="col-6 col-md-4 col-xl-2">
-                    <label class="form-label small text-body-secondary fw-semibold mb-1">{{ __('Bulan') }}</label>
-                    <input type="month" name="month" value="{{ $month }}" class="form-control form-control-sm">
-                </div>
-                <div class="col-6 col-md-4 col-xl-2">
-                    <label class="form-label small text-body-secondary fw-semibold mb-1">{{ __('Dari Tanggal') }}</label>
-                    <input type="date" name="start_date" value="{{ request('start_date') }}" class="form-control form-control-sm">
-                </div>
-                <div class="col-6 col-md-4 col-xl-2">
-                    <label class="form-label small text-body-secondary fw-semibold mb-1">{{ __('Sampai Tanggal') }}</label>
-                    <input type="date" name="end_date" value="{{ request('end_date') }}" class="form-control form-control-sm">
-                </div>
-                <div class="col-12 col-md-4 col-xl-1 d-flex gap-1">
-                    <button type="submit" class="btn btn-primary btn-sm flex-fill" id="btnFilterSubmit" title="{{ __('Terapkan Filter') }}">
-                        <i class="fa-solid fa-filter me-1"></i>{{ __('Filter') }}
-                    </button>
-                    <a href="{{ route('attendance.index') }}" class="btn btn-outline-secondary btn-sm" title="{{ __('Reset ke Bulan Ini') }}">
-                        <i class="fa-solid fa-rotate-left"></i>
-                    </a>
-                </div>
-            </div>
-
-            {{-- Tag Filter Aktif & Bulk Actions --}}
-            @php
-                $activeFilters = [];
-                if(request('user_id')) {
-                    $selectedUser = $technicians->where('id', request('user_id'))->first();
-                    $activeFilters['user_id'] = 'Karyawan: ' . ($selectedUser->employee?->full_name ?? $selectedUser->name ?? '-');
-                }
-                if(request('status')) {
-                    $stMap = [
-                        'present' => 'Hadir',
-                        'late'    => 'Terlambat',
-                        'leave'   => 'Cuti',
-                        'permit'  => 'Izin',
-                        'sick'    => 'Sakit',
-                        'alpha'   => 'Alpha'
-                    ];
-                    $activeFilters['status'] = 'Status: ' . ($stMap[request('status')] ?? request('status'));
-                }
-                if(request('start_date') && request('end_date')) {
-                    $activeFilters['date_range'] = 'Periode: ' . \Carbon\Carbon::parse(request('start_date'))->translatedFormat('d M Y') . ' - ' . \Carbon\Carbon::parse(request('end_date'))->translatedFormat('d M Y');
-                } elseif(request('start_date')) {
-                    $activeFilters['date_start'] = 'Mulai: ' . \Carbon\Carbon::parse(request('start_date'))->translatedFormat('d M Y');
-                } elseif(request('end_date')) {
-                    $activeFilters['date_end'] = 'Sampai: ' . \Carbon\Carbon::parse(request('end_date'))->translatedFormat('d M Y');
-                } elseif(request('date')) {
-                    $activeFilters['date'] = 'Tanggal: ' . \Carbon\Carbon::parse(request('date'))->translatedFormat('d M Y');
-                } elseif(!empty($month)) {
-                    $activeFilters['month'] = 'Bulan: ' . \Carbon\Carbon::parse($month)->translatedFormat('F Y');
-                }
-            @endphp
-
-            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-2 pt-2 border-top">
-                <div class="d-flex flex-wrap align-items-center gap-1.5">
-                    @if(count($activeFilters) > 0)
-                        <span class="small text-body-secondary me-1"><i class="fa-solid fa-filter me-1 text-primary"></i>{{ __('Filter Aktif:') }}</span>
-                        @foreach($activeFilters as $fKey => $fVal)
-                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2 py-1 small fw-normal">
-                                {{ $fVal }}
+    {{-- Single Container Utama (Card Modern Tanpa Kotak Bertumpuk) --}}
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+        
+        {{-- 1. Status Filter Tabs (Satu Baris di Atas Tabel) --}}
+        @php
+            $statTabs = [
+                ''        => ['label' => __('Semua'), 'count' => $attendances->total(), 'color' => 'secondary'],
+                'present' => ['label' => __('Hadir'), 'count' => $stats['present'] ?? 0, 'color' => 'success'],
+                'late'    => ['label' => __('Terlambat'), 'count' => $stats['late'] ?? 0, 'color' => 'warning'],
+                'leave'   => ['label' => __('Cuti'), 'count' => $stats['leave'] ?? 0, 'color' => 'info'],
+                'permit'  => ['label' => __('Izin'), 'count' => $stats['permit'] ?? 0, 'color' => 'primary'],
+                'sick'    => ['label' => __('Sakit'), 'count' => $stats['sick'] ?? 0, 'color' => 'secondary'],
+                'alpha'   => ['label' => __('Alpha'), 'count' => $stats['alpha'] ?? 0, 'color' => 'danger'],
+            ];
+            $currentStatus = (string) request('status', '');
+        @endphp
+        <div class="bg-light-subtle border-bottom px-3 pt-2">
+            <ul class="nav nav-tabs border-bottom-0 gap-1 flex-nowrap overflow-x-auto" style="scrollbar-width: thin;">
+                @foreach($statTabs as $stVal => $stMeta)
+                    @php
+                        $isActive = ($currentStatus === (string)$stVal);
+                        $targetUrl = $stVal === '' 
+                            ? route('attendance.index', request()->except('status')) 
+                            : route('attendance.index', array_merge(request()->query(), ['status' => $stVal]));
+                    @endphp
+                    <li class="nav-item">
+                        <a class="nav-link py-2 px-3 small d-flex align-items-center gap-1.5 border-0 rounded-top-3 text-nowrap {{ $isActive ? 'active bg-white fw-bold text-primary shadow-xs' : 'text-body-secondary bg-transparent' }}" 
+                           href="{{ $targetUrl }}">
+                            <span>{{ $stMeta['label'] }}</span>
+                            <span class="badge {{ $isActive ? 'bg-primary text-white' : 'bg-secondary-subtle text-secondary-emphasis' }} rounded-pill" style="font-size: 0.72rem;">
+                                {{ number_format($stMeta['count']) }}
                             </span>
-                        @endforeach
-                        <a href="{{ route('attendance.index') }}" class="badge bg-danger-subtle text-danger border border-danger-subtle text-decoration-none px-2 py-1 rounded-pill small fw-medium">
-                            <i class="fa-solid fa-rotate-left me-1"></i>{{ __('Reset') }}
                         </a>
-                    @else
-                        <span class="small text-body-secondary"><i class="fa-solid fa-circle-check text-success me-1"></i>{{ __('Menampilkan absensi periode bulan ini secara otomatis.') }}</span>
+                    </li>
+                @endforeach
+            </ul>
+        </div>
+
+        {{-- 2. Filter Toolbar (Satu Baris Efisien, Ramping & Bersih) --}}
+        <div class="p-3 bg-white border-bottom">
+            <form action="{{ route('attendance.index') }}" method="GET" id="attendanceFilterForm" class="m-0">
+                @if(request('status'))
+                    <input type="hidden" name="status" value="{{ request('status') }}">
+                @endif
+                
+                <div class="row g-2 align-items-center">
+                    {{-- Dropdown Karyawan --}}
+                    <div class="col-12 col-md-4 col-xl-3">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-transparent border-end-0 text-muted">
+                                <i class="fa-solid fa-user"></i>
+                            </span>
+                            <select name="user_id" class="form-select form-select-sm border-start-0 ps-0 js-search-select" onchange="this.form.submit()">
+                                <option value="">{{ __('Semua Karyawan') }}</option>
+                                @foreach($technicians as $tech)
+                                    <option value="{{ $tech->id }}" {{ (string)request('user_id') === (string)$tech->id ? 'selected' : '' }}>
+                                        {{ $tech->employee?->full_name ?? $tech->name }} ({{ $tech->employee?->position ?? $tech->role->name ?? __('Staff') }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    {{-- Filter Bulan --}}
+                    <div class="col-6 col-md-3 col-xl-2">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-transparent border-end-0 text-muted">
+                                <i class="fa-solid fa-calendar"></i>
+                            </span>
+                            <input type="month" name="month" value="{{ $month }}" class="form-control form-control-sm border-start-0 ps-0" onchange="this.form.submit()" title="{{ __('Pilih Bulan') }}">
+                        </div>
+                    </div>
+
+                    {{-- Tombol Toggle Rentang Tanggal Khusus --}}
+                    <div class="col-6 col-md-auto">
+                        <button type="button" class="btn btn-sm btn-outline-secondary w-100 text-nowrap {{ (request('start_date') || request('end_date')) ? 'active border-primary text-primary' : '' }}" 
+                                data-bs-toggle="collapse" data-bs-target="#customDateRangeCollapse" aria-expanded="{{ (request('start_date') || request('end_date')) ? 'true' : 'false' }}">
+                            <i class="fa-solid fa-sliders me-1"></i>
+                            {{ (request('start_date') || request('end_date')) ? __('Rentang Khusus: Aktif') : __('Rentang Tanggal') }}
+                        </button>
+                    </div>
+
+                    {{-- Tombol Reset --}}
+                    @if(request('user_id') || request('status') || request('start_date') || request('end_date') || (request('month') && request('month') !== now()->format('Y-m')))
+                        <div class="col-auto">
+                            <a href="{{ route('attendance.index') }}" class="btn btn-sm btn-outline-danger px-2.5" title="{{ __('Reset Semua Filter') }}">
+                                <i class="fa-solid fa-rotate-left me-1"></i>{{ __('Reset') }}
+                            </a>
+                        </div>
+                    @endif
+
+                    {{-- Bulk Delete Button (Muncul jika ada baris dicentang) --}}
+                    @if($isAdmin)
+                        <div class="col-auto ms-auto">
+                            <button type="button" class="btn btn-danger btn-sm d-none shadow-xs text-nowrap" id="btnBulkDelete" onclick="submitBulkDelete()">
+                                <i class="fa-regular fa-trash-can me-1"></i>{{ __('Hapus') }} (<span id="selectedCount">0</span>)
+                            </button>
+                        </div>
                     @endif
                 </div>
 
-                {{-- Bulk Action Hapus Terpilih --}}
-                @if($isAdmin)
-                    <div class="d-flex align-items-center gap-2">
-                        <button type="button" class="btn btn-outline-danger btn-sm d-none" id="btnBulkDelete" onclick="submitBulkDelete()">
-                            <i class="fa-regular fa-trash-can me-1"></i>{{ __('Hapus Terpilih') }} (<span id="selectedCount">0</span>)
-                        </button>
+                {{-- Rentang Tanggal Khusus (Collapsible agar tidak memakan ruang kosong) --}}
+                <div class="collapse {{ (request('start_date') || request('end_date')) ? 'show' : '' }} mt-2 pt-2 border-top" id="customDateRangeCollapse">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-auto small text-muted fw-semibold">
+                            <i class="fa-solid fa-calendar-week me-1"></i>{{ __('Cut-Off Payroll:') }}
+                        </div>
+                        <div class="col-6 col-md-3 col-xl-2">
+                            <input type="date" name="start_date" value="{{ request('start_date') }}" class="form-control form-control-sm" placeholder="{{ __('Dari Tanggal') }}" title="{{ __('Dari Tanggal') }}">
+                        </div>
+                        <div class="col-6 col-md-3 col-xl-2">
+                            <input type="date" name="end_date" value="{{ request('end_date') }}" class="form-control form-control-sm" placeholder="{{ __('Sampai Tanggal') }}" title="{{ __('Sampai Tanggal') }}">
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-primary btn-sm px-3">
+                                <i class="fa-solid fa-check me-1"></i>{{ __('Terapkan') }}
+                            </button>
+                        </div>
+                        @if(request('start_date') || request('end_date'))
+                            <div class="col-auto">
+                                <a href="{{ route('attendance.index', array_merge(request()->except(['start_date', 'end_date']))) }}" class="btn btn-link btn-sm text-danger text-decoration-none small p-0 ms-1">
+                                    <i class="fa-solid fa-xmark me-1"></i>{{ __('Hapus Rentang') }}
+                                </a>
+                            </div>
+                        @endif
                     </div>
-                @endif
-            </div>
-        </form>
-    </div>
-
-    {{-- Tabel Riwayat Presensi (Rapi, Terstruktur, Tanpa Card Terpisah) --}}
-    <div class="border rounded-3 overflow-hidden bg-body shadow-xs">
-        {{-- Table Header Bar --}}
-        <div class="p-3 bg-body-tertiary border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
-            <div class="d-flex align-items-center gap-2">
-                <i class="fa-solid fa-list-check text-primary"></i>
-                <h6 class="fw-bold mb-0 text-body-emphasis">{{ __('Data Riwayat Presensi') }}</h6>
-                <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill px-2">
-                    {{ $attendances->total() }} {{ __('Data') }}
-                </span>
-            </div>
-            <div class="small text-body-secondary">
-                {{ __('Halaman') }} {{ $attendances->currentPage() }} {{ __('dari') }} {{ $attendances->lastPage() }}
-            </div>
+                </div>
+            </form>
         </div>
 
+        {{-- 3. Tabel Riwayat Presensi (Rapi, Bersih, Proporsional) --}}
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0" style="min-width: 880px;">
-                <thead class="bg-body-tertiary text-uppercase small text-body-secondary border-bottom">
+            <table class="table table-hover align-middle mb-0" style="min-width: 820px;">
+                <thead class="bg-light text-uppercase x-small text-muted fw-semibold border-bottom">
                     <tr>
                         @if($isAdmin)
-                            <th class="ps-3 py-2.5 text-center" style="width: 40px;">
+                            <th class="ps-3 py-3 text-center" style="width: 38px;">
                                 <input type="checkbox" class="form-check-input" id="selectAllAttendance" onclick="toggleSelectAll()">
                             </th>
                         @endif
-                        <th class="py-2.5 ps-3" style="width: 50px;">{{ __('No') }}</th>
-                        <th class="py-2.5">{{ __('Karyawan') }}</th>
-                        <th class="py-2.5">{{ __('Tanggal') }}</th>
-                        <th class="py-2.5 text-center">{{ __('Jam Masuk') }}</th>
-                        <th class="py-2.5 text-center">{{ __('Jam Pulang') }}</th>
-                        <th class="py-2.5 text-center">{{ __('Status') }}</th>
-                        <th class="py-2.5 text-center">{{ __('Lokasi & Foto') }}</th>
+                        <th class="py-3 text-center" style="width: 45px;">{{ __('No') }}</th>
+                        <th class="py-3">{{ __('Karyawan') }}</th>
+                        <th class="py-3">{{ __('Tanggal') }}</th>
+                        <th class="py-3 text-center">{{ __('Jam Masuk') }}</th>
+                        <th class="py-3 text-center">{{ __('Jam Pulang') }}</th>
+                        <th class="py-3 text-center">{{ __('Status') }}</th>
+                        <th class="py-3 text-center">{{ __('Lokasi & Foto') }}</th>
                         @if($isAdmin)
-                            <th class="text-end pe-3 py-2.5" style="width: 110px;">{{ __('Aksi') }}</th>
+                            <th class="text-end pe-3 py-3" style="width: 100px;">{{ __('Aksi') }}</th>
                         @endif
                     </tr>
                 </thead>
-                <tbody class="table-group-divider">
+                <tbody class="divide-y">
                     @forelse($attendances as $index => $attendance)
                         <tr>
                             @if($isAdmin)
@@ -279,48 +271,50 @@
                                     <input type="checkbox" class="form-check-input attendance-select" value="{{ $attendance->id }}" onchange="updateBulkDeleteState()">
                                 </td>
                             @endif
-                            <td class="ps-3 text-body-secondary small">
+                            <td class="text-center text-muted small fw-medium">
                                 {{ $attendances->firstItem() + $index }}
                             </td>
                             <td>
                                 <div class="d-flex align-items-center gap-2.5">
-                                    <div class="avatar-sm rounded-circle bg-primary-subtle text-primary-emphasis fw-bold d-flex align-items-center justify-content-center flex-shrink-0" style="width: 34px; height: 34px; font-size: 0.82rem;">
+                                    <div class="avatar-sm rounded-circle bg-primary-subtle text-primary fw-bold d-flex align-items-center justify-content-center flex-shrink-0" style="width: 34px; height: 34px; font-size: 0.82rem;">
                                         {{ strtoupper(substr($attendance->user->employee?->full_name ?? $attendance->user->name ?? 'K', 0, 1)) }}
                                     </div>
                                     <div>
-                                        <div class="fw-semibold text-body-emphasis lh-sm">{{ $attendance->user->employee?->full_name ?? $attendance->user->name }}</div>
-                                        <div class="small text-body-secondary">{{ $attendance->user->employee?->position ?? $attendance->user->role?->name ?? __('Karyawan') }}</div>
+                                        <div class="fw-semibold text-body-emphasis lh-sm mb-0.5">
+                                            {{ $attendance->user->employee?->full_name ?? $attendance->user->name }}
+                                        </div>
+                                        <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                                            <span class="x-small text-muted">{{ $attendance->user->employee?->position ?? $attendance->user->role?->name ?? __('Karyawan') }}</span>
+                                            @php $shift = $attendance->shift_info; @endphp
+                                            @if(!empty($shift['start']) && !empty($shift['end']))
+                                                <span class="badge bg-light text-muted border px-1.5 py-0.5" style="font-size: 0.68rem;" title="{{ __('Jadwal Shift') }}">
+                                                    <i class="fa-regular fa-clock me-1"></i>{{ $shift['start'] }} - {{ $shift['end'] }}
+                                                </span>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
-                                @php $shift = $attendance->shift_info; @endphp
-                                @if(!empty($shift['start']) && !empty($shift['end']))
-                                    <div class="mt-1">
-                                        <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle px-1.5 py-0.5" style="font-size: 0.72rem;" title="{{ __('Jadwal Shift') }}">
-                                            <i class="fa-solid fa-business-time me-1"></i>{{ $shift['start'] }} - {{ $shift['end'] }}
-                                        </span>
-                                    </div>
-                                @endif
                             </td>
-                            <td class="small">
-                                <span class="fw-semibold text-body-emphasis d-block">{{ ($attendance->work_date ?? $attendance->clock_in)?->translatedFormat('d M Y') }}</span>
-                                <span class="text-body-secondary">{{ ($attendance->work_date ?? $attendance->clock_in)?->translatedFormat('l') }}</span>
+                            <td>
+                                <span class="fw-semibold text-body-emphasis d-block small">{{ ($attendance->work_date ?? $attendance->clock_in)?->translatedFormat('d M Y') }}</span>
+                                <span class="x-small text-muted">{{ ($attendance->work_date ?? $attendance->clock_in)?->translatedFormat('l') }}</span>
                             </td>
                             <td class="text-center">
                                 @if($attendance->clock_in)
-                                    <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle px-2 py-1 fw-medium" style="font-size: 0.8rem;">
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 fw-semibold font-monospace" style="font-size: 0.8rem;">
                                         <i class="fa-solid fa-arrow-right-to-bracket me-1"></i>{{ $attendance->clock_in->format('H:i') }}
                                     </span>
                                 @else
-                                    <span class="text-body-secondary small">--:--</span>
+                                    <span class="text-muted small">--:--</span>
                                 @endif
                             </td>
                             <td class="text-center">
                                 @if($attendance->clock_out)
-                                    <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-2 py-1 fw-medium" style="font-size: 0.8rem;">
+                                    <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-2 py-1 fw-semibold font-monospace" style="font-size: 0.8rem;">
                                         <i class="fa-solid fa-arrow-right-from-bracket me-1"></i>{{ $attendance->clock_out->format('H:i') }}
                                     </span>
                                 @else
-                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1 fw-medium" style="font-size: 0.8rem;">
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1 small fw-medium">
                                         <i class="fa-regular fa-clock me-1"></i>{{ __('Belum Pulang') }}
                                     </span>
                                 @endif
@@ -337,7 +331,7 @@
                                         default   => ['bg' => 'secondary','text' => ucfirst($attendance->status)],
                                     };
                                 @endphp
-                                <span class="badge bg-{{ $stBadge['bg'] }}-subtle text-{{ $stBadge['bg'] }}-emphasis border border-{{ $stBadge['bg'] }}-subtle px-2.5 py-1 rounded-pill small fw-medium">
+                                <span class="badge bg-{{ $stBadge['bg'] }}-subtle text-{{ $stBadge['bg'] }}-emphasis border border-{{ $stBadge['bg'] }}-subtle px-2.5 py-1 rounded-pill small fw-semibold">
                                     {{ $stBadge['text'] }}
                                 </span>
                             </td>
@@ -345,23 +339,23 @@
                                 <div class="d-inline-flex align-items-center gap-1.5">
                                     {{-- Maps Link --}}
                                     @if($attendance->lat_clock_in && $attendance->lng_clock_in)
-                                        <a href="https://maps.google.com/?q={{ $attendance->lat_clock_in }},{{ $attendance->lng_clock_in }}" target="_blank" class="btn btn-outline-primary btn-sm p-1 px-2" style="font-size: 0.72rem;" title="{{ __('Lihat Lokasi GPS') }}">
-                                            <i class="fa-solid fa-location-dot"></i>
+                                        <a href="https://maps.google.com/?q={{ $attendance->lat_clock_in }},{{ $attendance->lng_clock_in }}" target="_blank" class="btn btn-sm btn-outline-primary p-0 d-inline-flex align-items-center justify-content-center rounded-2" style="width: 26px; height: 26px;" title="{{ __('Lihat Lokasi GPS') }}">
+                                            <i class="fa-solid fa-location-dot" style="font-size: 0.72rem;"></i>
                                         </a>
                                     @endif
                                     {{-- Photo Preview --}}
                                     @if($attendance->photo_clock_in)
                                         <a href="{{ Storage::url($attendance->photo_clock_in) }}" target="_blank" title="{{ __('Foto Masuk') }}">
-                                            <img src="{{ Storage::url($attendance->photo_clock_in) }}" class="rounded border shadow-xs object-fit-cover" style="width: 30px; height: 30px;" alt="In" loading="lazy">
+                                            <img src="{{ Storage::url($attendance->photo_clock_in) }}" class="rounded border shadow-xs object-fit-cover" style="width: 26px; height: 26px;" alt="In" loading="lazy">
                                         </a>
                                     @endif
                                     @if($attendance->photo_clock_out)
                                         <a href="{{ Storage::url($attendance->photo_clock_out) }}" target="_blank" title="{{ __('Foto Pulang') }}">
-                                            <img src="{{ Storage::url($attendance->photo_clock_out) }}" class="rounded border shadow-xs object-fit-cover" style="width: 30px; height: 30px;" alt="Out" loading="lazy">
+                                            <img src="{{ Storage::url($attendance->photo_clock_out) }}" class="rounded border shadow-xs object-fit-cover" style="width: 26px; height: 26px;" alt="Out" loading="lazy">
                                         </a>
                                     @endif
                                     @if(!$attendance->lat_clock_in && !$attendance->photo_clock_in && !$attendance->photo_clock_out)
-                                        <span class="text-body-secondary small">-</span>
+                                        <span class="text-muted small">-</span>
                                     @endif
                                 </div>
                             </td>
@@ -371,7 +365,7 @@
                                         {{-- WhatsApp Notification --}}
                                         <form method="POST" action="{{ route('attendance.notify', $attendance) }}" class="form-whatsapp d-inline">
                                             @csrf
-                                            <button type="submit" class="btn btn-outline-success btn-sm p-1 px-2" title="{{ __('Kirim Notifikasi WhatsApp') }}">
+                                            <button type="submit" class="btn btn-outline-success btn-sm p-1 px-2 rounded-2" title="{{ __('Kirim WhatsApp') }}">
                                                 <i class="fa-brands fa-whatsapp"></i>
                                             </button>
                                         </form>
@@ -379,7 +373,7 @@
                                         <form method="POST" action="{{ route('attendance.destroy', $attendance->id) }}" class="form-delete d-inline">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-outline-danger btn-sm p-1 px-2" title="{{ __('Hapus Presensi') }}">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm p-1 px-2 rounded-2" title="{{ __('Hapus Presensi') }}">
                                                 <i class="fa-regular fa-trash-can"></i>
                                             </button>
                                         </form>
@@ -391,11 +385,11 @@
                         <tr>
                             <td colspan="{{ $isAdmin ? 9 : 7 }}" class="text-center py-5">
                                 <div class="py-4">
-                                    <div class="rounded-circle bg-body-tertiary text-body-secondary p-3 d-inline-flex align-items-center justify-content-center mb-2" style="width: 52px; height: 52px;">
-                                        <i class="fa-regular fa-folder-open fs-3"></i>
+                                    <div class="rounded-circle bg-light text-muted p-3 d-inline-flex align-items-center justify-content-center mb-2" style="width: 50px; height: 50px;">
+                                        <i class="fa-regular fa-folder-open fs-4"></i>
                                     </div>
                                     <h6 class="fw-semibold text-body-emphasis mb-1">{{ __('Tidak ada data absensi') }}</h6>
-                                    <p class="text-body-secondary small mb-0">{{ __('Belum ada riwayat absensi yang cocok dengan kriteria filter.') }}</p>
+                                    <p class="text-muted small mb-0">{{ __('Belum ada riwayat absensi yang cocok dengan kriteria filter saat ini.') }}</p>
                                 </div>
                             </td>
                         </tr>
@@ -404,9 +398,10 @@
             </table>
         </div>
 
+        {{-- Pagination & Footer --}}
         @if($attendances->hasPages())
-            <div class="p-3 bg-body-tertiary border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <span class="small text-body-secondary">
+            <div class="p-3 bg-white border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <span class="small text-muted">
                     {{ __('Menampilkan :from - :to dari :total data', ['from' => $attendances->firstItem() ?? 0, 'to' => $attendances->lastItem() ?? 0, 'total' => $attendances->total()]) }}
                 </span>
                 <div>
@@ -461,7 +456,7 @@
                         <textarea name="notes" class="form-control form-control-sm" rows="3" placeholder="Alasan cuti/izin/alfa..."></textarea>
                     </div>
                 </div>
-                <div class="modal-footer bg-body-tertiary border-top py-2">
+                <div class="modal-footer bg-light border-top py-2">
                     <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">{{ __('Tutup') }}</button>
                     <button type="submit" class="btn btn-primary btn-sm px-3" id="btnSubmitManual">
                         <i class="fa-solid fa-floppy-disk me-1"></i>{{ __('Simpan Data') }}
@@ -527,7 +522,7 @@
                         <span class="x-small text-muted mt-1 d-block">{{ __('Keterangan terisi otomatis berdasarkan kategori yang dipilih.') }}</span>
                     </div>
                 </div>
-                <div class="modal-footer bg-body-tertiary border-top py-2">
+                <div class="modal-footer bg-light border-top py-2">
                     <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">{{ __('Tutup') }}</button>
                     <button type="submit" class="btn btn-success btn-sm px-3" id="btnSubmitAdjustment">
                         <i class="fa-solid fa-floppy-disk me-1"></i>{{ __('Simpan') }}
