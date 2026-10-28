@@ -129,7 +129,7 @@ class AttendanceSyncApiController extends Controller
             $userEmail = $cleanEmail ?: ($employee?->email ?: (strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $displayName)) . rand(10, 99) . '@mstore.local'));
             $userPhone = $cleanPhone ?: ($employee?->phone ?: '');
 
-            $role = Role::whereIn('name', ['technician', 'operator', 'staff', 'employee'])->first();
+            $role = Role::whereIn('name', ['field-technician', 'technician', 'wash-operator', 'operator', 'staff'])->first();
 
             $user = User::create([
                 'name' => $displayName,
@@ -145,21 +145,34 @@ class AttendanceSyncApiController extends Controller
                 $employee->user_id = $user->id;
                 $employee->saveQuietly();
             }
+        } elseif (empty($user->role_id)) {
+            $defaultRole = Role::whereIn('name', ['field-technician', 'technician', 'wash-operator'])->first();
+            if ($defaultRole) {
+                $user->role_id = $defaultRole->id;
+                $user->saveQuietly();
+            }
         }
 
         // Jika User ada tapi Employee belum tercatat, buatkan record Employee
+        if (! $employee) {
+            $employee = Employee::where('user_id', $user->id)->first();
+        }
+
         if (! $employee) {
             $employee = Employee::create([
                 'nik' => $cleanNik ?: ('AUTO-' . date('Ymd') . '-' . rand(100, 999)),
                 'full_name' => $user->name,
                 'position' => 'Teknisi Lapangan',
-                'department' => 'Operasional',
+                'department' => 'Teknis & Jaringan',
                 'employment_status' => 'Tetap',
                 'join_date' => now(),
                 'email' => $user->email,
                 'phone' => $user->phone,
                 'user_id' => $user->id,
             ]);
+        } elseif (empty($employee->user_id)) {
+            $employee->user_id = $user->id;
+            $employee->saveQuietly();
         }
 
         // 4. Upsert ke tabel technician_attendances

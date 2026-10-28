@@ -85,7 +85,7 @@ class SalaryAdjustmentController extends Controller
         $loans = $loanQuery->get();
 
         $allUsers = User::whereHas('role', function ($q) {
-            $q->whereNotIn('name', ['customer', 'partner', 'super-admin', 'manager', 'field-leader']);
+            $q->whereNotIn('name', ['customer', 'pelanggan', 'partner', 'mitra', 'reseller', 'super-admin']);
         })->where('is_active', true)
           ->with('role')
           ->orderBy('name')
