@@ -263,9 +263,8 @@ class RoleController extends Controller implements HasMiddleware
         $newPermissions = $validated['permissions'] ?? [];
         $finalPermissions = array_unique(array_merge($newPermissions, $hiddenPermissions));
 
-        if ((bool) $role->is_system || in_array($role->name, $systemNames, true)) {
-            // System role tidak boleh diedit permissionnya via UI.
-            // Permission sync hanya diizinkan lewat artisan roles:normalize.
+        if ($role->name === 'super-admin') {
+            // Super-admin selalu memiliki hak akses penuh (tidak di-detach).
         } else {
             if (! empty($finalPermissions)) {
                 $role->permissions()->sync($finalPermissions);
