@@ -288,8 +288,6 @@ class SyncAttendanceEmployeesCommand extends Command
         // 1. Absensi Teknisi
         \App\Models\TechnicianAttendance::where('user_id', $sourceId)->update([
             'user_id' => $targetId,
-            'name' => $primaryUser->name,
-            'technician_name' => $primaryUser->name,
         ]);
 
         // 2. Tiket Penugasan
