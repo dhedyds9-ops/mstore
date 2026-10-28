@@ -66,16 +66,17 @@ class SalaryAdjustmentController extends Controller
         $statusFilter = $request->input('status');
 
         // Recap per teknisi / karyawan
-        $recap = $users->map(function ($user) use ($startDate, $endDate, $statusFilter) {
+        $recap = $users->map(function ($user) use ($startDate, $endDate, $request) {
             $kasbonQuery = SalaryAdjustment::where('user_id', $user->id)
                 ->where('type', 'kasbon');
             
-            if ($statusFilter) {
-                $kasbonQuery->where('status', $statusFilter);
-            } else {
-                // Default: kasbon yang masih pending (belum dipotong di slip gaji)
+            if ($request->filled('status')) {
+                $kasbonQuery->where('status', $request->status);
+            } elseif (! $request->has('status')) {
+                // Default awal: kasbon yang masih pending (belum dipotong di slip gaji)
                 $kasbonQuery->where('status', 'pending');
             }
+            // Jika user memilih 'Semua Status' (status='', request->has('status')), tampilkan seluruh kasbon
 
             // Jika ada filter tanggal, filter nominal rekap kasbon sesuai rentang tanggal tersebut
             if ($startDate && $endDate) {
