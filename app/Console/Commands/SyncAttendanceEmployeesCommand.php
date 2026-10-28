@@ -318,12 +318,42 @@ class SyncAttendanceEmployeesCommand extends Command
         // 5. Kasbon Loans (Pinjaman Angsuran)
         \App\Models\KasbonLoan::where('user_id', $sourceId)->update(['user_id' => $targetId]);
 
-        // 6. Jadwal Kerja
+        // 6. Jadwal Kerja (Tangani duplicate constraint pada unique keys)
         if (\Illuminate\Support\Facades\Schema::hasTable('technician_schedules')) {
-            \Illuminate\Support\Facades\DB::table('technician_schedules')->where('user_id', $sourceId)->update(['user_id' => $targetId]);
+            $existingWeeks = \Illuminate\Support\Facades\DB::table('technician_schedules')
+                ->where('user_id', $targetId)
+                ->select(['week_number', 'year'])
+                ->get();
+
+            foreach ($existingWeeks as $w) {
+                \Illuminate\Support\Facades\DB::table('technician_schedules')
+                    ->where('user_id', $sourceId)
+                    ->where('week_number', $w->week_number)
+                    ->where('year', $w->year)
+                    ->delete();
+            }
+
+            \Illuminate\Support\Facades\DB::table('technician_schedules')
+                ->where('user_id', $sourceId)
+                ->update(['user_id' => $targetId]);
         }
+
         if (\Illuminate\Support\Facades\Schema::hasTable('technician_daily_schedules')) {
-            \Illuminate\Support\Facades\DB::table('technician_daily_schedules')->where('user_id', $sourceId)->update(['user_id' => $targetId]);
+            $existingDates = \Illuminate\Support\Facades\DB::table('technician_daily_schedules')
+                ->where('user_id', $targetId)
+                ->pluck('date')
+                ->toArray();
+
+            if (!empty($existingDates)) {
+                \Illuminate\Support\Facades\DB::table('technician_daily_schedules')
+                    ->where('user_id', $sourceId)
+                    ->whereIn('date', $existingDates)
+                    ->delete();
+            }
+
+            \Illuminate\Support\Facades\DB::table('technician_daily_schedules')
+                ->where('user_id', $sourceId)
+                ->update(['user_id' => $targetId]);
         }
 
         // 7. Cuti & Izin
