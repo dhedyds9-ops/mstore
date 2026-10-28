@@ -83,7 +83,7 @@ class EmployeeController extends Controller implements HasMiddleware
         $employees = $query;
         $departments = Employee::query()->select('department')->whereNotNull('department')->where('department', '!=', '')->distinct()->orderBy('department')->pluck('department');
         $positions = Employee::query()->select('position')->whereNotNull('position')->where('position', '!=', '')->distinct()->orderBy('position')->pluck('position');
-        $roles = Role::query()->orderBy('label')->get();
+        $roles = Role::whereNotIn('name', Role::hiddenInUserManagement())->orderBy('label')->get();
         $defaultStatuses = ['Tetap', 'Training', 'Pendaftar'];
         $dbStatuses = Employee::query()->select('employment_status')->whereNotNull('employment_status')->distinct()->pluck('employment_status')->toArray();
         $statuses = array_values(array_unique(array_filter(array_merge($defaultStatuses, $dbStatuses))));

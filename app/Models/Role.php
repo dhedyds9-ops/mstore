@@ -90,13 +90,6 @@ class Role extends Model
             'partner',
             'mitra',
             'reseller',
-            'noc-operator',
-            'noc-legacy',
-            'noc',
-            'field-leader',
-            'field-technician',
-            'technician',
-            'leader',
         ];
 
         return array_values(array_unique(array_merge(

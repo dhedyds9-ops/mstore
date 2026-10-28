@@ -64,9 +64,9 @@
 
             <div class="col-auto">
                 <select name="role_id" class="form-select form-select-sm" onchange="this.form.submit()" style="cursor: pointer; min-width: 130px;">
-                    <option value="">Semua Peran</option>
+                    <option value="">{{ __('Semua Peran') }}</option>
                     @foreach($roles as $r)
-                        <option value="{{ $r->id }}" @selected((string) request('role_id') === (string) $r->id)>{{ $r->label }}</option>
+                        <option value="{{ $r->id }}" @selected((string) request('role_id') === (string) $r->id)>{{ $r->label ?: ucfirst(str_replace('-', ' ', $r->name)) }}</option>
                     @endforeach
                 </select>
             </div>
