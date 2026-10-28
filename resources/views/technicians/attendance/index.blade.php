@@ -8,324 +8,324 @@
     $isAdmin = $authUser && $authUser->hasAnyRole(['super-admin', 'manager', 'finance']);
 @endphp
 
-<div class="container-fluid px-0 px-md-2 py-2">
-    <!-- Header Halaman & Tombol Aksi Cepat -->
-    <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3 mb-4">
+<div class="container-fluid px-2 px-md-4 py-3">
+    {{-- Header & Top Action Bar --}}
+    <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between gap-3 mb-3">
         <div>
-            <div class="d-flex align-items-center gap-2">
-                <span class="avatar-title rounded-3 bg-primary bg-opacity-10 text-primary p-2 d-inline-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
-                    <i class="fa-solid fa-clipboard-user fs-5"></i>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <h4 class="fw-bold mb-0 text-body-emphasis">{{ __('Rekap Presensi Karyawan') }}</h4>
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 small fw-medium">
+                    <i class="fa-regular fa-calendar-check me-1"></i>{{ $periodLabel }}
                 </span>
-                <div>
-                    <h4 class="fw-bold mb-0 text-body">{{ __('Rekap Presensi Karyawan') }}</h4>
-                    <span class="text-muted small">{{ __('Pantau riwayat kehadiran, jam kerja, status absensi, dan kalkulasi penggajian.') }}</span>
-                </div>
             </div>
+            <p class="text-body-secondary small mb-0">{{ __('Pantau riwayat kehadiran, jam kerja, status absensi, dan kalkulasi penggajian karyawan.') }}</p>
         </div>
+
+        {{-- Navigasi Menu & Tombol Utama --}}
         <div class="d-flex flex-wrap align-items-center gap-2">
-            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="collapse" data-bs-target="#guideCollapse" aria-expanded="false" aria-controls="guideCollapse">
-                <i class="fa-solid fa-circle-question me-1"></i>{{ __('Panduan') }}
-            </button>
-            <a href="{{ route('attendance.daily') }}" class="btn btn-outline-info btn-sm">
-                <i class="fa-solid fa-calendar-day me-1"></i>{{ __('Absensi Harian') }}
-            </a>
-            <a href="{{ route('attendance.kiosk') }}" class="btn btn-outline-dark btn-sm">
-                <i class="fa-solid fa-barcode me-1"></i>{{ __('Kiosk Barcode') }}
-            </a>
-            @if($isAdmin)
-                <button type="button" class="btn btn-primary btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#manualAttendanceModal">
-                    <i class="fa-solid fa-plus me-1"></i>{{ __('Tambah Manual') }}
+            {{-- Navigasi Halaman Presensi --}}
+            <div class="btn-group btn-group-sm p-1 bg-body-tertiary rounded-3 border" role="group">
+                <a href="{{ route('attendance.index') }}" class="btn btn-primary fw-semibold rounded-2 px-3">
+                    <i class="fa-solid fa-clipboard-list me-1"></i>{{ __('Rekap') }}
+                </a>
+                <a href="{{ route('attendance.daily') }}" class="btn btn-ghost text-body-secondary fw-medium rounded-2 px-3">
+                    <i class="fa-solid fa-calendar-day me-1"></i>{{ __('Harian') }}
+                </a>
+                <a href="{{ route('attendance.kiosk') }}" class="btn btn-ghost text-body-secondary fw-medium rounded-2 px-3">
+                    <i class="fa-solid fa-barcode me-1"></i>{{ __('Kiosk') }}
+                </a>
+                <a href="{{ route('attendance.payslip', request()->all()) }}" class="btn btn-ghost text-body-secondary fw-medium rounded-2 px-3" target="_blank">
+                    <i class="fa-solid fa-receipt me-1 text-primary"></i>{{ __('Slip Gaji') }}
+                </a>
+            </div>
+
+            {{-- Tombol Aksi Admin --}}
+            <div class="d-flex align-items-center gap-2">
+                @if($isAdmin)
+                    <button type="button" class="btn btn-primary btn-sm shadow-xs" data-bs-toggle="modal" data-bs-target="#manualAttendanceModal">
+                        <i class="fa-solid fa-plus me-1"></i>{{ __('Absen Manual') }}
+                    </button>
+                    <button type="button" class="btn btn-outline-success btn-sm" data-bs-toggle="modal" data-bs-target="#salaryAdjustmentModal">
+                        <i class="fa-solid fa-money-bill-transfer me-1"></i>{{ __('Bonus / Kasbon') }}
+                    </button>
+                    <button type="button" class="btn btn-warning btn-sm text-dark fw-bold shadow-xs" onclick="confirmRecapFinance()">
+                        <i class="fa-solid fa-file-invoice-dollar me-1"></i>{{ __('Catat ke Kas') }}
+                    </button>
+                @endif
+                <a href="{{ route('attendance.excel', array_merge(request()->all(), ['download' => 'details'])) }}" class="btn btn-outline-secondary btn-sm" title="{{ __('Download Excel') }}" target="_blank">
+                    <i class="fa-solid fa-file-excel text-success me-1"></i>{{ __('Excel') }}
+                </a>
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="collapse" data-bs-target="#guideCollapse" aria-expanded="false" title="{{ __('Buka Panduan') }}">
+                    <i class="fa-solid fa-circle-question"></i>
                 </button>
-                <button type="button" class="btn btn-outline-success btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#salaryAdjustmentModal">
-                    <i class="fa-solid fa-money-bill-transfer me-1"></i>{{ __('Bonus / Kasbon') }}
-                </button>
-            @endif
+            </div>
         </div>
     </div>
 
-    <!-- Panduan Penggunaan (Collapsible agar tidak memakan ruang) -->
-    <div class="collapse mb-4" id="guideCollapse">
-        <div class="card border-0 shadow-sm border-start border-4 border-info">
-            <div class="card-body p-3">
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                    <h6 class="fw-bold text-info mb-0 d-flex align-items-center gap-2">
-                        <i class="fa-solid fa-circle-info"></i>{{ __('Panduan Rekap Presensi & Payroll') }}
-                    </h6>
-                    <button type="button" class="btn-close btn-sm" data-bs-toggle="collapse" data-bs-target="#guideCollapse" aria-label="Close"></button>
+    {{-- Panduan Penggunaan (Collapsible) --}}
+    <div class="collapse mb-3" id="guideCollapse">
+        <div class="border rounded-3 p-3 bg-body-tertiary">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <h6 class="fw-bold text-info mb-0 d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-circle-info"></i>{{ __('Panduan Rekap Presensi & Payroll') }}
+                </h6>
+                <button type="button" class="btn-close btn-sm" data-bs-toggle="collapse" data-bs-target="#guideCollapse" aria-label="Close"></button>
+            </div>
+            <div class="row g-3 small">
+                <div class="col-12 col-md-4">
+                    <span class="fw-bold text-primary d-block mb-1"><i class="fa-solid fa-calendar-check me-1"></i> {{ __('Filter Periode') }}</span>
+                    <span class="text-body-secondary">{{ __('Gunakan filter "Bulan" untuk siklus bulanan, atau tentukan rentang "Dari Tanggal" s/d "Sampai Tanggal" (misal: 26 Des - 25 Jan) untuk cut-off payroll.') }}</span>
                 </div>
-                <div class="row g-3 small">
-                    <div class="col-12 col-md-4">
-                        <div class="p-2 rounded bg-body-tertiary h-100">
-                            <span class="fw-bold text-primary d-block mb-1"><i class="fa-solid fa-calendar-check me-1"></i> {{ __('Filter Periode') }}</span>
-                            <span class="text-muted">{{ __('Gunakan filter "Bulan" untuk siklus bulanan, atau tentukan rentang "Dari Tanggal" s/d "Sampai Tanggal" (misal: 26 Des - 25 Jan) untuk cut-off payroll.') }}</span>
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-4">
-                        <div class="p-2 rounded bg-body-tertiary h-100">
-                            <span class="fw-bold text-success d-block mb-1"><i class="fa-solid fa-receipt me-1"></i> {{ __('Slip Gaji Otomatis') }}</span>
-                            <span class="text-muted">{{ __('Tombol "Slip Gaji" otomatis mengkalkulasi kompensasi kehadiran harian serta penambahan bonus dan pemotongan kasbon karyawan.') }}</span>
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-4">
-                        <div class="p-2 rounded bg-body-tertiary h-100">
-                            <span class="fw-bold text-warning d-block mb-1"><i class="fa-solid fa-money-bill-wave me-1"></i> {{ __('Catat Gaji ke Keuangan') }}</span>
-                            <span class="text-muted">{{ __('Admin dapat langsung membukukan total beban gaji ke modul Keuangan & Kas secara instan melalui tombol "Catat Gaji".') }}</span>
-                        </div>
-                    </div>
+                <div class="col-12 col-md-4">
+                    <span class="fw-bold text-success d-block mb-1"><i class="fa-solid fa-receipt me-1"></i> {{ __('Slip Gaji Otomatis') }}</span>
+                    <span class="text-body-secondary">{{ __('Tombol "Slip Gaji" otomatis mengkalkulasi kehadiran harian, penambahan bonus disiplin/absensi, serta pemotongan kasbon karyawan.') }}</span>
+                </div>
+                <div class="col-12 col-md-4">
+                    <span class="fw-bold text-warning d-block mb-1"><i class="fa-solid fa-money-bill-wave me-1"></i> {{ __('Catat Gaji ke Keuangan') }}</span>
+                    <span class="text-body-secondary">{{ __('Admin dapat langsung membukukan total beban gaji ke modul Keuangan & Kas secara instan melalui tombol "Catat ke Kas".') }}</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Ringkasan Statistik Presensi (KPI Cards) -->
-    <div class="d-flex align-items-center justify-content-between mb-2">
-        <span class="text-muted small fw-semibold">
-            <i class="fa-solid fa-calendar-days text-primary me-1"></i>
-            {{ __('Statistik Periode:') }} <strong class="text-body">{{ $periodLabel }}</strong>
-        </span>
+    {{-- Ringkasan Statistik Presensi: Inline Pills (TANPA CARD) --}}
+    @php
+        $statChips = [
+            'all'     => ['label' => __('Semua'), 'icon' => 'fa-list-check', 'color' => 'secondary', 'val' => $attendances->total()],
+            'present' => ['label' => __('Hadir'), 'icon' => 'fa-circle-check', 'color' => 'success', 'val' => $stats['present'] ?? 0],
+            'late'    => ['label' => __('Terlambat'), 'icon' => 'fa-clock-rotate-left', 'color' => 'warning', 'val' => $stats['late'] ?? 0],
+            'leave'   => ['label' => __('Cuti'), 'icon' => 'fa-plane-departure', 'color' => 'info', 'val' => $stats['leave'] ?? 0],
+            'permit'  => ['label' => __('Izin'), 'icon' => 'fa-envelope-open-text', 'color' => 'primary', 'val' => $stats['permit'] ?? 0],
+            'sick'    => ['label' => __('Sakit'), 'icon' => 'fa-notes-medical', 'color' => 'secondary', 'val' => $stats['sick'] ?? 0],
+            'alpha'   => ['label' => __('Alpha'), 'icon' => 'fa-circle-xmark', 'color' => 'danger', 'val' => $stats['alpha'] ?? 0],
+        ];
+    @endphp
+    <div class="d-flex flex-wrap align-items-center gap-1.5 mb-3 py-1">
+        @foreach($statChips as $chipKey => $chipData)
+            @php
+                $isCurrent = ($chipKey === 'all' && !request('status')) || (request('status') === $chipKey);
+                $queryTarget = $chipKey === 'all' 
+                    ? array_merge(request()->except('status'))
+                    : array_merge(request()->query(), ['status' => $chipKey]);
+            @endphp
+            <a href="{{ route('attendance.index', $queryTarget) }}" 
+               class="btn btn-sm d-inline-flex align-items-center gap-1.5 rounded-pill px-2.5 py-1 transition-all {{ $isCurrent ? 'btn-' . ($chipData['color'] === 'secondary' ? 'dark' : $chipData['color']) . ' fw-bold shadow-xs' : 'btn-outline-secondary border-opacity-50 text-body bg-body' }}">
+                <i class="fa-solid {{ $chipData['icon'] }} small {{ $isCurrent ? 'text-white' : 'text-' . $chipData['color'] }}"></i>
+                <span class="small">{{ $chipData['label'] }}</span>
+                <span class="badge {{ $isCurrent ? 'bg-white text-dark' : 'bg-' . $chipData['color'] . '-subtle text-' . $chipData['color'] . '-emphasis' }} rounded-pill px-1.5 py-0.5" style="font-size: 0.72rem;">
+                    {{ number_format($chipData['val']) }}
+                </span>
+            </a>
+        @endforeach
+
         @if(request('status'))
-            <a href="{{ route('attendance.index', array_merge(request()->except('status'))) }}" class="text-decoration-none small text-danger fw-semibold">
-                <i class="fa-solid fa-xmark me-1"></i>{{ __('Reset Filter Status') }}
+            <a href="{{ route('attendance.index', array_merge(request()->except('status'))) }}" class="btn btn-link btn-sm text-danger text-decoration-none px-2 py-1 ms-auto small" title="{{ __('Hapus Filter Status') }}">
+                <i class="fa-solid fa-xmark me-1"></i>{{ __('Reset Status') }}
             </a>
         @endif
     </div>
-    <div class="row g-2 g-md-3 mb-4">
-        @php
-            $statCards = [
-                'present' => ['label' => __('Hadir'), 'icon' => 'fa-circle-check', 'color' => 'success', 'val' => $stats['present'] ?? 0],
-                'late'    => ['label' => __('Terlambat'), 'icon' => 'fa-clock-rotate-left', 'color' => 'warning', 'val' => $stats['late'] ?? 0],
-                'leave'   => ['label' => __('Cuti'), 'icon' => 'fa-plane-departure', 'color' => 'info', 'val' => $stats['leave'] ?? 0],
-                'permit'  => ['label' => __('Izin'), 'icon' => 'fa-envelope-open-text', 'color' => 'primary', 'val' => $stats['permit'] ?? 0],
-                'sick'    => ['label' => __('Sakit'), 'icon' => 'fa-notes-medical', 'color' => 'secondary', 'val' => $stats['sick'] ?? 0],
-                'alpha'   => ['label' => __('Alpha'), 'icon' => 'fa-circle-xmark', 'color' => 'danger', 'val' => $stats['alpha'] ?? 0],
-            ];
-        @endphp
-        @foreach($statCards as $stKey => $stData)
-            @php
-                $isActive = (request('status') === $stKey);
-                $queryWithStatus = array_merge(request()->query(), ['status' => $isActive ? '' : $stKey]);
-            @endphp
-            <div class="col-6 col-sm-4 col-xl-2">
-                <a href="{{ route('attendance.index', $queryWithStatus) }}" class="text-decoration-none">
-                    <div class="card border-0 shadow-sm rounded-3 h-100 transition-all {{ $isActive ? 'border border-2 border-' . $stData['color'] : '' }}">
-                        <div class="card-body p-2 p-md-3 d-flex align-items-center justify-content-between">
-                            <div>
-                                <span class="d-block text-muted x-small fw-semibold text-uppercase">{{ $stData['label'] }}</span>
-                                <h3 class="fw-bold mb-0 text-{{ $stData['color'] }}">{{ number_format($stData['val']) }}</h3>
-                            </div>
-                            <span class="avatar-title rounded-circle bg-{{ $stData['color'] }} bg-opacity-10 text-{{ $stData['color'] }} d-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px;">
-                                <i class="fa-solid {{ $stData['icon'] }} fs-6"></i>
-                            </span>
-                        </div>
-                    </div>
-                </a>
-            </div>
-        @endforeach
-    </div>
 
-    <!-- Filter Toolbar & Action Buttons -->
-    <div class="card border-0 shadow-sm rounded-3 mb-4">
-        <div class="card-body p-3">
-            <form action="{{ route('attendance.index') }}" method="GET" id="attendanceFilterForm">
-                <div class="row g-2 align-items-end">
-                    <div class="col-12 col-md-6 col-xl-3">
-                        <label class="form-label x-small fw-bold text-muted mb-1 text-uppercase">{{ __('Karyawan') }}</label>
-                        <select name="user_id" class="form-select form-select-sm js-search-select">
-                            <option value="">{{ __('Semua Karyawan') }}</option>
-                            @foreach($technicians as $tech)
-                                <option value="{{ $tech->id }}" {{ (string)request('user_id') === (string)$tech->id ? 'selected' : '' }}>
-                                    {{ $tech->employee?->full_name ?? $tech->name }} ({{ $tech->employee?->position ?? $tech->role->name ?? __('Staff') }})
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-6 col-md-3 col-xl-2">
-                        <label class="form-label x-small fw-bold text-muted mb-1 text-uppercase">{{ __('Status') }}</label>
-                        <select name="status" class="form-select form-select-sm">
-                            <option value="">{{ __('Semua Status') }}</option>
-                            <option value="present" {{ request('status') === 'present' ? 'selected' : '' }}>{{ __('Hadir') }}</option>
-                            <option value="late" {{ request('status') === 'late' ? 'selected' : '' }}>{{ __('Terlambat') }}</option>
-                            <option value="leave" {{ request('status') === 'leave' ? 'selected' : '' }}>{{ __('Cuti') }}</option>
-                            <option value="permit" {{ request('status') === 'permit' ? 'selected' : '' }}>{{ __('Izin') }}</option>
-                            <option value="sick" {{ request('status') === 'sick' ? 'selected' : '' }}>{{ __('Sakit') }}</option>
-                            <option value="alpha" {{ request('status') === 'alpha' ? 'selected' : '' }}>{{ __('Alpha') }}</option>
-                        </select>
-                    </div>
-                    <div class="col-6 col-md-3 col-xl-2">
-                        <label class="form-label x-small fw-bold text-muted mb-1 text-uppercase">{{ __('Bulan') }}</label>
-                        <input type="month" name="month" value="{{ $month }}" class="form-control form-control-sm">
-                    </div>
-                    <div class="col-6 col-md-4 col-xl-2">
-                        <label class="form-label x-small fw-bold text-muted mb-1 text-uppercase">{{ __('Dari Tanggal') }}</label>
-                        <input type="date" name="start_date" value="{{ request('start_date') }}" class="form-control form-control-sm">
-                    </div>
-                    <div class="col-6 col-md-4 col-xl-2">
-                        <label class="form-label x-small fw-bold text-muted mb-1 text-uppercase">{{ __('Sampai Tanggal') }}</label>
-                        <input type="date" name="end_date" value="{{ request('end_date') }}" class="form-control form-control-sm">
-                    </div>
-                    <div class="col-12 col-md-4 col-xl-1 d-flex gap-1">
-                        <button type="submit" class="btn btn-primary btn-sm flex-fill" id="btnFilterSubmit" title="{{ __('Terapkan Filter') }}">
-                            <i class="fa-solid fa-filter me-1"></i>{{ __('Filter') }}
-                        </button>
-                        <a href="{{ route('attendance.index') }}" class="btn btn-outline-secondary btn-sm" title="{{ __('Reset ke Bulan Ini') }}">
-                            <i class="fa-solid fa-rotate-left"></i>
-                        </a>
-                    </div>
+    {{-- Filter Form Toolbar (Integrated, Tanpa Card) --}}
+    <div class="border rounded-3 p-3 bg-body mb-3">
+        <form action="{{ route('attendance.index') }}" method="GET" id="attendanceFilterForm">
+            <div class="row g-2 align-items-end">
+                <div class="col-12 col-md-5 col-xl-3">
+                    <label class="form-label small text-body-secondary fw-semibold mb-1">{{ __('Karyawan') }}</label>
+                    <select name="user_id" class="form-select form-select-sm js-search-select">
+                        <option value="">{{ __('Semua Karyawan') }}</option>
+                        @foreach($technicians as $tech)
+                            <option value="{{ $tech->id }}" {{ (string)request('user_id') === (string)$tech->id ? 'selected' : '' }}>
+                                {{ $tech->employee?->full_name ?? $tech->name }} ({{ $tech->employee?->position ?? $tech->role->name ?? __('Staff') }})
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
+                <div class="col-6 col-md-3 col-xl-2">
+                    <label class="form-label small text-body-secondary fw-semibold mb-1">{{ __('Status') }}</label>
+                    <select name="status" class="form-select form-select-sm">
+                        <option value="">{{ __('Semua Status') }}</option>
+                        <option value="present" {{ request('status') === 'present' ? 'selected' : '' }}>{{ __('Hadir') }}</option>
+                        <option value="late" {{ request('status') === 'late' ? 'selected' : '' }}>{{ __('Terlambat') }}</option>
+                        <option value="leave" {{ request('status') === 'leave' ? 'selected' : '' }}>{{ __('Cuti') }}</option>
+                        <option value="permit" {{ request('status') === 'permit' ? 'selected' : '' }}>{{ __('Izin') }}</option>
+                        <option value="sick" {{ request('status') === 'sick' ? 'selected' : '' }}>{{ __('Sakit') }}</option>
+                        <option value="alpha" {{ request('status') === 'alpha' ? 'selected' : '' }}>{{ __('Alpha') }}</option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-4 col-xl-2">
+                    <label class="form-label small text-body-secondary fw-semibold mb-1">{{ __('Bulan') }}</label>
+                    <input type="month" name="month" value="{{ $month }}" class="form-control form-control-sm">
+                </div>
+                <div class="col-6 col-md-4 col-xl-2">
+                    <label class="form-label small text-body-secondary fw-semibold mb-1">{{ __('Dari Tanggal') }}</label>
+                    <input type="date" name="start_date" value="{{ request('start_date') }}" class="form-control form-control-sm">
+                </div>
+                <div class="col-6 col-md-4 col-xl-2">
+                    <label class="form-label small text-body-secondary fw-semibold mb-1">{{ __('Sampai Tanggal') }}</label>
+                    <input type="date" name="end_date" value="{{ request('end_date') }}" class="form-control form-control-sm">
+                </div>
+                <div class="col-12 col-md-4 col-xl-1 d-flex gap-1">
+                    <button type="submit" class="btn btn-primary btn-sm flex-fill" id="btnFilterSubmit" title="{{ __('Terapkan Filter') }}">
+                        <i class="fa-solid fa-filter me-1"></i>{{ __('Filter') }}
+                    </button>
+                    <a href="{{ route('attendance.index') }}" class="btn btn-outline-secondary btn-sm" title="{{ __('Reset ke Bulan Ini') }}">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </a>
+                </div>
+            </div>
 
-                <!-- Tag Filter Aktif -->
-                @php
-                    $activeFilters = [];
-                    if(request('user_id')) {
-                        $selectedUser = $technicians->where('id', request('user_id'))->first();
-                        $activeFilters['user_id'] = 'Karyawan: ' . ($selectedUser->employee?->full_name ?? $selectedUser->name ?? '-');
-                    }
-                    if(request('status')) {
-                        $stMap = [
-                            'present' => 'Hadir',
-                            'late'    => 'Terlambat',
-                            'leave'   => 'Cuti',
-                            'permit'  => 'Izin',
-                            'sick'    => 'Sakit',
-                            'alpha'   => 'Alpha'
-                        ];
-                        $activeFilters['status'] = 'Status: ' . ($stMap[request('status')] ?? request('status'));
-                    }
-                    if(request('start_date') && request('end_date')) {
-                        $activeFilters['date_range'] = 'Periode: ' . \Carbon\Carbon::parse(request('start_date'))->translatedFormat('d M Y') . ' - ' . \Carbon\Carbon::parse(request('end_date'))->translatedFormat('d M Y');
-                    } elseif(request('date')) {
-                        $activeFilters['date'] = 'Tanggal: ' . \Carbon\Carbon::parse(request('date'))->translatedFormat('d M Y');
-                    } elseif(!empty($month)) {
-                        $activeFilters['month'] = 'Bulan: ' . \Carbon\Carbon::parse($month)->translatedFormat('F Y');
-                    }
-                @endphp
-                @if(count($activeFilters) > 0)
-                    <div class="d-flex flex-wrap align-items-center gap-2 mt-3 pt-3 border-top">
-                        <span class="x-small fw-bold text-muted"><i class="fa-solid fa-tags me-1"></i>{{ __('Filter Aktif:') }}</span>
+            {{-- Tag Filter Aktif & Bulk Actions --}}
+            @php
+                $activeFilters = [];
+                if(request('user_id')) {
+                    $selectedUser = $technicians->where('id', request('user_id'))->first();
+                    $activeFilters['user_id'] = 'Karyawan: ' . ($selectedUser->employee?->full_name ?? $selectedUser->name ?? '-');
+                }
+                if(request('status')) {
+                    $stMap = [
+                        'present' => 'Hadir',
+                        'late'    => 'Terlambat',
+                        'leave'   => 'Cuti',
+                        'permit'  => 'Izin',
+                        'sick'    => 'Sakit',
+                        'alpha'   => 'Alpha'
+                    ];
+                    $activeFilters['status'] = 'Status: ' . ($stMap[request('status')] ?? request('status'));
+                }
+                if(request('start_date') && request('end_date')) {
+                    $activeFilters['date_range'] = 'Periode: ' . \Carbon\Carbon::parse(request('start_date'))->translatedFormat('d M Y') . ' - ' . \Carbon\Carbon::parse(request('end_date'))->translatedFormat('d M Y');
+                } elseif(request('start_date')) {
+                    $activeFilters['date_start'] = 'Mulai: ' . \Carbon\Carbon::parse(request('start_date'))->translatedFormat('d M Y');
+                } elseif(request('end_date')) {
+                    $activeFilters['date_end'] = 'Sampai: ' . \Carbon\Carbon::parse(request('end_date'))->translatedFormat('d M Y');
+                } elseif(request('date')) {
+                    $activeFilters['date'] = 'Tanggal: ' . \Carbon\Carbon::parse(request('date'))->translatedFormat('d M Y');
+                } elseif(!empty($month)) {
+                    $activeFilters['month'] = 'Bulan: ' . \Carbon\Carbon::parse($month)->translatedFormat('F Y');
+                }
+            @endphp
+
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-2 pt-2 border-top">
+                <div class="d-flex flex-wrap align-items-center gap-1.5">
+                    @if(count($activeFilters) > 0)
+                        <span class="small text-body-secondary me-1"><i class="fa-solid fa-filter me-1 text-primary"></i>{{ __('Filter Aktif:') }}</span>
                         @foreach($activeFilters as $fKey => $fVal)
-                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1 fw-medium">
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2 py-1 small fw-normal">
                                 {{ $fVal }}
                             </span>
                         @endforeach
-                        <a href="{{ route('attendance.index') }}" class="badge bg-danger bg-opacity-10 text-danger text-decoration-none px-2 py-1 fw-medium">
-                            <i class="fa-solid fa-rotate-left me-1"></i>{{ __('Reset ke Bulan Ini') }}
+                        <a href="{{ route('attendance.index') }}" class="badge bg-danger-subtle text-danger border border-danger-subtle text-decoration-none px-2 py-1 rounded-pill small fw-medium">
+                            <i class="fa-solid fa-rotate-left me-1"></i>{{ __('Reset') }}
                         </a>
-                    </div>
-                @endif
-            </form>
-
-            <!-- Toolbar Tombol Laporan & Ekspor -->
-            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3 pt-3 border-top">
-                <div class="d-flex flex-wrap gap-2">
-                    <a href="{{ route('attendance.payslip', request()->all()) }}" class="btn btn-outline-primary btn-sm" target="_blank">
-                        <i class="fa-solid fa-receipt me-1 text-primary"></i>{{ __('Slip Gaji') }}
-                    </a>
-                    <a href="{{ route('attendance.excel', array_merge(request()->all(), ['download' => 'details'])) }}" class="btn btn-outline-success btn-sm" target="_blank">
-                        <i class="fa-solid fa-file-excel me-1 text-success"></i>{{ __('Download Excel') }}
-                    </a>
+                    @else
+                        <span class="small text-body-secondary"><i class="fa-solid fa-circle-check text-success me-1"></i>{{ __('Menampilkan absensi periode bulan ini secara otomatis.') }}</span>
+                    @endif
                 </div>
+
+                {{-- Bulk Action Hapus Terpilih --}}
                 @if($isAdmin)
-                    <div class="d-flex flex-wrap align-items-center gap-2">
-                        <button type="button" class="btn btn-warning btn-sm text-dark fw-bold shadow-xs" onclick="confirmRecapFinance()">
-                            <i class="fa-solid fa-money-bill-wave me-1"></i>{{ __('Catat Gaji ke Kas') }}
-                        </button>
+                    <div class="d-flex align-items-center gap-2">
                         <button type="button" class="btn btn-outline-danger btn-sm d-none" id="btnBulkDelete" onclick="submitBulkDelete()">
-                            <i class="fa-regular fa-trash-can me-1"></i>{{ __('Hapus') }} (<span id="selectedCount">0</span>)
+                            <i class="fa-regular fa-trash-can me-1"></i>{{ __('Hapus Terpilih') }} (<span id="selectedCount">0</span>)
                         </button>
                     </div>
                 @endif
             </div>
-        </div>
+        </form>
     </div>
 
-    <!-- Tabel Data Rekap Presensi -->
-    <div class="card border-0 shadow-sm rounded-3">
-        <div class="card-header bg-transparent py-3 border-0">
-            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                <h6 class="fw-bold mb-0 text-body d-flex align-items-center gap-2">
-                    <i class="fa-solid fa-list text-primary"></i>{{ __('Data Riwayat Presensi') }}
-                    <span class="badge bg-secondary bg-opacity-10 text-secondary fw-semibold rounded-pill px-2">
-                        {{ $attendances->total() }} {{ __('Data') }}
-                    </span>
-                    <span class="badge bg-primary bg-opacity-10 text-primary fw-normal rounded-pill px-2">
-                        {{ $periodLabel }}
-                    </span>
-                </h6>
+    {{-- Tabel Riwayat Presensi (Rapi, Terstruktur, Tanpa Card Terpisah) --}}
+    <div class="border rounded-3 overflow-hidden bg-body shadow-xs">
+        {{-- Table Header Bar --}}
+        <div class="p-3 bg-body-tertiary border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2">
+                <i class="fa-solid fa-list-check text-primary"></i>
+                <h6 class="fw-bold mb-0 text-body-emphasis">{{ __('Data Riwayat Presensi') }}</h6>
+                <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill px-2">
+                    {{ $attendances->total() }} {{ __('Data') }}
+                </span>
+            </div>
+            <div class="small text-body-secondary">
+                {{ __('Halaman') }} {{ $attendances->currentPage() }} {{ __('dari') }} {{ $attendances->lastPage() }}
             </div>
         </div>
 
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0" style="min-width: 850px;">
-                <thead class="table-light text-uppercase x-small fw-bold text-muted border-bottom">
+            <table class="table table-hover align-middle mb-0" style="min-width: 880px;">
+                <thead class="bg-body-tertiary text-uppercase small text-body-secondary border-bottom">
                     <tr>
                         @if($isAdmin)
-                            <th class="ps-3 py-3" style="width: 40px;">
+                            <th class="ps-3 py-2.5 text-center" style="width: 40px;">
                                 <input type="checkbox" class="form-check-input" id="selectAllAttendance" onclick="toggleSelectAll()">
                             </th>
                         @endif
-                        <th class="py-3">{{ __('Karyawan') }}</th>
-                        <th class="py-3">{{ __('Tanggal') }}</th>
-                        <th class="py-3">{{ __('Jam Masuk') }}</th>
-                        <th class="py-3">{{ __('Jam Pulang') }}</th>
-                        <th class="py-3">{{ __('Status') }}</th>
-                        <th class="py-3">{{ __('Lokasi & Foto') }}</th>
+                        <th class="py-2.5 ps-3" style="width: 50px;">{{ __('No') }}</th>
+                        <th class="py-2.5">{{ __('Karyawan') }}</th>
+                        <th class="py-2.5">{{ __('Tanggal') }}</th>
+                        <th class="py-2.5 text-center">{{ __('Jam Masuk') }}</th>
+                        <th class="py-2.5 text-center">{{ __('Jam Pulang') }}</th>
+                        <th class="py-2.5 text-center">{{ __('Status') }}</th>
+                        <th class="py-2.5 text-center">{{ __('Lokasi & Foto') }}</th>
                         @if($isAdmin)
-                            <th class="text-end pe-3 py-3" style="width: 140px;">{{ __('Aksi') }}</th>
+                            <th class="text-end pe-3 py-2.5" style="width: 110px;">{{ __('Aksi') }}</th>
                         @endif
                     </tr>
                 </thead>
-                <tbody class="divide-y">
-                    @forelse($attendances as $attendance)
+                <tbody class="table-group-divider">
+                    @forelse($attendances as $index => $attendance)
                         <tr>
                             @if($isAdmin)
-                                <td class="ps-3">
+                                <td class="ps-3 text-center">
                                     <input type="checkbox" class="form-check-input attendance-select" value="{{ $attendance->id }}" onchange="updateBulkDeleteState()">
                                 </td>
                             @endif
+                            <td class="ps-3 text-body-secondary small">
+                                {{ $attendances->firstItem() + $index }}
+                            </td>
                             <td>
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="avatar-title rounded-circle bg-primary bg-opacity-10 text-primary fw-bold d-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px; font-size: 0.8rem;">
-                                        {{ strtoupper(substr($attendance->user->employee?->full_name ?? $attendance->user->name ?? 'K', 0, 2)) }}
+                                <div class="d-flex align-items-center gap-2.5">
+                                    <div class="avatar-sm rounded-circle bg-primary-subtle text-primary-emphasis fw-bold d-flex align-items-center justify-content-center flex-shrink-0" style="width: 34px; height: 34px; font-size: 0.82rem;">
+                                        {{ strtoupper(substr($attendance->user->employee?->full_name ?? $attendance->user->name ?? 'K', 0, 1)) }}
                                     </div>
                                     <div>
-                                        <span class="fw-semibold text-body d-block">{{ $attendance->user->employee?->full_name ?? $attendance->user->name }}</span>
-                                        <span class="x-small text-muted">{{ $attendance->user->employee?->position ?? $attendance->user->role?->name ?? __('Karyawan') }}</span>
+                                        <div class="fw-semibold text-body-emphasis lh-sm">{{ $attendance->user->employee?->full_name ?? $attendance->user->name }}</div>
+                                        <div class="small text-body-secondary">{{ $attendance->user->employee?->position ?? $attendance->user->role?->name ?? __('Karyawan') }}</div>
                                     </div>
                                 </div>
                                 @php $shift = $attendance->shift_info; @endphp
                                 @if(!empty($shift['start']) && !empty($shift['end']))
                                     <div class="mt-1">
-                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-10 x-small py-0 px-2" title="{{ __('Jadwal Shift') }}">
+                                        <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle px-1.5 py-0.5" style="font-size: 0.72rem;" title="{{ __('Jadwal Shift') }}">
                                             <i class="fa-solid fa-business-time me-1"></i>{{ $shift['start'] }} - {{ $shift['end'] }}
                                         </span>
                                     </div>
                                 @endif
                             </td>
                             <td class="small">
-                                <span class="fw-medium text-body d-block">{{ ($attendance->work_date ?? $attendance->clock_in)?->translatedFormat('d M Y') }}</span>
-                                <span class="x-small text-muted">{{ ($attendance->work_date ?? $attendance->clock_in)?->translatedFormat('l') }}</span>
+                                <span class="fw-semibold text-body-emphasis d-block">{{ ($attendance->work_date ?? $attendance->clock_in)?->translatedFormat('d M Y') }}</span>
+                                <span class="text-body-secondary">{{ ($attendance->work_date ?? $attendance->clock_in)?->translatedFormat('l') }}</span>
                             </td>
-                            <td>
+                            <td class="text-center">
                                 @if($attendance->clock_in)
-                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 py-1 px-2" style="font-size: 0.82rem;">
+                                    <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle px-2 py-1 fw-medium" style="font-size: 0.8rem;">
                                         <i class="fa-solid fa-arrow-right-to-bracket me-1"></i>{{ $attendance->clock_in->format('H:i') }}
                                     </span>
                                 @else
-                                    <span class="text-muted small">--:--</span>
+                                    <span class="text-body-secondary small">--:--</span>
                                 @endif
                             </td>
-                            <td>
+                            <td class="text-center">
                                 @if($attendance->clock_out)
-                                    <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 py-1 px-2" style="font-size: 0.82rem;">
+                                    <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-2 py-1 fw-medium" style="font-size: 0.8rem;">
                                         <i class="fa-solid fa-arrow-right-from-bracket me-1"></i>{{ $attendance->clock_out->format('H:i') }}
                                     </span>
                                 @else
-                                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 py-1 px-2" style="font-size: 0.82rem;">
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1 fw-medium" style="font-size: 0.8rem;">
                                         <i class="fa-regular fa-clock me-1"></i>{{ __('Belum Pulang') }}
                                     </span>
                                 @endif
                             </td>
-                            <td>
+                            <td class="text-center">
                                 @php
                                     $stBadge = match($attendance->status) {
                                         'present' => ['bg' => 'success', 'text' => __('Hadir')],
@@ -337,28 +337,31 @@
                                         default   => ['bg' => 'secondary','text' => ucfirst($attendance->status)],
                                     };
                                 @endphp
-                                <span class="badge bg-{{ $stBadge['bg'] }} bg-opacity-10 text-{{ $stBadge['bg'] }} border border-{{ $stBadge['bg'] }} border-opacity-25 px-2 py-1">
+                                <span class="badge bg-{{ $stBadge['bg'] }}-subtle text-{{ $stBadge['bg'] }}-emphasis border border-{{ $stBadge['bg'] }}-subtle px-2.5 py-1 rounded-pill small fw-medium">
                                     {{ $stBadge['text'] }}
                                 </span>
                             </td>
-                            <td>
-                                <div class="d-flex align-items-center gap-1">
+                            <td class="text-center">
+                                <div class="d-inline-flex align-items-center gap-1.5">
                                     {{-- Maps Link --}}
                                     @if($attendance->lat_clock_in && $attendance->lng_clock_in)
-                                        <a href="https://maps.google.com/?q={{ $attendance->lat_clock_in }},{{ $attendance->lng_clock_in }}" target="_blank" class="btn btn-outline-primary btn-sm py-0 px-2" style="font-size: 0.72rem;" title="{{ __('Lihat Lokasi GPS') }}">
+                                        <a href="https://maps.google.com/?q={{ $attendance->lat_clock_in }},{{ $attendance->lng_clock_in }}" target="_blank" class="btn btn-outline-primary btn-sm p-1 px-2" style="font-size: 0.72rem;" title="{{ __('Lihat Lokasi GPS') }}">
                                             <i class="fa-solid fa-location-dot"></i>
                                         </a>
                                     @endif
                                     {{-- Photo Preview --}}
                                     @if($attendance->photo_clock_in)
                                         <a href="{{ Storage::url($attendance->photo_clock_in) }}" target="_blank" title="{{ __('Foto Masuk') }}">
-                                            <img src="{{ Storage::url($attendance->photo_clock_in) }}" class="rounded border shadow-xs object-fit-cover" style="width: 32px; height: 32px;" alt="In" loading="lazy">
+                                            <img src="{{ Storage::url($attendance->photo_clock_in) }}" class="rounded border shadow-xs object-fit-cover" style="width: 30px; height: 30px;" alt="In" loading="lazy">
                                         </a>
                                     @endif
                                     @if($attendance->photo_clock_out)
                                         <a href="{{ Storage::url($attendance->photo_clock_out) }}" target="_blank" title="{{ __('Foto Pulang') }}">
-                                            <img src="{{ Storage::url($attendance->photo_clock_out) }}" class="rounded border shadow-xs object-fit-cover" style="width: 32px; height: 32px;" alt="Out" loading="lazy">
+                                            <img src="{{ Storage::url($attendance->photo_clock_out) }}" class="rounded border shadow-xs object-fit-cover" style="width: 30px; height: 30px;" alt="Out" loading="lazy">
                                         </a>
+                                    @endif
+                                    @if(!$attendance->lat_clock_in && !$attendance->photo_clock_in && !$attendance->photo_clock_out)
+                                        <span class="text-body-secondary small">-</span>
                                     @endif
                                 </div>
                             </td>
@@ -386,13 +389,13 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ $isAdmin ? 8 : 6 }}" class="text-center py-5">
+                            <td colspan="{{ $isAdmin ? 9 : 7 }}" class="text-center py-5">
                                 <div class="py-4">
-                                    <span class="avatar-title rounded-circle bg-secondary bg-opacity-10 text-secondary p-3 d-inline-flex align-items-center justify-content-center mb-2" style="width: 54px; height: 54px;">
+                                    <div class="rounded-circle bg-body-tertiary text-body-secondary p-3 d-inline-flex align-items-center justify-content-center mb-2" style="width: 52px; height: 52px;">
                                         <i class="fa-regular fa-folder-open fs-3"></i>
-                                    </span>
-                                    <h6 class="fw-semibold text-body mb-1">{{ __('Tidak ada data absensi') }}</h6>
-                                    <p class="text-muted small mb-0">{{ __('Belum ada riwayat absensi yang cocok dengan kriteria filter.') }}</p>
+                                    </div>
+                                    <h6 class="fw-semibold text-body-emphasis mb-1">{{ __('Tidak ada data absensi') }}</h6>
+                                    <p class="text-body-secondary small mb-0">{{ __('Belum ada riwayat absensi yang cocok dengan kriteria filter.') }}</p>
                                 </div>
                             </td>
                         </tr>
@@ -402,12 +405,12 @@
         </div>
 
         @if($attendances->hasPages())
-            <div class="card-footer bg-transparent py-3 border-top">
-                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                    <span class="x-small text-muted">
-                        {{ __('Menampilkan :from - :to dari :total data', ['from' => $attendances->firstItem() ?? 0, 'to' => $attendances->lastItem() ?? 0, 'total' => $attendances->total()]) }}
-                    </span>
-                    {{ $attendances->appends(request()->query())->links() }}
+            <div class="p-3 bg-body-tertiary border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <span class="small text-body-secondary">
+                    {{ __('Menampilkan :from - :to dari :total data', ['from' => $attendances->firstItem() ?? 0, 'to' => $attendances->lastItem() ?? 0, 'total' => $attendances->total()]) }}
+                </span>
+                <div>
+                    {{ $attendances->appends(request()->query())->links('pagination::bootstrap-5') }}
                 </div>
             </div>
         @endif
@@ -419,7 +422,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
             <div class="modal-header border-bottom">
-                <h5 class="modal-title fw-bold text-body">
+                <h5 class="modal-title fw-bold text-body-emphasis">
                     <i class="fa-solid fa-plus-circle text-primary me-2"></i>{{ __('Tambah Absensi / Cuti Manual') }}
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -458,7 +461,7 @@
                         <textarea name="notes" class="form-control form-control-sm" rows="3" placeholder="Alasan cuti/izin/alfa..."></textarea>
                     </div>
                 </div>
-                <div class="modal-footer bg-light border-top py-2">
+                <div class="modal-footer bg-body-tertiary border-top py-2">
                     <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">{{ __('Tutup') }}</button>
                     <button type="submit" class="btn btn-primary btn-sm px-3" id="btnSubmitManual">
                         <i class="fa-solid fa-floppy-disk me-1"></i>{{ __('Simpan Data') }}
@@ -474,7 +477,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
             <div class="modal-header border-bottom">
-                <h5 class="modal-title fw-bold text-body">
+                <h5 class="modal-title fw-bold text-body-emphasis">
                     <i class="fa-solid fa-money-bill-transfer text-success me-2"></i>{{ __('Input Bonus / Kasbon Karyawan') }}
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -524,7 +527,7 @@
                         <span class="x-small text-muted mt-1 d-block">{{ __('Keterangan terisi otomatis berdasarkan kategori yang dipilih.') }}</span>
                     </div>
                 </div>
-                <div class="modal-footer bg-light border-top py-2">
+                <div class="modal-footer bg-body-tertiary border-top py-2">
                     <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">{{ __('Tutup') }}</button>
                     <button type="submit" class="btn btn-success btn-sm px-3" id="btnSubmitAdjustment">
                         <i class="fa-solid fa-floppy-disk me-1"></i>{{ __('Simpan') }}
