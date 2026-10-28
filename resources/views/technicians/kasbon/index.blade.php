@@ -17,8 +17,8 @@
         $totalKasbonPending += $r['total_kasbon_biasa'];
         $totalPinjamanAktif += $r['total_pinjaman_aktif'];
         $totalCicilanDibayar += $r['total_cicilan'];
-        $totalOutstanding += $r['sisa_pinjaman'];
-        if ($r['total_kasbon_biasa'] > 0 || $r['total_pinjaman_aktif'] > 0) {
+        $totalOutstanding += ($r['total_outstanding'] ?? ($r['total_kasbon_biasa'] + $r['sisa_pinjaman']));
+        if (($r['total_kasbon_biasa'] ?? 0) > 0 || ($r['sisa_pinjaman'] ?? 0) > 0) {
             $karyawanMemilikiKasbon++;
         }
     }
@@ -38,17 +38,22 @@
 
 <div class="container-fluid px-3 px-md-4 py-3">
     {{-- Page Header --}}
-    <div class="card border-0 shadow-sm rounded-3 mb-4 bg-white">
+    <div class="card border rounded-3 shadow-sm mb-4 bg-body">
         <div class="card-body p-4">
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
                 <div>
                     <div class="d-flex align-items-center gap-2 mb-1">
-                        <span class="badge bg-warning bg-opacity-10 text-warning px-2.5 py-1.5 rounded-pill fs-7 fw-bold">
+                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2.5 py-1 rounded-pill fs-7 fw-bold">
                             <i class="fa-solid fa-hand-holding-dollar me-1"></i> SDM & Keuangan
                         </span>
+                        @if(request('start_date') && request('end_date'))
+                            <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-2.5 py-1 rounded-pill fs-7 fw-medium">
+                                <i class="fas fa-calendar-check me-1"></i> Periode: {{ \Carbon\Carbon::parse(request('start_date'))->translatedFormat('d M Y') }} - {{ \Carbon\Carbon::parse(request('end_date'))->translatedFormat('d M Y') }}
+                            </span>
+                        @endif
                     </div>
-                    <h3 class="fw-bold text-dark mb-1">{{ __('Manajemen Kasbon & Pinjaman Karyawan') }}</h3>
-                    <p class="mb-0 text-muted small">
+                    <h3 class="fw-bold text-body-emphasis mb-1">{{ __('Manajemen Kasbon & Pinjaman Karyawan') }}</h3>
+                    <p class="mb-0 text-body-secondary small">
                         {{ __('Kelola pencatatan kasbon sekali potong, pinjaman angsuran berkala, dan bonus insentif karyawan.') }}
                     </p>
                 </div>
@@ -75,72 +80,72 @@
     {{-- 4 Kartu Metrik Utama --}}
     <div class="row g-3 mb-4">
         <div class="col-xl-3 col-sm-6">
-            <div class="card border-0 shadow-sm rounded-3 h-100 border-start border-4 border-danger">
+            <div class="card border rounded-3 shadow-sm h-100 border-start border-4 border-danger bg-body">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center justify-content-between mb-2">
-                        <span class="text-uppercase text-muted fw-bold small">{{ __('Total Sisa Hutang (Outstanding)') }}</span>
-                        <div class="bg-danger bg-opacity-10 text-danger rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                        <span class="text-uppercase text-body-secondary fw-bold small">{{ __('Total Sisa Kewajiban') }}</span>
+                        <div class="bg-danger-subtle text-danger-emphasis rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
                             <i class="fa-solid fa-coins fs-6"></i>
                         </div>
                     </div>
                     <h3 class="fw-bold mb-1 text-danger">Rp {{ number_format($totalOutstanding, 0, ',', '.') }}</h3>
-                    <small class="text-muted d-block">{{ $karyawanMemilikiKasbon }} {{ __('karyawan memiliki kewajiban') }}</small>
+                    <small class="text-body-secondary d-block">{{ $karyawanMemilikiKasbon }} {{ __('karyawan memiliki kewajiban aktif') }}</small>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-sm-6">
-            <div class="card border-0 shadow-sm rounded-3 h-100 border-start border-4 border-warning">
+            <div class="card border rounded-3 shadow-sm h-100 border-start border-4 border-warning bg-body">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center justify-content-between mb-2">
-                        <span class="text-uppercase text-muted fw-bold small">{{ __('Kasbon Biasa (Pending)') }}</span>
-                        <div class="bg-warning bg-opacity-10 text-warning rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                        <span class="text-uppercase text-body-secondary fw-bold small">{{ __('Kasbon Biasa (Pending)') }}</span>
+                        <div class="bg-warning-subtle text-warning-emphasis rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
                             <i class="fa-solid fa-money-bill-wave fs-6"></i>
                         </div>
                     </div>
                     <h3 class="fw-bold mb-1 text-warning">Rp {{ number_format($totalKasbonPending, 0, ',', '.') }}</h3>
-                    <small class="text-muted d-block">{{ $kasbonAdjustments->total() }} {{ __('transaksi siap potong gaji') }}</small>
+                    <small class="text-body-secondary d-block">{{ $kasbonAdjustments->total() }} {{ __('transaksi siap potong gaji') }}</small>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-sm-6">
-            <div class="card border-0 shadow-sm rounded-3 h-100 border-start border-4 border-primary">
+            <div class="card border rounded-3 shadow-sm h-100 border-start border-4 border-primary bg-body">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center justify-content-between mb-2">
-                        <span class="text-uppercase text-muted fw-bold small">{{ __('Pinjaman Angsuran Aktif') }}</span>
-                        <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                        <span class="text-uppercase text-body-secondary fw-bold small">{{ __('Pinjaman Angsuran Aktif') }}</span>
+                        <div class="bg-primary-subtle text-primary-emphasis rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
                             <i class="fa-solid fa-credit-card fs-6"></i>
                         </div>
                     </div>
                     <h3 class="fw-bold mb-1 text-primary">Rp {{ number_format($totalPinjamanAktif, 0, ',', '.') }}</h3>
-                    <small class="text-muted d-block">{{ $loans->where('status', 'active')->count() }} {{ __('pinjaman cicilan berjalan') }}</small>
+                    <small class="text-body-secondary d-block">{{ $loans->where('status', 'active')->count() }} {{ __('pinjaman cicilan berjalan') }}</small>
                 </div>
             </div>
         </div>
         <div class="col-xl-3 col-sm-6">
-            <div class="card border-0 shadow-sm rounded-3 h-100 border-start border-4 border-success">
+            <div class="card border rounded-3 shadow-sm h-100 border-start border-4 border-success bg-body">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center justify-content-between mb-2">
-                        <span class="text-uppercase text-muted fw-bold small">{{ __('Bonus Pending') }}</span>
-                        <div class="bg-success bg-opacity-10 text-success rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                        <span class="text-uppercase text-body-secondary fw-bold small">{{ __('Bonus Pending') }}</span>
+                        <div class="bg-success-subtle text-success-emphasis rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
                             <i class="fa-solid fa-gift fs-6"></i>
                         </div>
                     </div>
                     <h3 class="fw-bold mb-1 text-success">Rp {{ number_format($totalBonusPending, 0, ',', '.') }}</h3>
-                    <small class="text-muted d-block">{{ $bonusAdjustments->total() }} {{ __('penambahan insentif gaji') }}</small>
+                    <small class="text-body-secondary d-block">{{ $bonusAdjustments->total() }} {{ __('penambahan insentif gaji') }}</small>
                 </div>
             </div>
         </div>
     </div>
 
     {{-- Filter Card --}}
-    <div class="card shadow-sm border-0 rounded-3 mb-4">
+    <div class="card border rounded-3 shadow-sm mb-4 bg-body">
         <div class="card-body p-3 p-md-4">
             <form action="{{ route('technicians.kasbon.index') }}" method="GET" id="filterForm">
                 <input type="hidden" name="tab" id="filterTabInput" value="{{ request('tab', 'recap') }}">
                 <div class="row g-3 align-items-end">
                     <div class="col-lg-3 col-md-6">
-                        <label class="form-label small text-muted mb-1">{{ __('Filter Karyawan') }}</label>
-                        <select name="user_id" class="form-select" id="filterTechnician">
+                        <label class="form-label small text-body-secondary mb-1 fw-medium">{{ __('Filter Karyawan') }}</label>
+                        <select name="user_id" class="form-select bg-body border" id="filterTechnician">
                             <option value="">{{ __('Semua Karyawan') }}</option>
                             @foreach($users as $user)
                                 <option value="{{ $user->id }}" {{ request('user_id') == $user->id ? 'selected' : '' }}>
@@ -150,26 +155,26 @@
                         </select>
                     </div>
                     <div class="col-lg-3 col-md-6">
-                        <label class="form-label small text-muted mb-1">{{ __('Status') }}</label>
-                        <select name="status" class="form-select">
+                        <label class="form-label small text-body-secondary mb-1 fw-medium">{{ __('Status Kasbon') }}</label>
+                        <select name="status" class="form-select bg-body border">
                             <option value="">{{ __('Semua Status') }}</option>
                             <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>{{ __('Belum Diproses (Pending)') }}</option>
                             <option value="processed" {{ request('status') === 'processed' ? 'selected' : '' }}>{{ __('Sudah Diproses (Lunas/Dipotong)') }}</option>
                         </select>
                     </div>
                     <div class="col-lg-2 col-md-4 col-sm-6">
-                        <label class="form-label small text-muted mb-1">{{ __('Tanggal Mulai') }}</label>
-                        <input type="date" name="start_date" value="{{ request('start_date') }}" class="form-control">
+                        <label class="form-label small text-body-secondary mb-1 fw-medium">{{ __('Tanggal Mulai') }}</label>
+                        <input type="date" name="start_date" value="{{ request('start_date') }}" class="form-control bg-body border">
                     </div>
                     <div class="col-lg-2 col-md-4 col-sm-6">
-                        <label class="form-label small text-muted mb-1">{{ __('Tanggal Selesai') }}</label>
-                        <input type="date" name="end_date" value="{{ request('end_date') }}" class="form-control">
+                        <label class="form-label small text-body-secondary mb-1 fw-medium">{{ __('Tanggal Selesai') }}</label>
+                        <input type="date" name="end_date" value="{{ request('end_date') }}" class="form-control bg-body border">
                     </div>
                     <div class="col-lg-2 col-md-4 d-flex gap-2">
                         <button type="submit" class="btn btn-primary w-100">
                             <i class="fas fa-filter me-1"></i>{{ __('Filter') }}
                         </button>
-                        <a href="{{ route('technicians.kasbon.index') }}" class="btn btn-outline-secondary" title="{{ __('Reset Filter') }}">
+                        <a href="{{ route('technicians.kasbon.index', ['tab' => request('tab', 'recap')]) }}" class="btn btn-outline-secondary" title="{{ __('Reset Filter') }}">
                             <i class="fas fa-rotate-left"></i>
                         </a>
                     </div>
@@ -179,15 +184,15 @@
     </div>
 
     {{-- Navigasi Tab Modern --}}
-    <div class="card border-0 shadow-sm rounded-3 mb-4">
-        <div class="card-header bg-white border-bottom p-2 px-md-3">
+    <div class="card border rounded-3 shadow-sm mb-4 bg-body">
+        <div class="card-header bg-body-tertiary border-bottom p-2 px-md-3">
             <ul class="nav nav-pills card-header-pills gap-1" id="kasbonTabs" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link px-3 py-2 fw-semibold {{ request('tab', 'recap') === 'recap' ? 'active' : '' }}" 
                             id="tab-recap-btn" data-bs-toggle="pill" data-bs-target="#tab-recap" type="button" role="tab">
                         <i class="fa-solid fa-users me-1.5"></i>
                         {{ __('1. Rekap per Karyawan') }}
-                        <span class="badge bg-secondary bg-opacity-25 text-dark rounded-pill ms-1">{{ $recap->count() }}</span>
+                        <span class="badge bg-secondary-subtle text-secondary-emphasis rounded-pill ms-1">{{ $recap->count() }}</span>
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
@@ -195,7 +200,7 @@
                             id="tab-biasa-btn" data-bs-toggle="pill" data-bs-target="#tab-biasa" type="button" role="tab">
                         <i class="fa-solid fa-money-bill-wave me-1.5"></i>
                         {{ __('2. Kasbon Sekali Potong') }}
-                        <span class="badge bg-warning bg-opacity-25 text-dark rounded-pill ms-1">{{ $kasbonAdjustments->total() }}</span>
+                        <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill ms-1">{{ $kasbonAdjustments->total() }}</span>
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
@@ -203,7 +208,7 @@
                             id="tab-loans-btn" data-bs-toggle="pill" data-bs-target="#tab-loans" type="button" role="tab">
                         <i class="fa-solid fa-file-invoice-dollar me-1.5"></i>
                         {{ __('3. Kasbon Angsuran (Pinjaman)') }}
-                        <span class="badge bg-primary bg-opacity-25 text-dark rounded-pill ms-1">{{ $loans->count() }}</span>
+                        <span class="badge bg-primary-subtle text-primary-emphasis rounded-pill ms-1">{{ $loans->count() }}</span>
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
@@ -211,7 +216,7 @@
                             id="tab-bonus-btn" data-bs-toggle="pill" data-bs-target="#tab-bonus" type="button" role="tab">
                         <i class="fa-solid fa-gift me-1.5"></i>
                         {{ __('4. Bonus & Insentif') }}
-                        <span class="badge bg-success bg-opacity-25 text-dark rounded-pill ms-1">{{ $bonusAdjustments->total() }}</span>
+                        <span class="badge bg-success-subtle text-success-emphasis rounded-pill ms-1">{{ $bonusAdjustments->total() }}</span>
                     </button>
                 </li>
             </ul>
@@ -224,15 +229,21 @@
                 <div class="tab-pane fade {{ request('tab', 'recap') === 'recap' ? 'show active' : '' }}" id="tab-recap" role="tabpanel">
                     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
                         <div>
-                            <h5 class="fw-bold mb-0 text-dark">{{ __('Ringkasan Saldo per Karyawan') }}</h5>
-                            <small class="text-muted">{{ __('Rincian kasbon biasa dan sisa angsuran per masing-masing staf.') }}</small>
+                            <h5 class="fw-bold mb-0 text-body-emphasis">{{ __('Ringkasan Saldo per Karyawan') }}</h5>
+                            <small class="text-body-secondary">
+                                @if(request('start_date') && request('end_date'))
+                                    {{ __('Menampilkan kasbon periode ') }} <strong>{{ \Carbon\Carbon::parse(request('start_date'))->translatedFormat('d M Y') }}</strong> s/d <strong>{{ \Carbon\Carbon::parse(request('end_date'))->translatedFormat('d M Y') }}</strong>
+                                @else
+                                    {{ __('Rincian kasbon biasa aktif (pending) dan sisa pokok angsuran per masing-masing staf.') }}
+                                @endif
+                            </small>
                         </div>
                         <div style="min-width: 250px;">
                             <div class="input-group input-group-sm">
-                                <span class="input-group-text bg-white border-end-0">
-                                    <i class="fas fa-search text-muted"></i>
+                                <span class="input-group-text bg-body-tertiary border-end-0">
+                                    <i class="fas fa-search text-body-secondary"></i>
                                 </span>
-                                <input type="text" class="form-control border-start-0" id="searchTechnician" placeholder="{{ __('Ketik nama karyawan...') }}">
+                                <input type="text" class="form-control bg-body border-start-0" id="searchTechnician" placeholder="{{ __('Ketik nama karyawan...') }}">
                             </div>
                         </div>
                     </div>
@@ -246,6 +257,7 @@
                                     :total-pinjaman-aktif="$item['total_pinjaman_aktif']"
                                     :total-cicilan="$item['total_cicilan']"
                                     :sisa-pinjaman="$item['sisa_pinjaman']"
+                                    :total-outstanding="$item['total_outstanding']"
                                 />
                             </div>
                         @empty
@@ -263,8 +275,8 @@
                 <div class="tab-pane fade {{ request('tab') === 'biasa' ? 'show active' : '' }}" id="tab-biasa" role="tabpanel">
                     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
                         <div>
-                            <h5 class="fw-bold mb-0 text-dark">{{ __('Daftar Kasbon Biasa (Sekali Potong)') }}</h5>
-                            <small class="text-muted">{{ __('Kasbon harian yang otomatis dipotong penuh saat penggajian/slip gaji berikutnya.') }}</small>
+                            <h5 class="fw-bold mb-0 text-body-emphasis">{{ __('Daftar Kasbon Biasa (Sekali Potong)') }}</h5>
+                            <small class="text-body-secondary">{{ __('Kasbon harian yang otomatis dipotong penuh saat penggajian/slip gaji berikutnya.') }}</small>
                         </div>
                         @if(Auth::user()->hasAnyRole(['super-admin', 'manager', 'finance']))
                             <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#addKasbonModal">
@@ -273,9 +285,9 @@
                         @endif
                     </div>
 
-                    <div class="table-responsive border rounded-3">
+                    <div class="table-responsive border rounded-3 bg-body">
                         <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
+                            <thead class="bg-body-tertiary text-body-secondary small border-bottom">
                                 <tr>
                                     <th class="fw-semibold text-center" style="width: 50px;">{{ __('No') }}</th>
                                     <th class="fw-semibold">{{ __('Nama Karyawan') }}</th>
@@ -289,20 +301,20 @@
                             <tbody class="table-group-divider">
                                 @forelse($kasbonAdjustments as $index => $adjustment)
                                     <tr>
-                                        <td class="text-center text-muted small">{{ $kasbonAdjustments->firstItem() + $index }}</td>
+                                        <td class="text-center text-body-secondary small">{{ $kasbonAdjustments->firstItem() + $index }}</td>
                                         <td>
                                             <div class="d-flex align-items-center">
-                                                <div class="avatar-sm rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-2.5" style="width: 32px; height: 32px; font-weight: 600;">
+                                                <div class="avatar-sm rounded-circle bg-primary-subtle text-primary-emphasis d-flex align-items-center justify-content-center me-2.5" style="width: 32px; height: 32px; font-weight: 600;">
                                                     {{ strtoupper(substr($adjustment->user->name ?? 'U', 0, 1)) }}
                                                 </div>
                                                 <div>
-                                                    <div class="fw-semibold text-dark">{{ $adjustment->user->name ?? '-' }}</div>
-                                                    <small class="text-muted">{{ $adjustment->user->role->name ?? 'Staf' }}</small>
+                                                    <div class="fw-semibold text-body-emphasis">{{ $adjustment->user->name ?? '-' }}</div>
+                                                    <small class="text-body-secondary">{{ $adjustment->user->role->name ?? 'Staf' }}</small>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td class="small text-muted">
-                                            <i class="far fa-calendar-alt me-1 text-muted"></i>
+                                        <td class="small text-body-secondary">
+                                            <i class="far fa-calendar-alt me-1 text-body-secondary"></i>
                                             {{ $adjustment->date ? $adjustment->date->translatedFormat('d M Y') : '-' }}
                                         </td>
                                         <td>
@@ -311,7 +323,7 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <span class="text-secondary small">{{ $adjustment->description ?: '-' }}</span>
+                                            <span class="text-body-secondary small">{{ $adjustment->description ?: '-' }}</span>
                                         </td>
                                         <td class="text-center">
                                             <x-kasbon.status-badge :status="$adjustment->status" />
@@ -332,7 +344,7 @@
                                                         </form>
                                                     </div>
                                                 @else
-                                                    <span class="badge bg-secondary-subtle text-secondary small">
+                                                    <span class="badge bg-secondary-subtle text-secondary-emphasis small">
                                                         <i class="fas fa-check-double me-1"></i>{{ __('Telah Dipotong') }}
                                                     </span>
                                                 @endif
@@ -355,7 +367,7 @@
 
                     @if($kasbonAdjustments->hasPages())
                         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3 pt-2">
-                            <small class="text-muted">
+                            <small class="text-body-secondary">
                                 {{ __('Menampilkan') }} {{ $kasbonAdjustments->firstItem() }} - {{ $kasbonAdjustments->lastItem() }} {{ __('dari') }} {{ $kasbonAdjustments->total() }} {{ __('data') }}
                             </small>
                             <div>
@@ -369,8 +381,8 @@
                 <div class="tab-pane fade {{ request('tab') === 'loans' ? 'show active' : '' }}" id="tab-loans" role="tabpanel">
                     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
                         <div>
-                            <h5 class="fw-bold mb-0 text-dark">{{ __('Pinjaman Angsuran Berkala') }}</h5>
-                            <small class="text-muted">{{ __('Pinjaman jumlah besar dengan skema cicilan bulanan yang dapat dilunasi bertahap.') }}</small>
+                            <h5 class="fw-bold mb-0 text-body-emphasis">{{ __('Pinjaman Angsuran Berkala') }}</h5>
+                            <small class="text-body-secondary">{{ __('Pinjaman jumlah besar dengan skema cicilan bulanan yang dapat dilunasi bertahap.') }}</small>
                         </div>
                         @if(Auth::user()->hasAnyRole(['super-admin', 'manager', 'finance']))
                             <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addKasbonLoanModal">
@@ -385,16 +397,16 @@
                             $remaining = $loan->remaining;
                             $percentage = $loan->principal_amount > 0 ? min(100, ($totalPaid / $loan->principal_amount) * 100) : 0;
                         @endphp
-                        <div class="card border rounded-3 mb-3 shadow-none bg-light bg-opacity-25">
-                            <div class="card-header bg-white border-bottom py-3">
+                        <div class="card border rounded-3 mb-3 shadow-none bg-body">
+                            <div class="card-header bg-body-tertiary border-bottom py-3">
                                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
                                     <div class="d-flex align-items-center gap-2.5">
-                                        <div class="p-2.5 rounded-circle bg-primary bg-opacity-10 text-primary">
+                                        <div class="p-2.5 rounded-circle bg-primary-subtle text-primary-emphasis">
                                             <i class="fas fa-user-tie fs-5"></i>
                                         </div>
                                         <div>
-                                            <h6 class="mb-0 fw-bold text-dark">{{ $loan->user->name ?? '-' }}</h6>
-                                            <small class="text-muted">
+                                            <h6 class="mb-0 fw-bold text-body-emphasis">{{ $loan->user->name ?? '-' }}</h6>
+                                            <small class="text-body-secondary">
                                                 <i class="far fa-calendar-alt me-1"></i>{{ __('Mulai:') }} {{ $loan->start_date ? $loan->start_date->translatedFormat('d M Y') : '-' }}
                                                 @if($loan->description)
                                                     &bull; <span class="fst-italic">{{ $loan->description }}</span>
@@ -426,36 +438,36 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="card-body p-3 p-md-4 bg-white">
+                            <div class="card-body p-3 p-md-4 bg-body">
                                 <div class="row g-3 mb-3">
                                     <div class="col-md-3 col-6">
-                                        <div class="border rounded-3 p-2.5 bg-light bg-opacity-50">
-                                            <small class="text-muted d-block">{{ __('Total Pokok Pinjaman') }}</small>
-                                            <h6 class="fw-bold mb-0 text-dark">
+                                        <div class="border rounded-3 p-2.5 bg-body-tertiary">
+                                            <small class="text-body-secondary d-block">{{ __('Total Pokok Pinjaman') }}</small>
+                                            <h6 class="fw-bold mb-0 text-body-emphasis">
                                                 Rp {{ number_format($loan->principal_amount, 0, ',', '.') }}
                                             </h6>
                                         </div>
                                     </div>
                                     <div class="col-md-3 col-6">
-                                        <div class="border rounded-3 p-2.5 bg-light bg-opacity-50">
-                                            <small class="text-muted d-block">{{ __('Total Terbayar') }}</small>
+                                        <div class="border rounded-3 p-2.5 bg-body-tertiary">
+                                            <small class="text-body-secondary d-block">{{ __('Total Terbayar') }}</small>
                                             <h6 class="fw-bold mb-0 text-success">
                                                 Rp {{ number_format($totalPaid, 0, ',', '.') }}
                                             </h6>
                                         </div>
                                     </div>
                                     <div class="col-md-3 col-6">
-                                        <div class="border rounded-3 p-2.5 bg-light bg-opacity-50">
-                                            <small class="text-muted d-block">{{ __('Sisa Kewajiban (Sisa Pokok)') }}</small>
+                                        <div class="border rounded-3 p-2.5 bg-body-tertiary">
+                                            <small class="text-body-secondary d-block">{{ __('Sisa Pokok Pinjaman') }}</small>
                                             <h6 class="fw-bold mb-0 text-danger">
                                                 Rp {{ number_format($remaining, 0, ',', '.') }}
                                             </h6>
                                         </div>
                                     </div>
                                     <div class="col-md-3 col-6">
-                                        <div class="border rounded-3 p-2.5 bg-light bg-opacity-50">
-                                            <small class="text-muted d-block">{{ __('Tenor & Target Bulanan') }}</small>
-                                            <h6 class="fw-bold mb-0 text-secondary">
+                                        <div class="border rounded-3 p-2.5 bg-body-tertiary">
+                                            <small class="text-body-secondary d-block">{{ __('Tenor & Target Bulanan') }}</small>
+                                            <h6 class="fw-bold mb-0 text-body-secondary">
                                                 {{ $loan->tenor_months ? $loan->tenor_months . ' bln' : '-' }} &bull; {{ $loan->monthly_installment ? 'Rp ' . number_format($loan->monthly_installment, 0, ',', '.') : '-' }}
                                             </h6>
                                         </div>
@@ -464,7 +476,7 @@
 
                                 {{-- Progress Pelunasan --}}
                                 <div class="mb-3">
-                                    <div class="d-flex justify-content-between small text-muted mb-1">
+                                    <div class="d-flex justify-content-between small text-body-secondary mb-1">
                                         <span>{{ __('Progress Pelunasan') }}</span>
                                         <span class="fw-bold text-success">{{ number_format($percentage, 1) }}%</span>
                                     </div>
@@ -480,9 +492,9 @@
                                             <i class="fas fa-list-check me-1"></i>{{ __('Lihat Riwayat Cicilan') }} ({{ $loan->installments->count() }}x pembayaran) <i class="fas fa-chevron-down ms-1 small"></i>
                                         </button>
                                         <div class="collapse mt-2" id="collapseInstallment-{{ $loan->id }}">
-                                            <div class="table-responsive border rounded-3 bg-white">
+                                            <div class="table-responsive border rounded-3 bg-body">
                                                 <table class="table table-sm table-hover align-middle mb-0">
-                                                    <thead class="table-light small">
+                                                    <thead class="bg-body-tertiary text-body-secondary small border-bottom">
                                                         <tr>
                                                             <th>{{ __('Tanggal Bayar') }}</th>
                                                             <th>{{ __('Nominal Cicilan') }}</th>
@@ -494,14 +506,14 @@
                                                     <tbody class="small">
                                                         @foreach($loan->installments as $installment)
                                                             <tr>
-                                                                <td class="text-muted">{{ $installment->date ? $installment->date->translatedFormat('d M Y') : '-' }}</td>
+                                                                <td class="text-body-secondary">{{ $installment->date ? $installment->date->translatedFormat('d M Y') : '-' }}</td>
                                                                 <td class="fw-bold text-success">Rp {{ number_format($installment->amount, 0, ',', '.') }}</td>
-                                                                <td>{{ $installment->description ?: '-' }}</td>
+                                                                <td class="text-body-secondary">{{ $installment->description ?: '-' }}</td>
                                                                 <td>
                                                                     @if($installment->salary_adjustment_id)
-                                                                        <span class="badge bg-info-subtle text-info">{{ __('Potong Slip Gaji') }}</span>
+                                                                        <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">{{ __('Potong Slip Gaji') }}</span>
                                                                     @else
-                                                                        <span class="badge bg-secondary-subtle text-secondary">{{ __('Setor Tunai / Manual') }}</span>
+                                                                        <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle">{{ __('Setor Tunai / Manual') }}</span>
                                                                     @endif
                                                                 </td>
                                                                 <td class="text-end pe-2">
@@ -537,8 +549,8 @@
                 <div class="tab-pane fade {{ request('tab') === 'bonus' ? 'show active' : '' }}" id="tab-bonus" role="tabpanel">
                     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
                         <div>
-                            <h5 class="fw-bold mb-0 text-dark">{{ __('Daftar Bonus & Insentif Karyawan') }}</h5>
-                            <small class="text-muted">{{ __('Tambahan pendapatan yang akan diakumulasikan ke slip gaji karyawan.') }}</small>
+                            <h5 class="fw-bold mb-0 text-body-emphasis">{{ __('Daftar Bonus & Insentif Karyawan') }}</h5>
+                            <small class="text-body-secondary">{{ __('Tambahan pendapatan yang akan diakumulasikan ke slip gaji karyawan.') }}</small>
                         </div>
                         @if(Auth::user()->hasAnyRole(['super-admin', 'manager', 'finance']))
                             <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addBonusModal">
@@ -547,9 +559,9 @@
                         @endif
                     </div>
 
-                    <div class="table-responsive border rounded-3">
+                    <div class="table-responsive border rounded-3 bg-body">
                         <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
+                            <thead class="bg-body-tertiary text-body-secondary small border-bottom">
                                 <tr>
                                     <th class="fw-semibold text-center" style="width: 50px;">{{ __('No') }}</th>
                                     <th class="fw-semibold">{{ __('Nama Karyawan') }}</th>
@@ -563,20 +575,20 @@
                             <tbody class="table-group-divider">
                                 @forelse($bonusAdjustments as $index => $bonus)
                                     <tr>
-                                        <td class="text-center text-muted small">{{ $bonusAdjustments->firstItem() + $index }}</td>
+                                        <td class="text-center text-body-secondary small">{{ $bonusAdjustments->firstItem() + $index }}</td>
                                         <td>
                                             <div class="d-flex align-items-center">
-                                                <div class="avatar-sm rounded-circle bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center me-2.5" style="width: 32px; height: 32px; font-weight: 600;">
+                                                <div class="avatar-sm rounded-circle bg-success-subtle text-success-emphasis d-flex align-items-center justify-content-center me-2.5" style="width: 32px; height: 32px; font-weight: 600;">
                                                     {{ strtoupper(substr($bonus->user->name ?? 'U', 0, 1)) }}
                                                 </div>
                                                 <div>
-                                                    <div class="fw-semibold text-dark">{{ $bonus->user->name ?? '-' }}</div>
-                                                    <small class="text-muted">{{ $bonus->user->role->name ?? 'Staf' }}</small>
+                                                    <div class="fw-semibold text-body-emphasis">{{ $bonus->user->name ?? '-' }}</div>
+                                                    <small class="text-body-secondary">{{ $bonus->user->role->name ?? 'Staf' }}</small>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td class="small text-muted">
-                                            <i class="far fa-calendar-alt me-1 text-muted"></i>
+                                        <td class="small text-body-secondary">
+                                            <i class="far fa-calendar-alt me-1 text-body-secondary"></i>
                                             {{ $bonus->date ? $bonus->date->translatedFormat('d M Y') : '-' }}
                                         </td>
                                         <td>
@@ -585,7 +597,7 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <span class="text-secondary small">{{ $bonus->description ?: '-' }}</span>
+                                            <span class="text-body-secondary small">{{ $bonus->description ?: '-' }}</span>
                                         </td>
                                         <td class="text-center">
                                             <x-kasbon.status-badge :status="$bonus->status" />
@@ -606,7 +618,7 @@
                                                         </form>
                                                     </div>
                                                 @else
-                                                    <span class="badge bg-secondary-subtle text-secondary small">
+                                                    <span class="badge bg-secondary-subtle text-secondary-emphasis small">
                                                         <i class="fas fa-check-double me-1"></i>{{ __('Telah Dibayarkan') }}
                                                     </span>
                                                 @endif
@@ -629,7 +641,7 @@
 
                     @if($bonusAdjustments->hasPages())
                         <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3 pt-2">
-                            <small class="text-muted">
+                            <small class="text-body-secondary">
                                 {{ __('Menampilkan') }} {{ $bonusAdjustments->firstItem() }} - {{ $bonusAdjustments->lastItem() }} {{ __('dari') }} {{ $bonusAdjustments->total() }} {{ __('data') }}
                             </small>
                             <div>
@@ -649,17 +661,17 @@
 {{-- Modal Tambah Kasbon Biasa --}}
 <div class="modal fade" id="addKasbonModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-warning bg-opacity-10 border-bottom-0">
+        <div class="modal-content border bg-body shadow">
+            <div class="modal-header bg-body-tertiary border-bottom">
                 <div class="d-flex align-items-center">
-                    <div class="p-2 rounded-circle bg-warning text-dark me-2">
+                    <div class="p-2 rounded-circle bg-warning-subtle text-warning-emphasis me-2">
                         <i class="fas fa-hand-holding-dollar"></i>
                     </div>
-                    <h5 class="modal-title mb-0 fw-bold">{{ __('Tambah Kasbon Biasa') }}</h5>
+                    <h5 class="modal-title mb-0 fw-bold text-body-emphasis">{{ __('Tambah Kasbon Biasa') }}</h5>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-4">
+            <div class="modal-body p-4 bg-body">
                 @if ($errors->any() && old('type') === 'kasbon')
                     <div class="alert alert-danger mb-3">
                         <ul class="mb-0 small">
@@ -673,8 +685,8 @@
                     @csrf
                     <input type="hidden" name="type" value="kasbon">
                     <div class="mb-3">
-                        <label for="add_user_id" class="form-label fw-semibold small">{{ __('Pilih Karyawan') }} <span class="text-danger">*</span></label>
-                        <select name="user_id" id="add_user_id" class="form-select @error('user_id') is-invalid @enderror" required>
+                        <label for="add_user_id" class="form-label fw-semibold small text-body-emphasis">{{ __('Pilih Karyawan') }} <span class="text-danger">*</span></label>
+                        <select name="user_id" id="add_user_id" class="form-select bg-body border @error('user_id') is-invalid @enderror" required>
                             <option value="">{{ __('-- Pilih Karyawan --') }}</option>
                             @foreach($users as $user)
                                 <option value="{{ $user->id }}" {{ old('user_id') == $user->id ? 'selected' : '' }}>{{ $user->name }} ({{ $user->role->name ?? 'Staf' }})</option>
@@ -685,29 +697,29 @@
                         @enderror
                     </div>
                     <div class="mb-3">
-                        <label for="add_amount" class="form-label fw-semibold small">{{ __('Nominal Kasbon (Rp)') }} <span class="text-danger">*</span></label>
-                        <input type="number" name="amount" id="add_amount" class="form-control @error('amount') is-invalid @enderror" placeholder="Contoh: 100000" required min="1" value="{{ old('amount') }}">
+                        <label for="add_amount" class="form-label fw-semibold small text-body-emphasis">{{ __('Nominal Kasbon (Rp)') }} <span class="text-danger">*</span></label>
+                        <input type="number" name="amount" id="add_amount" class="form-control bg-body border @error('amount') is-invalid @enderror" placeholder="Contoh: 100000" required min="1" value="{{ old('amount') }}">
                         @error('amount')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
                     <div class="mb-3">
-                        <label for="add_date" class="form-label fw-semibold small">{{ __('Tanggal Kasbon') }} <span class="text-danger">*</span></label>
-                        <input type="date" name="date" id="add_date" class="form-control @error('date') is-invalid @enderror" required value="{{ old('date', date('Y-m-d')) }}">
+                        <label for="add_date" class="form-label fw-semibold small text-body-emphasis">{{ __('Tanggal Kasbon') }} <span class="text-danger">*</span></label>
+                        <input type="date" name="date" id="add_date" class="form-control bg-body border @error('date') is-invalid @enderror" required value="{{ old('date', date('Y-m-d')) }}">
                         @error('date')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
                     <div class="mb-3">
-                        <label for="add_description" class="form-label fw-semibold small">{{ __('Keterangan / Keperluan') }}</label>
-                        <textarea name="description" id="add_description" class="form-control @error('description') is-invalid @enderror" rows="3" placeholder="{{ __('Tuliskan alasan kasbon...') }}">{{ old('description') }}</textarea>
+                        <label for="add_description" class="form-label fw-semibold small text-body-emphasis">{{ __('Keterangan / Keperluan') }}</label>
+                        <textarea name="description" id="add_description" class="form-control bg-body border @error('description') is-invalid @enderror" rows="3" placeholder="{{ __('Tuliskan alasan kasbon...') }}">{{ old('description') }}</textarea>
                         @error('description')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
                 </form>
             </div>
-            <div class="modal-footer bg-light border-top-0">
+            <div class="modal-footer bg-body-tertiary border-top">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('Batal') }}</button>
                 <button type="submit" class="btn btn-warning fw-semibold px-4" form="addKasbonForm">{{ __('Simpan Kasbon') }}</button>
             </div>
@@ -718,17 +730,17 @@
 {{-- Modal Tambah Kasbon Angsuran --}}
 <div class="modal fade" id="addKasbonLoanModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-primary bg-opacity-10 border-bottom-0">
+        <div class="modal-content border bg-body shadow">
+            <div class="modal-header bg-body-tertiary border-bottom">
                 <div class="d-flex align-items-center">
-                    <div class="p-2 rounded-circle bg-primary text-white me-2">
+                    <div class="p-2 rounded-circle bg-primary-subtle text-primary-emphasis me-2">
                         <i class="fas fa-file-invoice-dollar"></i>
                     </div>
-                    <h5 class="modal-title mb-0 fw-bold">{{ __('Buat Pinjaman Angsuran') }}</h5>
+                    <h5 class="modal-title mb-0 fw-bold text-body-emphasis">{{ __('Buat Pinjaman Angsuran') }}</h5>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-4">
+            <div class="modal-body p-4 bg-body">
                 @if ($errors->any() && !old('type'))
                     <div class="alert alert-danger mb-3">
                         <ul class="mb-0 small">
@@ -741,8 +753,8 @@
                 <form action="{{ route('kasbon-loans.store') }}" method="POST" id="addKasbonLoanForm" data-no-loading="true">
                     @csrf
                     <div class="mb-3">
-                        <label for="add_loan_user_id" class="form-label fw-semibold small">{{ __('Pilih Karyawan') }} <span class="text-danger">*</span></label>
-                        <select name="user_id" id="add_loan_user_id" class="form-select @error('user_id') is-invalid @enderror" required>
+                        <label for="add_loan_user_id" class="form-label fw-semibold small text-body-emphasis">{{ __('Pilih Karyawan') }} <span class="text-danger">*</span></label>
+                        <select name="user_id" id="add_loan_user_id" class="form-select bg-body border @error('user_id') is-invalid @enderror" required>
                             <option value="">{{ __('-- Pilih Karyawan --') }}</option>
                             @foreach($users as $user)
                                 <option value="{{ $user->id }}" {{ old('user_id') == $user->id ? 'selected' : '' }}>{{ $user->name }} ({{ $user->role->name ?? 'Staf' }})</option>
@@ -753,45 +765,45 @@
                         @enderror
                     </div>
                     <div class="mb-3">
-                        <label for="add_principal_amount" class="form-label fw-semibold small">{{ __('Total Pokok Pinjaman (Rp)') }} <span class="text-danger">*</span></label>
-                        <input type="number" name="principal_amount" id="add_principal_amount" class="form-control @error('principal_amount') is-invalid @enderror" placeholder="Contoh: 1500000" required min="1" value="{{ old('principal_amount') }}">
+                        <label for="add_principal_amount" class="form-label fw-semibold small text-body-emphasis">{{ __('Total Pokok Pinjaman (Rp)') }} <span class="text-danger">*</span></label>
+                        <input type="number" name="principal_amount" id="add_principal_amount" class="form-control bg-body border @error('principal_amount') is-invalid @enderror" placeholder="Contoh: 1500000" required min="1" value="{{ old('principal_amount') }}">
                         @error('principal_amount')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
                     <div class="mb-3">
-                        <label for="add_start_date" class="form-label fw-semibold small">{{ __('Tanggal Mulai Pinjaman') }} <span class="text-danger">*</span></label>
-                        <input type="date" name="start_date" id="add_start_date" class="form-control @error('start_date') is-invalid @enderror" required value="{{ old('start_date', date('Y-m-d')) }}">
+                        <label for="add_start_date" class="form-label fw-semibold small text-body-emphasis">{{ __('Tanggal Mulai Pinjaman') }} <span class="text-danger">*</span></label>
+                        <input type="date" name="start_date" id="add_start_date" class="form-control bg-body border @error('start_date') is-invalid @enderror" required value="{{ old('start_date', date('Y-m-d')) }}">
                         @error('start_date')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
                     <div class="row g-2 mb-3">
                         <div class="col-6">
-                            <label for="add_tenor_months" class="form-label fw-semibold small">{{ __('Tenor (Bulan)') }}</label>
-                            <input type="number" name="tenor_months" id="add_tenor_months" class="form-control @error('tenor_months') is-invalid @enderror" placeholder="Contoh: 5" min="1" value="{{ old('tenor_months') }}">
+                            <label for="add_tenor_months" class="form-label fw-semibold small text-body-emphasis">{{ __('Tenor (Bulan)') }}</label>
+                            <input type="number" name="tenor_months" id="add_tenor_months" class="form-control bg-body border @error('tenor_months') is-invalid @enderror" placeholder="Contoh: 5" min="1" value="{{ old('tenor_months') }}">
                             @error('tenor_months')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="col-6">
-                            <label for="add_monthly_installment" class="form-label fw-semibold small">{{ __('Cicilan/Bulan (Rp)') }}</label>
-                            <input type="number" name="monthly_installment" id="add_monthly_installment" class="form-control @error('monthly_installment') is-invalid @enderror" placeholder="Contoh: 300000" min="0" value="{{ old('monthly_installment') }}">
+                            <label for="add_monthly_installment" class="form-label fw-semibold small text-body-emphasis">{{ __('Cicilan/Bulan (Rp)') }}</label>
+                            <input type="number" name="monthly_installment" id="add_monthly_installment" class="form-control bg-body border @error('monthly_installment') is-invalid @enderror" placeholder="Contoh: 300000" min="0" value="{{ old('monthly_installment') }}">
                             @error('monthly_installment')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label for="add_loan_description" class="form-label fw-semibold small">{{ __('Keterangan Pinjaman') }}</label>
-                        <textarea name="description" id="add_loan_description" class="form-control @error('description') is-invalid @enderror" rows="2" placeholder="{{ __('Tuliskan alasan/peruntukan pinjaman...') }}">{{ old('description') }}</textarea>
+                        <label for="add_loan_description" class="form-label fw-semibold small text-body-emphasis">{{ __('Keterangan Pinjaman') }}</label>
+                        <textarea name="description" id="add_loan_description" class="form-control bg-body border @error('description') is-invalid @enderror" rows="2" placeholder="{{ __('Tuliskan alasan/peruntukan pinjaman...') }}">{{ old('description') }}</textarea>
                         @error('description')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
                 </form>
             </div>
-            <div class="modal-footer bg-light border-top-0">
+            <div class="modal-footer bg-body-tertiary border-top">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('Batal') }}</button>
                 <button type="submit" class="btn btn-primary fw-semibold px-4" form="addKasbonLoanForm">{{ __('Simpan Pinjaman') }}</button>
             </div>
@@ -802,17 +814,17 @@
 {{-- Modal Tambah Bonus --}}
 <div class="modal fade" id="addBonusModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-success bg-opacity-10 border-bottom-0">
+        <div class="modal-content border bg-body shadow">
+            <div class="modal-header bg-body-tertiary border-bottom">
                 <div class="d-flex align-items-center">
-                    <div class="p-2 rounded-circle bg-success text-white me-2">
+                    <div class="p-2 rounded-circle bg-success-subtle text-success-emphasis me-2">
                         <i class="fas fa-gift"></i>
                     </div>
-                    <h5 class="modal-title mb-0 fw-bold">{{ __('Tambah Bonus Karyawan') }}</h5>
+                    <h5 class="modal-title mb-0 fw-bold text-body-emphasis">{{ __('Tambah Bonus Karyawan') }}</h5>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-4">
+            <div class="modal-body p-4 bg-body">
                 @if ($errors->any() && old('type') === 'bonus')
                     <div class="alert alert-danger mb-3">
                         <ul class="mb-0 small">
@@ -826,8 +838,8 @@
                     @csrf
                     <input type="hidden" name="type" value="bonus">
                     <div class="mb-3">
-                        <label for="add_bonus_user_id" class="form-label fw-semibold small">{{ __('Pilih Karyawan') }} <span class="text-danger">*</span></label>
-                        <select name="user_id" id="add_bonus_user_id" class="form-select @error('user_id') is-invalid @enderror" required>
+                        <label for="add_bonus_user_id" class="form-label fw-semibold small text-body-emphasis">{{ __('Pilih Karyawan') }} <span class="text-danger">*</span></label>
+                        <select name="user_id" id="add_bonus_user_id" class="form-select bg-body border @error('user_id') is-invalid @enderror" required>
                             <option value="">{{ __('-- Pilih Karyawan --') }}</option>
                             @foreach($users as $user)
                                 <option value="{{ $user->id }}" {{ old('user_id') == $user->id ? 'selected' : '' }}>{{ $user->name }} ({{ $user->role->name ?? 'Staf' }})</option>
@@ -838,29 +850,29 @@
                         @enderror
                     </div>
                     <div class="mb-3">
-                        <label for="add_bonus_amount" class="form-label fw-semibold small">{{ __('Nominal Bonus (Rp)') }} <span class="text-danger">*</span></label>
-                        <input type="number" name="amount" id="add_bonus_amount" class="form-control @error('amount') is-invalid @enderror" placeholder="Contoh: 250000" required min="1" value="{{ old('amount') }}">
+                        <label for="add_bonus_amount" class="form-label fw-semibold small text-body-emphasis">{{ __('Nominal Bonus (Rp)') }} <span class="text-danger">*</span></label>
+                        <input type="number" name="amount" id="add_bonus_amount" class="form-control bg-body border @error('amount') is-invalid @enderror" placeholder="Contoh: 250000" required min="1" value="{{ old('amount') }}">
                         @error('amount')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
                     <div class="mb-3">
-                        <label for="add_bonus_date" class="form-label fw-semibold small">{{ __('Tanggal Bonus') }} <span class="text-danger">*</span></label>
-                        <input type="date" name="date" id="add_bonus_date" class="form-control @error('date') is-invalid @enderror" required value="{{ old('date', date('Y-m-d')) }}">
+                        <label for="add_bonus_date" class="form-label fw-semibold small text-body-emphasis">{{ __('Tanggal Bonus') }} <span class="text-danger">*</span></label>
+                        <input type="date" name="date" id="add_bonus_date" class="form-control bg-body border @error('date') is-invalid @enderror" required value="{{ old('date', date('Y-m-d')) }}">
                         @error('date')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
                     <div class="mb-3">
-                        <label for="add_bonus_description" class="form-label fw-semibold small">{{ __('Keterangan / Alasan Bonus') }}</label>
-                        <textarea name="description" id="add_bonus_description" class="form-control @error('description') is-invalid @enderror" rows="3" placeholder="{{ __('Tuliskan alasan pemberian bonus...') }}">{{ old('description') }}</textarea>
+                        <label for="add_bonus_description" class="form-label fw-semibold small text-body-emphasis">{{ __('Keterangan / Alasan Bonus') }}</label>
+                        <textarea name="description" id="add_bonus_description" class="form-control bg-body border @error('description') is-invalid @enderror" rows="3" placeholder="{{ __('Tuliskan alasan pemberian bonus...') }}">{{ old('description') }}</textarea>
                         @error('description')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
                 </form>
             </div>
-            <div class="modal-footer bg-light border-top-0">
+            <div class="modal-footer bg-body-tertiary border-top">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('Batal') }}</button>
                 <button type="submit" class="btn btn-success fw-semibold px-4" form="addBonusForm">{{ __('Simpan Bonus') }}</button>
             </div>
@@ -872,34 +884,34 @@
 @foreach($kasbonAdjustments as $adjustment)
     <div class="modal fade" id="editKasbonModal-{{ $adjustment->id }}" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-light">
-                    <h5 class="modal-title fw-bold">{{ __('Edit Kasbon') }} - {{ $adjustment->user->name ?? '' }}</h5>
+            <div class="modal-content border bg-body shadow">
+                <div class="modal-header bg-body-tertiary border-bottom">
+                    <h5 class="modal-title fw-bold text-body-emphasis">{{ __('Edit Kasbon') }} - {{ $adjustment->user->name ?? '' }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-4">
+                <div class="modal-body p-4 bg-body">
                     <form action="{{ route('salary-adjustments.update', $adjustment) }}" method="POST" id="editKasbonForm-{{ $adjustment->id }}" data-no-loading="true">
                         @csrf
                         @method('PUT')
                         <div class="mb-3">
-                            <label class="form-label fw-semibold small">{{ __('Karyawan') }}</label>
-                            <input type="text" class="form-control" value="{{ $adjustment->user->name ?? '' }}" disabled>
+                            <label class="form-label fw-semibold small text-body-emphasis">{{ __('Karyawan') }}</label>
+                            <input type="text" class="form-control bg-body border" value="{{ $adjustment->user->name ?? '' }}" disabled>
                         </div>
                         <div class="mb-3">
-                            <label for="edit_amount_{{ $adjustment->id }}" class="form-label fw-semibold small">{{ __('Jumlah (Rp)') }}</label>
-                            <input type="number" name="amount" id="edit_amount_{{ $adjustment->id }}" class="form-control" required min="1" value="{{ $adjustment->amount }}">
+                            <label for="edit_amount_{{ $adjustment->id }}" class="form-label fw-semibold small text-body-emphasis">{{ __('Jumlah (Rp)') }}</label>
+                            <input type="number" name="amount" id="edit_amount_{{ $adjustment->id }}" class="form-control bg-body border" required min="1" value="{{ $adjustment->amount }}">
                         </div>
                         <div class="mb-3">
-                            <label for="edit_date_{{ $adjustment->id }}" class="form-label fw-semibold small">{{ __('Tanggal') }}</label>
-                            <input type="date" name="date" id="edit_date_{{ $adjustment->id }}" class="form-control" required value="{{ $adjustment->date ? $adjustment->date->format('Y-m-d') : date('Y-m-d') }}">
+                            <label for="edit_date_{{ $adjustment->id }}" class="form-label fw-semibold small text-body-emphasis">{{ __('Tanggal') }}</label>
+                            <input type="date" name="date" id="edit_date_{{ $adjustment->id }}" class="form-control bg-body border" required value="{{ $adjustment->date ? $adjustment->date->format('Y-m-d') : date('Y-m-d') }}">
                         </div>
                         <div class="mb-3">
-                            <label for="edit_description_{{ $adjustment->id }}" class="form-label fw-semibold small">{{ __('Keterangan') }}</label>
-                            <textarea name="description" id="edit_description_{{ $adjustment->id }}" class="form-control" rows="3">{{ $adjustment->description }}</textarea>
+                            <label for="edit_description_{{ $adjustment->id }}" class="form-label fw-semibold small text-body-emphasis">{{ __('Keterangan') }}</label>
+                            <textarea name="description" id="edit_description_{{ $adjustment->id }}" class="form-control bg-body border" rows="3">{{ $adjustment->description }}</textarea>
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer bg-light">
+                <div class="modal-footer bg-body-tertiary border-top">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('Batal') }}</button>
                     <button type="submit" class="btn btn-primary" form="editKasbonForm-{{ $adjustment->id }}">{{ __('Perbarui') }}</button>
                 </div>
@@ -912,34 +924,34 @@
 @foreach($bonusAdjustments as $bonus)
     <div class="modal fade" id="editBonusModal-{{ $bonus->id }}" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-light">
-                    <h5 class="modal-title fw-bold">{{ __('Edit Bonus') }} - {{ $bonus->user->name ?? '' }}</h5>
+            <div class="modal-content border bg-body shadow">
+                <div class="modal-header bg-body-tertiary border-bottom">
+                    <h5 class="modal-title fw-bold text-body-emphasis">{{ __('Edit Bonus') }} - {{ $bonus->user->name ?? '' }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-4">
+                <div class="modal-body p-4 bg-body">
                     <form action="{{ route('salary-adjustments.update', $bonus) }}" method="POST" id="editBonusForm-{{ $bonus->id }}" data-no-loading="true">
                         @csrf
                         @method('PUT')
                         <div class="mb-3">
-                            <label class="form-label fw-semibold small">{{ __('Karyawan') }}</label>
-                            <input type="text" class="form-control" value="{{ $bonus->user->name ?? '' }}" disabled>
+                            <label class="form-label fw-semibold small text-body-emphasis">{{ __('Karyawan') }}</label>
+                            <input type="text" class="form-control bg-body border" value="{{ $bonus->user->name ?? '' }}" disabled>
                         </div>
                         <div class="mb-3">
-                            <label for="edit_bonus_amount_{{ $bonus->id }}" class="form-label fw-semibold small">{{ __('Jumlah (Rp)') }}</label>
-                            <input type="number" name="amount" id="edit_bonus_amount_{{ $bonus->id }}" class="form-control" required min="1" value="{{ $bonus->amount }}">
+                            <label for="edit_bonus_amount_{{ $bonus->id }}" class="form-label fw-semibold small text-body-emphasis">{{ __('Jumlah (Rp)') }}</label>
+                            <input type="number" name="amount" id="edit_bonus_amount_{{ $bonus->id }}" class="form-control bg-body border" required min="1" value="{{ $bonus->amount }}">
                         </div>
                         <div class="mb-3">
-                            <label for="edit_bonus_date_{{ $bonus->id }}" class="form-label fw-semibold small">{{ __('Tanggal') }}</label>
-                            <input type="date" name="date" id="edit_bonus_date_{{ $bonus->id }}" class="form-control" required value="{{ $bonus->date ? $bonus->date->format('Y-m-d') : date('Y-m-d') }}">
+                            <label for="edit_bonus_date_{{ $bonus->id }}" class="form-label fw-semibold small text-body-emphasis">{{ __('Tanggal') }}</label>
+                            <input type="date" name="date" id="edit_bonus_date_{{ $bonus->id }}" class="form-control bg-body border" required value="{{ $bonus->date ? $bonus->date->format('Y-m-d') : date('Y-m-d') }}">
                         </div>
                         <div class="mb-3">
-                            <label for="edit_bonus_description_{{ $bonus->id }}" class="form-label fw-semibold small">{{ __('Keterangan') }}</label>
-                            <textarea name="description" id="edit_bonus_description_{{ $bonus->id }}" class="form-control" rows="3">{{ $bonus->description }}</textarea>
+                            <label for="edit_bonus_description_{{ $bonus->id }}" class="form-label fw-semibold small text-body-emphasis">{{ __('Keterangan') }}</label>
+                            <textarea name="description" id="edit_bonus_description_{{ $bonus->id }}" class="form-control bg-body border" rows="3">{{ $bonus->description }}</textarea>
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer bg-light">
+                <div class="modal-footer bg-body-tertiary border-top">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('Batal') }}</button>
                     <button type="submit" class="btn btn-success" form="editBonusForm-{{ $bonus->id }}">{{ __('Perbarui') }}</button>
                 </div>
@@ -953,44 +965,44 @@
     {{-- Edit Loan Modal --}}
     <div class="modal fade" id="editKasbonLoanModal-{{ $loan->id }}" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-light">
-                    <h5 class="modal-title fw-bold">{{ __('Edit Pinjaman Angsuran') }}</h5>
+            <div class="modal-content border bg-body shadow">
+                <div class="modal-header bg-body-tertiary border-bottom">
+                    <h5 class="modal-title fw-bold text-body-emphasis">{{ __('Edit Pinjaman Angsuran') }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-4">
+                <div class="modal-body p-4 bg-body">
                     <form action="{{ route('kasbon-loans.update', $loan) }}" method="POST" id="editKasbonLoanForm-{{ $loan->id }}" data-no-loading="true">
                         @csrf
                         @method('PUT')
                         <div class="mb-3">
-                            <label class="form-label fw-semibold small">{{ __('Karyawan') }}</label>
-                            <input type="text" class="form-control" value="{{ $loan->user->name ?? '' }}" disabled>
+                            <label class="form-label fw-semibold small text-body-emphasis">{{ __('Karyawan') }}</label>
+                            <input type="text" class="form-control bg-body border" value="{{ $loan->user->name ?? '' }}" disabled>
                         </div>
                         <div class="mb-3">
-                            <label for="edit_principal_amount_{{ $loan->id }}" class="form-label fw-semibold small">{{ __('Pokok Pinjaman (Rp)') }}</label>
-                            <input type="number" name="principal_amount" id="edit_principal_amount_{{ $loan->id }}" class="form-control" required min="1" value="{{ $loan->principal_amount }}">
+                            <label for="edit_principal_amount_{{ $loan->id }}" class="form-label fw-semibold small text-body-emphasis">{{ __('Pokok Pinjaman (Rp)') }}</label>
+                            <input type="number" name="principal_amount" id="edit_principal_amount_{{ $loan->id }}" class="form-control bg-body border" required min="1" value="{{ $loan->principal_amount }}">
                         </div>
                         <div class="mb-3">
-                            <label for="edit_start_date_{{ $loan->id }}" class="form-label fw-semibold small">{{ __('Tanggal Mulai') }}</label>
-                            <input type="date" name="start_date" id="edit_start_date_{{ $loan->id }}" class="form-control" required value="{{ $loan->start_date ? $loan->start_date->format('Y-m-d') : date('Y-m-d') }}">
+                            <label for="edit_start_date_{{ $loan->id }}" class="form-label fw-semibold small text-body-emphasis">{{ __('Tanggal Mulai') }}</label>
+                            <input type="date" name="start_date" id="edit_start_date_{{ $loan->id }}" class="form-control bg-body border" required value="{{ $loan->start_date ? $loan->start_date->format('Y-m-d') : date('Y-m-d') }}">
                         </div>
                         <div class="row g-2 mb-3">
                             <div class="col-6">
-                                <label for="edit_tenor_months_{{ $loan->id }}" class="form-label fw-semibold small">{{ __('Tenor (Bulan)') }}</label>
-                                <input type="number" name="tenor_months" id="edit_tenor_months_{{ $loan->id }}" class="form-control" min="1" value="{{ $loan->tenor_months }}">
+                                <label for="edit_tenor_months_{{ $loan->id }}" class="form-label fw-semibold small text-body-emphasis">{{ __('Tenor (Bulan)') }}</label>
+                                <input type="number" name="tenor_months" id="edit_tenor_months_{{ $loan->id }}" class="form-control bg-body border" min="1" value="{{ $loan->tenor_months }}">
                             </div>
                             <div class="col-6">
-                                <label for="edit_monthly_installment_{{ $loan->id }}" class="form-label fw-semibold small">{{ __('Cicilan/Bulan (Rp)') }}</label>
-                                <input type="number" name="monthly_installment" id="edit_monthly_installment_{{ $loan->id }}" class="form-control" min="0" value="{{ $loan->monthly_installment }}">
+                                <label for="edit_monthly_installment_{{ $loan->id }}" class="form-label fw-semibold small text-body-emphasis">{{ __('Cicilan/Bulan (Rp)') }}</label>
+                                <input type="number" name="monthly_installment" id="edit_monthly_installment_{{ $loan->id }}" class="form-control bg-body border" min="0" value="{{ $loan->monthly_installment }}">
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label for="edit_loan_description_{{ $loan->id }}" class="form-label fw-semibold small">{{ __('Keterangan') }}</label>
-                            <textarea name="description" id="edit_loan_description_{{ $loan->id }}" class="form-control" rows="2">{{ $loan->description }}</textarea>
+                            <label for="edit_loan_description_{{ $loan->id }}" class="form-label fw-semibold small text-body-emphasis">{{ __('Keterangan') }}</label>
+                            <textarea name="description" id="edit_loan_description_{{ $loan->id }}" class="form-control bg-body border" rows="2">{{ $loan->description }}</textarea>
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer bg-light">
+                <div class="modal-footer bg-body-tertiary border-top">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('Batal') }}</button>
                     <button type="submit" class="btn btn-primary" form="editKasbonLoanForm-{{ $loan->id }}">{{ __('Perbarui') }}</button>
                 </div>
@@ -1004,18 +1016,18 @@
     @endphp
     <div class="modal fade" id="addInstallmentModal-{{ $loan->id }}" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-success bg-opacity-10">
+            <div class="modal-content border bg-body shadow">
+                <div class="modal-header bg-success-subtle border-bottom">
                     <div class="d-flex align-items-center">
                         <div class="p-2 rounded-circle bg-success text-white me-2">
                             <i class="fas fa-receipt"></i>
                         </div>
-                        <h5 class="modal-title mb-0 fw-bold">{{ __('Catat Pembayaran Cicilan') }}</h5>
+                        <h5 class="modal-title mb-0 fw-bold text-success-emphasis">{{ __('Catat Pembayaran Cicilan') }}</h5>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-4">
-                    <div class="alert alert-info py-2 px-3 small mb-3">
+                <div class="modal-body p-4 bg-body">
+                    <div class="alert alert-info bg-info-subtle text-info-emphasis border-info-subtle py-2 px-3 small mb-3">
                         <div class="d-flex justify-content-between">
                             <span>{{ __('Karyawan:') }} <strong>{{ $loan->user->name ?? '-' }}</strong></span>
                             <span>{{ __('Sisa Hutang:') }} <strong class="text-danger">Rp {{ number_format($loanRem, 0, ',', '.') }}</strong></span>
@@ -1024,26 +1036,26 @@
                     <form action="{{ route('kasbon-loans.installments.store', $loan) }}" method="POST" id="addInstallmentForm-{{ $loan->id }}" data-no-loading="true">
                         @csrf
                         <div class="mb-3">
-                            <label for="installment_amount_{{ $loan->id }}" class="form-label fw-semibold small">{{ __('Nominal Cicilan (Rp)') }} <span class="text-danger">*</span></label>
-                            <input type="number" name="amount" id="installment_amount_{{ $loan->id }}" class="form-control" required min="1" max="{{ $loanRem }}" value="{{ min($loanRem, $loan->monthly_installment ?: $loanRem) }}">
+                            <label for="installment_amount_{{ $loan->id }}" class="form-label fw-semibold small text-body-emphasis">{{ __('Nominal Cicilan (Rp)') }} <span class="text-danger">*</span></label>
+                            <input type="number" name="amount" id="installment_amount_{{ $loan->id }}" class="form-control bg-body border" required min="1" max="{{ $loanRem }}" value="{{ min($loanRem, $loan->monthly_installment ?: $loanRem) }}">
                         </div>
                         <div class="mb-3">
-                            <label for="installment_date_{{ $loan->id }}" class="form-label fw-semibold small">{{ __('Tanggal Pembayaran') }} <span class="text-danger">*</span></label>
-                            <input type="date" name="date" id="installment_date_{{ $loan->id }}" class="form-control" required value="{{ date('Y-m-d') }}">
+                            <label for="installment_date_{{ $loan->id }}" class="form-label fw-semibold small text-body-emphasis">{{ __('Tanggal Pembayaran') }} <span class="text-danger">*</span></label>
+                            <input type="date" name="date" id="installment_date_{{ $loan->id }}" class="form-control bg-body border" required value="{{ date('Y-m-d') }}">
                         </div>
                         <div class="mb-3">
-                            <label for="installment_description_{{ $loan->id }}" class="form-label fw-semibold small">{{ __('Keterangan / Catatan') }}</label>
-                            <textarea name="description" id="installment_description_{{ $loan->id }}" class="form-control" rows="2" placeholder="Cicilan ke-..."></textarea>
+                            <label for="installment_description_{{ $loan->id }}" class="form-label fw-semibold small text-body-emphasis">{{ __('Keterangan / Catatan') }}</label>
+                            <textarea name="description" id="installment_description_{{ $loan->id }}" class="form-control bg-body border" rows="2" placeholder="Cicilan ke-..."></textarea>
                         </div>
                         <div class="form-check form-switch mb-2">
                             <input type="checkbox" name="potong_gaji" id="potong_gaji_{{ $loan->id }}" class="form-check-input" checked>
-                            <label for="potong_gaji_{{ $loan->id }}" class="form-check-label small fw-semibold">
+                            <label for="potong_gaji_{{ $loan->id }}" class="form-check-label small fw-semibold text-body-emphasis">
                                 {{ __('Otomatis catat sebagai pemotongan slip gaji') }}
                             </label>
                         </div>
                     </form>
                 </div>
-                <div class="modal-footer bg-light">
+                <div class="modal-footer bg-body-tertiary border-top">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('Batal') }}</button>
                     <button type="submit" class="btn btn-success px-4" form="addInstallmentForm-{{ $loan->id }}">{{ __('Simpan Pembayaran') }}</button>
                 </div>
@@ -1079,7 +1091,6 @@
                 if (filterTabInput) {
                     filterTabInput.value = targetId;
                 }
-                // Update URL without reloading page
                 const url = new URL(window.location);
                 url.searchParams.set('tab', targetId);
                 window.history.replaceState({}, '', url);

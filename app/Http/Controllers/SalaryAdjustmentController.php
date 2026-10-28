@@ -61,12 +61,28 @@ class SalaryAdjustmentController extends Controller
           ->orderBy('name')
           ->get();
 
-        // Recap per teknisi
-        $recap = $users->map(function ($user) {
-            $totalKasbonBiasa = SalaryAdjustment::where('user_id', $user->id)
-                ->where('type', 'kasbon')
-                ->where('status', 'pending')
-                ->sum('amount');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $statusFilter = $request->input('status');
+
+        // Recap per teknisi / karyawan
+        $recap = $users->map(function ($user) use ($startDate, $endDate, $statusFilter) {
+            $kasbonQuery = SalaryAdjustment::where('user_id', $user->id)
+                ->where('type', 'kasbon');
+            
+            if ($statusFilter) {
+                $kasbonQuery->where('status', $statusFilter);
+            } else {
+                // Default: kasbon yang masih pending (belum dipotong di slip gaji)
+                $kasbonQuery->where('status', 'pending');
+            }
+
+            // Jika ada filter tanggal, filter nominal rekap kasbon sesuai rentang tanggal tersebut
+            if ($startDate && $endDate) {
+                $kasbonQuery->whereBetween('date', [$startDate, $endDate]);
+            }
+
+            $totalKasbonBiasa = $kasbonQuery->sum('amount');
             
             $totalPinjamanAktif = KasbonLoan::where('user_id', $user->id)
                 ->where('status', 'active')
@@ -81,12 +97,16 @@ class SalaryAdjustmentController extends Controller
                 ->get()
                 ->sum(fn($loan) => $loan->remaining);
 
+            // Total kewajiban nyata karyawan = Kasbon biasa pending + sisa pokok pinjaman angsuran
+            $totalOutstanding = (float) $totalKasbonBiasa + (float) $sisaPinjaman;
+
             return [
                 'user' => $user,
                 'total_kasbon_biasa' => (float) $totalKasbonBiasa,
                 'total_pinjaman_aktif' => (float) $totalPinjamanAktif,
                 'total_cicilan' => (float) $totalCicilan,
                 'sisa_pinjaman' => (float) $sisaPinjaman,
+                'total_outstanding' => (float) $totalOutstanding,
             ];
         });
 
