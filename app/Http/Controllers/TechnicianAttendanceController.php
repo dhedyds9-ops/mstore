@@ -69,6 +69,36 @@ class TechnicianAttendanceController extends Controller implements HasMiddleware
         return $this->attendanceService->isUserOffOnDate($user, $dateStr);
     }
 
+    /**
+     * Query dasar untuk mengambil akun Teknisi Lapangan yang valid untuk modul presensi teknisi.
+     * Mengabaikan Leader/Koordinator, Kasir, Staff Finance, Operator Cuci, dan Manajemen.
+     */
+    protected function getTechniciansBaseQuery()
+    {
+        return User::query()
+            ->where('is_active', true)
+            ->whereHas('role', function ($q) {
+                $q->whereNotIn('name', [
+                    'customer', 'pelanggan', 'partner', 'mitra', 'reseller',
+                    'super-admin', 'manager', 'finance',
+                    'field-leader', 'leader', 'noc-operator', 'noc-legacy', 'noc',
+                    'wash-operator', 'wash-cashier', 'atk-cashier',
+                ]);
+            })
+            ->where(function ($query) {
+                $query->whereHas('role', function ($q) {
+                    $q->whereIn('name', ['field-technician', 'technician']);
+                })
+                ->orWhere('job_title', 'like', '%Teknisi%')
+                ->orWhereHas('employee', function ($q) {
+                    $q->where('position', 'like', '%Teknisi%')
+                      ->orWhere('department', 'like', '%Teknis%');
+                });
+            })
+            ->with(['role', 'employee'])
+            ->orderBy('name');
+    }
+
     public static function middleware(): array
     {
         return [
@@ -101,20 +131,18 @@ class TechnicianAttendanceController extends Controller implements HasMiddleware
             [$startDate, $endDate] = [$endDate, $startDate];
         }
 
-        $usersQuery = \App\Models\User::whereHas('role', function ($q) {
-            $q->whereNotIn('name', ['customer', 'pelanggan', 'partner', 'mitra', 'reseller', 'super-admin']);
-        })->where('is_active', true)
-            ->with(['role', 'employee'])
-            ->orderBy('name');
+        $usersQuery = $this->getTechniciansBaseQuery();
 
         if (!$this->attendanceService->canViewAllAttendanceData($user)) {
             $usersQuery->where('id', Auth::id());
         }
 
         if ($search) {
-            $usersQuery->where('name', 'LIKE', "%{$search}%")
-                ->orWhere('username', 'LIKE', "%{$search}%")
-                ->orWhere('email', 'LIKE', "%{$search}%");
+            $usersQuery->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                    ->orWhere('username', 'LIKE', "%{$search}%")
+                    ->orWhere('email', 'LIKE', "%{$search}%");
+            });
         }
 
         $users = $usersQuery->get();
@@ -184,16 +212,13 @@ class TechnicianAttendanceController extends Controller implements HasMiddleware
 
         $attendances = $query->latest('clock_in')->customPaginate()->withQueryString();
 
-        $techniciansQuery = \App\Models\User::whereHas('role', function ($q) {
-            $q->whereNotIn('name', ['customer', 'pelanggan', 'partner', 'mitra', 'reseller', 'super-admin']);
-        })->where('is_active', true)
-            ->with(['role', 'employee']);
+        $techniciansQuery = $this->getTechniciansBaseQuery();
 
         if (!$this->attendanceService->canViewAllAttendanceData($user)) {
             $techniciansQuery->where('id', Auth::id());
         }
 
-        $technicians = $techniciansQuery->orderBy('name')->get();
+        $technicians = $techniciansQuery->get();
         $status = (string) $request->query('status', '');
         $search = (string) $request->query('search', '');
         $user_id = (string) $request->query('user_id', '');
@@ -235,16 +260,13 @@ class TechnicianAttendanceController extends Controller implements HasMiddleware
             $month = (string) $request->query('month', '');
         }
 
-        $techniciansQuery = \App\Models\User::whereHas('role', function ($q) {
-            $q->whereNotIn('name', ['customer', 'pelanggan', 'partner', 'mitra', 'reseller', 'super-admin']);
-        })->where('is_active', true)
-            ->with(['role', 'employee']);
+        $techniciansQuery = $this->getTechniciansBaseQuery();
 
         if (!$this->attendanceService->canViewAllAttendanceData($user)) {
             $techniciansQuery->where('id', Auth::id());
         }
 
-        $technicians = $techniciansQuery->orderBy('name')->get();
+        $technicians = $techniciansQuery->get();
 
         $attendances = $this->getFilteredAttendanceQuery($request)->oldest('clock_in')->get();
         $allAdjustments = $this->getFilteredAdjustmentsQuery($request)->get()->groupBy('user_id');
@@ -289,11 +311,7 @@ class TechnicianAttendanceController extends Controller implements HasMiddleware
                 [$startDate, $endDate] = [$endDate, $startDate];
             }
 
-            $usersQuery = \App\Models\User::whereHas('role', function ($q) {
-                $q->whereNotIn('name', array_merge(Role::hiddenInUserManagement(), ['super-admin', 'manager']));
-            })->where('is_active', true)
-                ->with('role')
-                ->orderBy('name');
+            $usersQuery = $this->getTechniciansBaseQuery();
                 
             if (!$this->attendanceService->canViewAllAttendanceData($user)) {
                 $usersQuery->where('id', Auth::id());
