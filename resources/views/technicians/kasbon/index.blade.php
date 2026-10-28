@@ -179,6 +179,42 @@
                         </a>
                     </div>
                 </div>
+
+                @php
+                    $activeFilters = [];
+                    if(request('user_id')) {
+                        $selectedUser = $users->where('id', request('user_id'))->first();
+                        $activeFilters['user'] = 'Karyawan: ' . ($selectedUser->name ?? '-');
+                    }
+                    if(request('status')) {
+                        $statusNames = [
+                            'pending' => 'Belum Diproses (Pending)',
+                            'processed' => 'Sudah Diproses (Lunas/Dipotong)',
+                        ];
+                        $activeFilters['status'] = 'Status: ' . ($statusNames[request('status')] ?? request('status'));
+                    }
+                    if(request('start_date') && request('end_date')) {
+                        $activeFilters['date'] = 'Periode: ' . \Carbon\Carbon::parse(request('start_date'))->translatedFormat('d M Y') . ' s/d ' . \Carbon\Carbon::parse(request('end_date'))->translatedFormat('d M Y');
+                    } elseif(request('start_date')) {
+                        $activeFilters['date'] = 'Mulai: ' . \Carbon\Carbon::parse(request('start_date'))->translatedFormat('d M Y');
+                    } elseif(request('end_date')) {
+                        $activeFilters['date'] = 'Sampai: ' . \Carbon\Carbon::parse(request('end_date'))->translatedFormat('d M Y');
+                    }
+                @endphp
+
+                @if(count($activeFilters) > 0)
+                    <div class="d-flex flex-wrap align-items-center gap-2 mt-3 pt-3 border-top">
+                        <small class="text-body-secondary fw-semibold me-1"><i class="fas fa-filter me-1 text-primary"></i>{{ __('Filter Aktif:') }}</small>
+                        @foreach($activeFilters as $key => $filterLabel)
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2.5 py-1.5 rounded-pill fs-7 fw-normal">
+                                {{ $filterLabel }}
+                            </span>
+                        @endforeach
+                        <a href="{{ route('technicians.kasbon.index', ['tab' => request('tab', 'recap')]) }}" class="badge bg-danger-subtle text-danger border border-danger-subtle text-decoration-none px-2.5 py-1.5 rounded-pill fs-7 fw-medium" title="{{ __('Hapus Semua Filter') }}">
+                            <i class="fas fa-rotate-left me-1"></i>{{ __('Reset Filter') }}
+                        </a>
+                    </div>
+                @endif
             </form>
         </div>
     </div>
@@ -1087,7 +1123,7 @@
         
         tabButtons.forEach(button => {
             button.addEventListener('shown.bs.tab', function(event) {
-                const targetId = event.target.getAttribute('data-bs-target').replace('#tab-', '');
+                const btn = event.target.closest('button'); const targetSelector = btn ? btn.getAttribute('data-bs-target') : ''; const targetId = (targetSelector || '').replace('#tab-', '');
                 if (filterTabInput) {
                     filterTabInput.value = targetId;
                 }

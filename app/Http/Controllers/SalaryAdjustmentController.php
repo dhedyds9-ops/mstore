@@ -23,6 +23,13 @@ class SalaryAdjustmentController extends Controller
         // Ambil data bonus
         $bonusQuery = SalaryAdjustment::with('user')->where('type', 'bonus');
 
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        if ($startDate && $endDate && strtotime($startDate) > strtotime($endDate)) {
+            [$startDate, $endDate] = [$endDate, $startDate];
+        }
+
         if ($request->filled('user_id')) {
             $kasbonQuery->where('user_id', $request->user_id);
             $bonusQuery->where('user_id', $request->user_id);
@@ -33,40 +40,66 @@ class SalaryAdjustmentController extends Controller
             $bonusQuery->where('status', $request->status);
         }
 
-        if ($request->filled('start_date') && $request->filled('end_date')) {
-            $kasbonQuery->whereBetween('date', [$request->start_date, $request->end_date]);
-            $bonusQuery->whereBetween('date', [$request->start_date, $request->end_date]);
+        if ($startDate && $endDate) {
+            $kasbonQuery->whereBetween('date', [$startDate, $endDate]);
+            $bonusQuery->whereBetween('date', [$startDate, $endDate]);
+        } elseif ($startDate) {
+            $kasbonQuery->where('date', '>=', $startDate);
+            $bonusQuery->where('date', '>=', $startDate);
+        } elseif ($endDate) {
+            $kasbonQuery->where('date', '<=', $endDate);
+            $bonusQuery->where('date', '<=', $endDate);
         }
 
-        $kasbonAdjustments = $kasbonQuery->latest('date')->paginate(15, ['*'], 'kasbon_page')->withQueryString();
-        $bonusAdjustments = $bonusQuery->latest('date')->paginate(15, ['*'], 'bonus_page')->withQueryString();
+        $kasbonAdjustments = $kasbonQuery->latest('date')->latest('id')->paginate(15, ['*'], 'kasbon_page')->withQueryString();
+        $bonusAdjustments = $bonusQuery->latest('date')->latest('id')->paginate(15, ['*'], 'bonus_page')->withQueryString();
 
         $loanQuery = KasbonLoan::query()
             ->with(['user', 'installments' => function ($q) {
                 $q->latest('date');
             }])
             ->withSum('installments', 'amount')
-            ->latest('start_date');
+            ->latest('start_date')
+            ->latest('id');
         
         if ($request->filled('user_id')) {
             $loanQuery->where('user_id', $request->user_id);
         }
 
+        if ($request->filled('status')) {
+            if ($request->status === 'pending') {
+                $loanQuery->where('status', 'active');
+            } elseif ($request->status === 'processed') {
+                $loanQuery->where('status', 'closed');
+            }
+        }
+
+        if ($startDate && $endDate) {
+            $loanQuery->whereBetween('start_date', [$startDate, $endDate]);
+        } elseif ($startDate) {
+            $loanQuery->where('start_date', '>=', $startDate);
+        } elseif ($endDate) {
+            $loanQuery->where('start_date', '<=', $endDate);
+        }
+
         $loans = $loanQuery->get();
 
-        $users = User::whereHas('role', function ($q) {
+        $allUsers = User::whereHas('role', function ($q) {
             $q->whereNotIn('name', ['customer', 'partner', 'super-admin', 'manager', 'field-leader']);
         })->where('is_active', true)
           ->with('role')
           ->orderBy('name')
           ->get();
 
-        $startDate = $request->input('start_date');
-        $endDate = $request->input('end_date');
+        $recapUsers = $allUsers;
+        if ($request->filled('user_id')) {
+            $recapUsers = $allUsers->where('id', (int) $request->user_id);
+        }
+
         $statusFilter = $request->input('status');
 
         // Recap per teknisi / karyawan
-        $recap = $users->map(function ($user) use ($startDate, $endDate, $request) {
+        $recap = $recapUsers->map(function ($user) use ($startDate, $endDate, $request) {
             $kasbonQuery = SalaryAdjustment::where('user_id', $user->id)
                 ->where('type', 'kasbon');
             
@@ -81,6 +114,10 @@ class SalaryAdjustmentController extends Controller
             // Jika ada filter tanggal, filter nominal rekap kasbon sesuai rentang tanggal tersebut
             if ($startDate && $endDate) {
                 $kasbonQuery->whereBetween('date', [$startDate, $endDate]);
+            } elseif ($startDate) {
+                $kasbonQuery->where('date', '>=', $startDate);
+            } elseif ($endDate) {
+                $kasbonQuery->where('date', '<=', $endDate);
             }
 
             $totalKasbonBiasa = $kasbonQuery->sum('amount');
@@ -110,6 +147,8 @@ class SalaryAdjustmentController extends Controller
                 'total_outstanding' => (float) $totalOutstanding,
             ];
         });
+
+        $users = $allUsers;
 
         return view('technicians.kasbon.index', compact('kasbonAdjustments', 'bonusAdjustments', 'loans', 'users', 'recap'));
     }
