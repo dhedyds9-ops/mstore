@@ -187,22 +187,6 @@ class DefaultRolePermissions
                 ],
             ],
 
-            'noc-operator' => [
-                'label' => 'NOC / Network Monitoring',
-                'permissions' => [
-                    'dashboard.view',
-                    'attendance.view',
-                    'attendance.create',
-                    'schedule.view',
-                    'leave.view',
-                    'leave.create',
-                    'leave.edit',
-                    'profile.view',
-                    'profile.update',
-                    'notification.view',
-                ],
-            ],
-
             'field-leader' => [
                 'label' => 'Leader Jaringan',
                 'permissions' => [
@@ -230,16 +214,6 @@ class DefaultRolePermissions
                     'leave.view',
                     'leave.create',
                     'leave.edit',
-                    'profile.view',
-                    'profile.update',
-                    'notification.view',
-                ],
-            ],
-
-            'partner' => [
-                'label' => 'Mitra / Reseller',
-                'permissions' => [
-                    'dashboard.view',
                     'profile.view',
                     'profile.update',
                     'notification.view',

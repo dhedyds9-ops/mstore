@@ -11,10 +11,8 @@ return [
         'atk-cashier'        => ['label' => 'Kasir POS ATK',                'is_system' => true, 'portal' => 'bu'],
         'wash-cashier'       => ['label' => 'Kasir POS Wash',               'is_system' => true, 'portal' => 'bu'],
         'wash-operator'      => ['label' => 'Operator Wash / Tukang Cuci',  'is_system' => true, 'portal' => 'bu'],
-        'noc-operator'       => ['label' => 'NOC / Network Monitoring',     'is_system' => true, 'portal' => 'isp'],
         'field-leader'       => ['label' => 'Leader Jaringan',              'is_system' => true, 'portal' => 'isp'],
         'field-technician'   => ['label' => 'Teknisi Lapangan',             'is_system' => true, 'portal' => 'isp'],
-        'partner'            => ['label' => 'Mitra / Reseller',             'is_system' => true, 'portal' => 'partner'],
         'customer'           => ['label' => 'Pelanggan',                    'is_system' => true, 'portal' => 'customer'],
     ],
 

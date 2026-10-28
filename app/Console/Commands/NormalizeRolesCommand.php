@@ -265,6 +265,19 @@ class NormalizeRolesCommand extends Command
             }
         }
 
+        // Hapus role purnabakti yang 0 pengguna
+        $retiredRoles = ['noc-operator', 'partner'];
+        foreach ($retiredRoles as $retired) {
+            $r = Role::where('name', $retired)->first();
+            if ($r && $r->users()->count() === 0) {
+                $this->line("  • Menghapus role nonaktif tidak terpakai: \"{$r->name}\" ({$r->label})");
+                if (! $dryRun) {
+                    $r->permissions()->detach();
+                    $r->delete();
+                }
+            }
+        }
+
         $systemRoleNames = Role::allSystemRoleNames();
         $customRoles = Role::whereNotIn('name', $systemRoleNames)
             ->withCount('users')
