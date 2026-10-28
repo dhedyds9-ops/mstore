@@ -60,6 +60,23 @@ class EmployeeController extends Controller implements HasMiddleware
                         ->orWhere('phone', 'like', '%'.$search.'%')
                         ->orWhere('department', 'like', '%'.$search.'%')
                         ->orWhere('position', 'like', '%'.$search.'%');
+
+                    $searchLower = strtolower(trim($search));
+                    if (str_contains($searchLower, 'bombom')) {
+                        $q->orWhere('full_name', 'like', '%fajar%');
+                    }
+                    if (str_contains($searchLower, 'fajar')) {
+                        $q->orWhere('full_name', 'like', '%bombom%');
+                    }
+                    if (str_contains($searchLower, 'rifki') || str_contains($searchLower, 'rifky') || str_contains($searchLower, 'ripky')) {
+                        $q->orWhere('full_name', 'like', '%ripky%')
+                          ->orWhere('full_name', 'like', '%rifki%')
+                          ->orWhere('full_name', 'like', '%rifky%');
+                    }
+                    if (str_contains($searchLower, 'gundul') || str_contains($searchLower, 'irfan') || str_contains($searchLower, 'irpan')) {
+                        $q->orWhere('full_name', 'like', '%irpan%')
+                          ->orWhere('full_name', 'like', '%gundul%');
+                    }
                 });
             })
             ->when($department !== '', function ($query) use ($department) {
@@ -358,6 +375,23 @@ class EmployeeController extends Controller implements HasMiddleware
                         ->orWhere('phone', 'like', '%'.$search.'%')
                         ->orWhere('department', 'like', '%'.$search.'%')
                         ->orWhere('position', 'like', '%'.$search.'%');
+
+                    $searchLower = strtolower(trim($search));
+                    if (str_contains($searchLower, 'bombom')) {
+                        $q->orWhere('full_name', 'like', '%fajar%');
+                    }
+                    if (str_contains($searchLower, 'fajar')) {
+                        $q->orWhere('full_name', 'like', '%bombom%');
+                    }
+                    if (str_contains($searchLower, 'rifki') || str_contains($searchLower, 'rifky') || str_contains($searchLower, 'ripky')) {
+                        $q->orWhere('full_name', 'like', '%ripky%')
+                          ->orWhere('full_name', 'like', '%rifki%')
+                          ->orWhere('full_name', 'like', '%rifky%');
+                    }
+                    if (str_contains($searchLower, 'gundul') || str_contains($searchLower, 'irfan') || str_contains($searchLower, 'irpan')) {
+                        $q->orWhere('full_name', 'like', '%irpan%')
+                          ->orWhere('full_name', 'like', '%gundul%');
+                    }
                 });
             })
             ->when($department !== '', function ($query) use ($department) {
@@ -882,6 +916,23 @@ class EmployeeController extends Controller implements HasMiddleware
                         ->orWhere('phone', 'like', '%'.$search.'%')
                         ->orWhere('department', 'like', '%'.$search.'%')
                         ->orWhere('position', 'like', '%'.$search.'%');
+
+                    $searchLower = strtolower(trim($search));
+                    if (str_contains($searchLower, 'bombom')) {
+                        $q->orWhere('full_name', 'like', '%fajar%');
+                    }
+                    if (str_contains($searchLower, 'fajar')) {
+                        $q->orWhere('full_name', 'like', '%bombom%');
+                    }
+                    if (str_contains($searchLower, 'rifki') || str_contains($searchLower, 'rifky') || str_contains($searchLower, 'ripky')) {
+                        $q->orWhere('full_name', 'like', '%ripky%')
+                          ->orWhere('full_name', 'like', '%rifki%')
+                          ->orWhere('full_name', 'like', '%rifky%');
+                    }
+                    if (str_contains($searchLower, 'gundul') || str_contains($searchLower, 'irfan') || str_contains($searchLower, 'irpan')) {
+                        $q->orWhere('full_name', 'like', '%irpan%')
+                          ->orWhere('full_name', 'like', '%gundul%');
+                    }
                 });
             })
             ->when($department !== '', function ($query) use ($department) {

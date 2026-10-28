@@ -56,6 +56,23 @@ class UserController extends Controller implements HasMiddleware
                 }
 
                 $q->orWhere('phone', 'like', "%{$search}%");
+
+                $searchLower = strtolower(trim($search));
+                if (str_contains($searchLower, 'bombom')) {
+                    $q->orWhere('name', 'like', '%fajar%');
+                }
+                if (str_contains($searchLower, 'fajar')) {
+                    $q->orWhere('name', 'like', '%bombom%');
+                }
+                if (str_contains($searchLower, 'rifki') || str_contains($searchLower, 'rifky') || str_contains($searchLower, 'ripky')) {
+                    $q->orWhere('name', 'like', '%ripky%')
+                      ->orWhere('name', 'like', '%rifki%')
+                      ->orWhere('name', 'like', '%rifky%');
+                }
+                if (str_contains($searchLower, 'gundul') || str_contains($searchLower, 'irfan') || str_contains($searchLower, 'irpan')) {
+                    $q->orWhere('name', 'like', '%irpan%')
+                      ->orWhere('name', 'like', '%gundul%');
+                }
             });
         }
 
@@ -141,6 +158,23 @@ class UserController extends Controller implements HasMiddleware
                 }
 
                 $q->orWhere('phone', 'like', "%{$search}%");
+
+                $searchLower = strtolower(trim($search));
+                if (str_contains($searchLower, 'bombom')) {
+                    $q->orWhere('name', 'like', '%fajar%');
+                }
+                if (str_contains($searchLower, 'fajar')) {
+                    $q->orWhere('name', 'like', '%bombom%');
+                }
+                if (str_contains($searchLower, 'rifki') || str_contains($searchLower, 'rifky') || str_contains($searchLower, 'ripky')) {
+                    $q->orWhere('name', 'like', '%ripky%')
+                      ->orWhere('name', 'like', '%rifki%')
+                      ->orWhere('name', 'like', '%rifky%');
+                }
+                if (str_contains($searchLower, 'gundul') || str_contains($searchLower, 'irfan') || str_contains($searchLower, 'irpan')) {
+                    $q->orWhere('name', 'like', '%irpan%')
+                      ->orWhere('name', 'like', '%gundul%');
+                }
             });
         }
 
