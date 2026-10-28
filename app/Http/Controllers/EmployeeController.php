@@ -46,7 +46,7 @@ class EmployeeController extends Controller implements HasMiddleware
     {
         $search = trim((string) $request->query('search', ''));
         $department = trim((string) $request->query('department', ''));
-        $position = trim((string) $request->query('position', ''));
+        $position = trim((string) ($request->query('position') ?: $request->query('job_title', '')));
         $status = trim((string) $request->query('status', ''));
         $roleId = $request->filled('role_id') ? $request->integer('role_id') : null;
 
@@ -345,7 +345,7 @@ class EmployeeController extends Controller implements HasMiddleware
 
         $search = trim((string) $request->query('search', ''));
         $department = trim((string) $request->query('department', ''));
-        $position = trim((string) $request->query('position', ''));
+        $position = trim((string) ($request->query('position') ?: $request->query('job_title', '')));
         $status = trim((string) $request->query('status', ''));
         $roleId = $request->filled('role_id') ? $request->integer('role_id') : null;
 

@@ -51,21 +51,45 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($users as $user)
+                            @forelse($users as $user)
                             <tr>
-                                <td class="ps-3 fw-medium">
-                                    <div>{{ $user->name }}</div>
-                                    @if(trim((string) $user->job_title) !== '')
-                                        <div class="small text-primary fw-normal mb-1">
-                                            <i class="fa-solid fa-briefcase me-1"></i>{{ $user->job_title }}
-                                        </div>
-                                    @endif
-                                    <div class="small text-muted">
-                                        <i class="fa-solid fa-user me-1"></i>{{ $user->username }}
-                                        @if($user->phone)
-                                            <span class="mx-1">·</span>
-                                            <i class="fa-solid fa-phone me-1"></i>{{ $user->phone }}
+                                <td class="ps-3">
+                                    <div class="d-flex align-items-center gap-2.5 gap-md-3">
+                                        @php
+                                            $avatarPath = $user->avatar ?? ($user->employee?->id_card_photo_path ?? '');
+                                            $userPhoto = null;
+                                            if ($avatarPath !== '') {
+                                                if (str_starts_with($avatarPath, 'http://') || str_starts_with($avatarPath, 'https://')) {
+                                                    $userPhoto = $avatarPath;
+                                                } elseif (str_starts_with($avatarPath, 'storage/') || str_starts_with($avatarPath, 'img/')) {
+                                                    $userPhoto = asset($avatarPath);
+                                                } else {
+                                                    $userPhoto = asset('storage/' . $avatarPath);
+                                                }
+                                            }
+                                        @endphp
+                                        @if($userPhoto)
+                                            <img src="{{ $userPhoto }}" alt="{{ $user->name }}" class="rounded-circle border flex-shrink-0" style="width: 36px; height: 36px; object-fit: cover;">
+                                        @else
+                                            <div class="rounded-circle bg-primary-subtle text-primary fw-bold d-flex align-items-center justify-content-center border border-primary-subtle flex-shrink-0" style="width: 36px; height: 36px; font-size: 0.85rem;">
+                                                {{ strtoupper(substr($user->name, 0, 1)) }}
+                                            </div>
                                         @endif
+                                        <div>
+                                            <div class="fw-bold text-dark mb-0">{{ $user->name }}</div>
+                                            @if(trim((string) $user->job_title) !== '')
+                                                <div class="small text-primary fw-medium mb-0">
+                                                    <i class="fa-solid fa-briefcase me-1"></i>{{ $user->job_title }}
+                                                </div>
+                                            @endif
+                                            <div class="small text-muted">
+                                                <i class="fa-solid fa-user me-1"></i>{{ $user->username }}
+                                                @if($user->phone)
+                                                    <span class="mx-1">·</span>
+                                                    <i class="fa-solid fa-phone me-1"></i>{{ $user->phone }}
+                                                @endif
+                                            </div>
+                                        </div>
                                     </div>
                                 </td>
                                 <td>
@@ -153,13 +177,20 @@
                                     </div>
                                 </td>
                             </tr>
-                            @endforeach
+                            @empty
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    <i class="fa-solid fa-users-slash fa-2x opacity-25 d-block mb-2"></i>
+                                    {{ __('Tidak ada data pengguna ditemukan.') }}
+                                </td>
+                            </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
 
                 <!-- Pagination -->
-                @if($users instanceof \Illuminate\Pagination\LengthAwarePaginator)
+                @if($users instanceof \Illuminate\Pagination\LengthAwarePaginator && $users->hasPages())
                 <div class="mt-4">
                     {{ $users->appends(request()->query())->links() }}
                 </div>

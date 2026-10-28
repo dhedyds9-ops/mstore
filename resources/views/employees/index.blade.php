@@ -28,252 +28,228 @@
         </div>
     </div>
 
-    <div class="card shadow-sm border-0 rounded-4 mb-4 overflow-hidden">
-        <div class="card-body p-3 p-md-4">
+    <form method="GET" action="{{ route('employees.print.cards') }}" target="_blank" id="printSelectedForm" class="d-none">
+        <input type="hidden" name="search" value="{{ $search }}">
+        <input type="hidden" name="department" value="{{ $department }}">
+        <input type="hidden" name="position" value="{{ $position }}">
+        <input type="hidden" name="role_id" value="{{ request('role_id') }}">
+        <input type="hidden" name="status" value="{{ $status }}">
+    </form>
 
-        {{-- Row 2: Filter & Search --}}
-        <form method="GET" class="row g-2 align-items-center">
-            <!-- Pagination per_page -->
-            <div class="col-auto">
-                <select name="per_page" class="form-select form-select-sm" onchange="this.form.submit()" style="cursor: pointer; min-width: 90px;">
-                    <option value="10" @selected(request('per_page') == '10' || !request()->has('per_page'))>10 Data</option>
-                    <option value="20" @selected(request('per_page') == '20')>20 Data</option>
-                    <option value="50" @selected(request('per_page') == '50')>50 Data</option>
-                    <option value="100" @selected(request('per_page') == '100')>100 Data</option>
-                    <option value="all" @selected(request('per_page') == 'all')>Semua</option>
-                </select>
-            </div>
-
-            <div class="col-auto">
-                <select name="department" class="form-select form-select-sm" onchange="this.form.submit()" style="cursor: pointer; min-width: 130px;">
-                    <option value="">Semua Dept</option>
-                    @foreach($departments as $dep)
-                        <option value="{{ $dep }}" {{ $department === $dep ? 'selected' : '' }}>{{ $dep }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="col-auto">
-                <select name="position" class="form-select form-select-sm" onchange="this.form.submit()" style="cursor: pointer; min-width: 130px;">
-                    <option value="">Semua Jabatan</option>
-                    @foreach($positions as $pos)
-                        <option value="{{ $pos }}" {{ $position === $pos ? 'selected' : '' }}>{{ $pos }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="col-auto">
-                <select name="role_id" class="form-select form-select-sm" onchange="this.form.submit()" style="cursor: pointer; min-width: 130px;">
-                    <option value="">{{ __('Semua Peran') }}</option>
-                    @foreach($roles as $r)
-                        <option value="{{ $r->id }}" @selected((string) request('role_id') === (string) $r->id)>{{ $r->label ?: ucfirst(str_replace('-', ' ', $r->name)) }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="col-auto">
-                <select name="status" class="form-select form-select-sm" onchange="this.form.submit()" style="cursor: pointer; min-width: 120px;">
-                    <option value="">Semua Status</option>
-                    @foreach($statuses as $st)
-                        <option value="{{ $st }}" {{ $status === $st ? 'selected' : '' }}>{{ $st }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            <div class="col-auto flex-grow-1 flex-md-grow-0">
-                <div class="input-group input-group-sm">
-                    <input type="text" class="form-control" name="search" value="{{ $search }}" placeholder="Cari nama, NIK, jabatan..." style="min-width: 160px;">
-                    <button class="btn btn-primary px-3" type="submit" title="Cari">
-                        <i class="fa-solid fa-magnifying-glass"></i>
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+        <div class="card-header bg-white py-3 border-bottom-0">
+            <x-table-toolbar 
+                :route="route('employees.index')" 
+                searchPlaceholder="Cari nama, NIK, jabatan..." 
+                :showDepartmentFilter="true"
+                :departments="$departments ?? collect()"
+                :showRoleFilter="true" 
+                :roles="$roles ?? collect()" 
+                :showJobTitleFilter="true"
+                :jobTitles="$positions ?? collect()"
+                jobTitleParam="position"
+                :showStatusFilter="true"
+                :statuses="$statuses ?? []"
+            >
+                <div class="col-auto ms-auto d-flex align-items-center gap-1">
+                    <button type="submit" form="printSelectedForm" class="btn btn-sm btn-outline-dark" id="printSelectedBtn" disabled title="{{ __('Print ID Card Karyawan Pilihan') }}">
+                        <i class="fa-solid fa-id-card me-1"></i> {{ __('Print Pilihan') }}
                     </button>
-                    @if(request('search') || request('department') || request('position') || request('role_id') || request('status') || request('per_page') || request('company_id'))
-                        <a href="{{ route('employees.index') }}" class="btn btn-outline-secondary px-3" title="Reset Filter">
-                            <i class="fa-solid fa-rotate-left"></i>
-                        </a>
-                    @endif
+                    <a href="{{ route('employees.print.cards', request()->query()) }}" target="_blank" class="btn btn-sm btn-outline-dark" title="{{ __('Print Semua ID Card Sesuai Filter') }}">
+                        <i class="fa-solid fa-print me-1"></i> {{ __('ID Cards') }}
+                    </a>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="fa-solid fa-file-export me-1"></i> {{ __('Ekspor') }}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                            <li><a class="dropdown-item py-2" href="{{ route('employees.export.pdf', request()->query()) }}"><i class="fa-regular fa-file-pdf me-2 text-danger"></i> PDF</a></li>
+                            <li><a class="dropdown-item py-2" href="{{ route('employees.export.excel', request()->query()) }}"><i class="fa-regular fa-file-excel me-2 text-success"></i> Excel</a></li>
+                            <li><a class="dropdown-item py-2" href="{{ route('employees.export.csv', request()->query()) }}"><i class="fa-solid fa-file-csv me-2 text-secondary"></i> CSV</a></li>
+                        </ul>
+                    </div>
                 </div>
-            </div>
-
-            {{-- Row 2 Right: Export Actions --}}
-            <div class="col-auto ms-auto d-flex gap-1">
-                <div class="dropdown">
-                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-                        <i class="fa-solid fa-file-export me-1"></i> Ekspor
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                        <li><a class="dropdown-item py-2" href="{{ route('employees.export.pdf', request()->query()) }}"><i class="fa-regular fa-file-pdf me-2 text-danger"></i> PDF</a></li>
-                        <li><a class="dropdown-item py-2" href="{{ route('employees.export.excel', request()->query()) }}"><i class="fa-regular fa-file-excel me-2 text-success"></i> Excel</a></li>
-                        <li><a class="dropdown-item py-2" href="{{ route('employees.export.csv', request()->query()) }}"><i class="fa-solid fa-file-csv me-2 text-secondary"></i> CSV</a></li>
-                    </ul>
-                </div>
-                <a href="{{ route('employees.print.cards', request()->query()) }}" target="_blank" class="btn btn-sm btn-outline-dark">
-                    <i class="fa-solid fa-print me-1"></i> ID Cards
-                </a>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div class="card shadow-sm border-0 mb-4 overflow-hidden">
-    <div class="card-header bg-transparent py-3 border-0 d-flex justify-content-between align-items-center">
-        <h6 class="mb-0 fw-bold text-dark">Daftar Karyawan</h6>
-        <form method="GET" action="{{ route('employees.print.cards') }}" target="_blank" id="printSelectedForm" class="m-0">
-            <input type="hidden" name="search" value="{{ $search }}">
-            <input type="hidden" name="department" value="{{ $department }}">
-            <input type="hidden" name="position" value="{{ $position }}">
-            <input type="hidden" name="role_id" value="{{ request('role_id') }}">
-            <input type="hidden" name="status" value="{{ $status }}">
-            <button type="submit" class="btn btn-xs btn-outline-dark" id="printSelectedBtn" disabled>
-                <i class="fa-solid fa-id-card me-1"></i> Print Pilihan
-            </button>
-        </form>
-    </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="bg-light-subtle">
-                    <tr class="small text-uppercase text-muted">
-                        <th class="ps-3" style="width:40px;">
-                            <input type="checkbox" class="form-check-input" id="checkAllEmployees">
-                        </th>
-                        <th>Nama Karyawan</th>
-                        <th>NIK</th>
-                        <th>Posisi / Dept</th>
-                        <th>No HP</th>
-                        <th>Gaji Bulanan</th>
-                        <th>Gaji Harian</th>
-                        <th>Status</th>
-                        <th>Integrasi</th>
-                        <th class="text-end pe-3">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($employees as $employee)
+            </x-table-toolbar>
+        </div>
+        <div class="card-body pt-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 table-responsive-mobile">
+                    <thead class="bg-light">
                         <tr>
-                            <td class="ps-3">
-                                <input type="checkbox" class="form-check-input employee-check" name="selected_ids[]" value="{{ $employee->id }}" form="printSelectedForm">
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center gap-2">
-                                    @if($employee->id_card_photo_path)
-                                        <img src="{{ asset('storage/'.$employee->id_card_photo_path) }}" class="rounded-circle border" style="width: 32px; height: 32px; object-fit: cover;">
-                                    @else
-                                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center border text-muted" style="width: 32px; height: 32px;">
-                                            <i class="fa-solid fa-user x-small"></i>
+                            <th class="ps-3 text-uppercase small text-muted border-0" style="width:40px;">
+                                <input type="checkbox" class="form-check-input" id="checkAllEmployees">
+                            </th>
+                            <th class="text-uppercase small text-muted border-0">{{ __('Nama Karyawan') }}</th>
+                            <th class="text-uppercase small text-muted border-0">{{ __('NIK') }}</th>
+                            <th class="text-uppercase small text-muted border-0">{{ __('Posisi / Dept') }}</th>
+                            <th class="text-uppercase small text-muted border-0">{{ __('No HP') }}</th>
+                            <th class="text-uppercase small text-muted border-0 text-end">{{ __('Gaji Bulanan') }}</th>
+                            <th class="text-uppercase small text-muted border-0 text-end">{{ __('Gaji Harian') }}</th>
+                            <th class="text-uppercase small text-muted border-0">{{ __('Status') }}</th>
+                            <th class="text-uppercase small text-muted border-0">{{ __('Integrasi') }}</th>
+                            <th class="text-end pe-3 text-uppercase small text-muted border-0">{{ __('Aksi') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($employees as $employee)
+                            <tr>
+                                <td class="ps-3">
+                                    <input type="checkbox" class="form-check-input employee-check" name="selected_ids[]" value="{{ $employee->id }}" form="printSelectedForm">
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2.5 gap-md-3">
+                                        @php
+                                            $empPhotoPath = $employee->id_card_photo_path ?? ($employee->user?->avatar ?? '');
+                                            $empPhoto = null;
+                                            if ($empPhotoPath !== '') {
+                                                if (str_starts_with($empPhotoPath, 'http://') || str_starts_with($empPhotoPath, 'https://')) {
+                                                    $empPhoto = $empPhotoPath;
+                                                } elseif (str_starts_with($empPhotoPath, 'storage/') || str_starts_with($empPhotoPath, 'img/')) {
+                                                    $empPhoto = asset($empPhotoPath);
+                                                } else {
+                                                    $empPhoto = asset('storage/' . $empPhotoPath);
+                                                }
+                                            }
+                                        @endphp
+                                        @if($empPhoto)
+                                            <img src="{{ $empPhoto }}" alt="{{ $employee->full_name }}" class="rounded-circle border flex-shrink-0" style="width: 36px; height: 36px; object-fit: cover;">
+                                        @else
+                                            <div class="rounded-circle bg-primary-subtle text-primary fw-bold d-flex align-items-center justify-content-center border border-primary-subtle flex-shrink-0" style="width: 36px; height: 36px; font-size: 0.85rem;">
+                                                {{ strtoupper(substr($employee->full_name, 0, 1)) }}
+                                            </div>
+                                        @endif
+                                        <div>
+                                            <div class="fw-bold text-dark mb-0">{{ $employee->full_name }}</div>
+                                            <div class="small text-muted">
+                                                <i class="fa-solid fa-user me-1"></i>{{ $employee->user->username ?? '-' }}
+                                            </div>
                                         </div>
-                                    @endif
-                                    <div>
-                                        <div class="fw-bold text-dark mb-0">{{ $employee->full_name }}</div>
-                                        <div class="x-small text-muted">{{ $employee->user->username ?? '-' }}</div>
                                     </div>
-                                </div>
-                            </td>
-                            <td class="small fw-medium">{{ $employee->nik }}</td>
-                            <td>
-                                <div class="small fw-semibold text-dark">{{ $employee->position }}</div>
-                                <div class="x-small text-muted">{{ $employee->department }}</div>
-                            </td>
-                            <td class="small">{{ $employee->phone }}</td>
-                            <td class="small fw-medium text-end">{{ number_format($employee->monthly_salary ?? 0, 0, ',', '.') }}</td>
-                            <td class="small fw-medium text-end">{{ number_format($employee->daily_salary ?? 0, 0, ',', '.') }}</td>
-                            <td>
-                                <span class="badge {{ $employee->employment_status === 'Tetap' ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning' }} x-small px-2">
-                                    {{ $employee->employment_status }}
-                                </span>
-                            </td>
-                            <td>
-                                <div class="d-flex gap-1">
-                                    @if($employee->user_id)
-                                        <span class="badge bg-primary-subtle text-primary x-small border border-primary-subtle" title="User Account: {{ $employee->user->username }}">User</span>
-                                    @endif
-                                    @if($employee->wash_employee_id)
-                                        <span class="badge bg-info-subtle text-info x-small border border-info-subtle">Layanan</span>
-                                    @endif
-                                    @if(!$employee->user_id && !$employee->wash_employee_id)
-                                        <span class="text-muted x-small italic">Manual</span>
-                                    @endif
-                                </div>
-                            </td>
-                            <td class="text-end pe-3">
-                                <div class="d-flex justify-content-end gap-1">
-                                    @php
-                                        $cleanPhone = preg_replace('/[^0-9]/', '', (string)($employee->phone ?? ''));
-                                        if (str_starts_with($cleanPhone, '08')) {
-                                            $cleanPhone = '628' . substr($cleanPhone, 2);
-                                        } elseif (str_starts_with($cleanPhone, '8')) {
-                                            $cleanPhone = '628' . substr($cleanPhone, 1);
-                                        } elseif (str_starts_with($cleanPhone, '6208')) {
-                                            $cleanPhone = '628' . substr($cleanPhone, 4);
-                                        }
-                                        $userUname = $employee->user?->username ?? ($employee->user?->email ?? $employee->email);
-                                        $manualWaText = rawurlencode("Halo *{$employee->full_name}*,\n\nBerikut informasi akun login sistem Anda:\n━━━━━━━━━━━━━━━━━━━━\n🏢 *Aplikasi:* MStore\n👤 *Nama:* {$employee->full_name}\n💼 *Jabatan:* " . ($employee->position ?: 'Staff') . "\n🌐 *Link Login:* " . route('login') . "\n\n🔐 *Kredensial Login:*\n• Username: *{$userUname}*\n• Password: *Password123!*\n━━━━━━━━━━━━━━━━━━━━\nSilakan gunakan informasi di atas untuk masuk ke sistem. Demi keamanan, segera ganti password Anda setelah login pertama kali.\n\nTerima kasih.");
-                                    @endphp
-                                    @if($cleanPhone)
-                                        <div class="dropdown d-inline">
-                                            <button class="btn btn-sm btn-outline-success dropdown-toggle" type="button" data-bs-toggle="dropdown" title="Kirim Akun via WhatsApp">
-                                                <i class="fa-brands fa-whatsapp"></i>
-                                            </button>
-                                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 small">
-                                                <li>
-                                                    <form action="{{ route('employees.send-whatsapp', $employee) }}" method="POST">
-                                                        @csrf
-                                                        <button type="submit" class="dropdown-item py-2 text-success">
-                                                            <i class="fa-solid fa-paper-plane me-2"></i> Kirim Otomatis via Gateway
-                                                        </button>
-                                                    </form>
-                                                </li>
-                                                <li>
-                                                    <a class="dropdown-item py-2 text-secondary" href="https://wa.me/{{ $cleanPhone }}?text={{ $manualWaText }}" target="_blank">
-                                                        <i class="fa-solid fa-arrow-up-right-from-square me-2"></i> Buka WhatsApp Web Manual
-                                                    </a>
-                                                </li>
-                                            </ul>
+                                </td>
+                                <td class="small fw-medium">{{ $employee->nik }}</td>
+                                <td>
+                                    <div class="small text-primary fw-medium">
+                                        <i class="fa-solid fa-briefcase me-1"></i>{{ $employee->position ?: '-' }}
+                                    </div>
+                                    @if($employee->department)
+                                        <div class="small text-muted">
+                                            <i class="fa-solid fa-building me-1"></i>{{ $employee->department }}
                                         </div>
                                     @endif
-                                    <form action="{{ route('employees.sync-dsbilling', $employee) }}" method="POST" class="d-inline form-sync-dsbilling" data-name="{{ $employee->full_name }}">
-                                        @csrf
-                                        <button class="btn btn-sm btn-outline-info" type="button" onclick="confirmDsBillingSync(this)" title="Kirim ke dsBilling">
-                                            <i class="fa-solid fa-satellite-dish"></i>
-                                        </button>
-                                    </form>
-                                    <a href="{{ route('employees.id-card', $employee) }}" class="btn btn-sm btn-outline-dark" title="ID Card">
-                                        <i class="fa-solid fa-id-card"></i>
-                                    </a>
-                                    @if($employee->document_path)
-                                        <a class="btn btn-sm btn-outline-secondary" href="{{ asset('storage/'.$employee->document_path) }}" target="_blank" title="Dokumen">
-                                            <i class="fa-regular fa-file-lines"></i>
-                                        </a>
+                                </td>
+                                <td class="small">{{ $employee->phone ?: '-' }}</td>
+                                <td class="small fw-medium text-end">{{ number_format($employee->monthly_salary ?? 0, 0, ',', '.') }}</td>
+                                <td class="small fw-medium text-end">{{ number_format($employee->daily_salary ?? 0, 0, ',', '.') }}</td>
+                                <td>
+                                    @if($employee->employment_status === 'Tetap')
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">{{ __('Tetap') }}</span>
+                                    @elseif($employee->employment_status === 'Training')
+                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">{{ __('Training') }}</span>
+                                    @elseif($employee->employment_status === 'Pendaftar')
+                                        <span class="badge bg-info-subtle text-info border border-info-subtle">{{ __('Pendaftar') }}</span>
+                                    @else
+                                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">{{ $employee->employment_status ?: '-' }}</span>
                                     @endif
-                                    <a href="{{ route('employees.edit', $employee) }}" class="btn btn-sm btn-outline-primary" title="Edit">
-                                        <i class="fa-solid fa-pen"></i>
-                                    </a>
-                                    <form action="{{ route('employees.destroy', $employee) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin hapus data ini?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn btn-sm btn-outline-danger" type="submit" title="Hapus">
-                                            <i class="fa-solid fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="10" class="text-center text-muted py-5">
-                                <i class="fa-solid fa-user-slash fa-2x opacity-25 d-block mb-2"></i>
-                                Belum ada data karyawan.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-wrap gap-1">
+                                        @if($employee->user_id)
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle" title="User Account: {{ $employee->user->username ?? '' }}">
+                                                <i class="fa-solid fa-user-check me-1"></i>User
+                                            </span>
+                                        @endif
+                                        @if($employee->wash_employee_id)
+                                            <span class="badge bg-info-subtle text-info border border-info-subtle">
+                                                <i class="fa-solid fa-spray-can-sparkles me-1"></i>Layanan
+                                            </span>
+                                        @endif
+                                        @if(!$employee->user_id && !$employee->wash_employee_id)
+                                            <span class="badge bg-light text-muted border">Manual</span>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td class="text-end pe-3">
+                                    <div class="d-flex justify-content-end gap-1">
+                                        @php
+                                            $cleanPhone = preg_replace('/[^0-9]/', '', (string)($employee->phone ?? ''));
+                                            if (str_starts_with($cleanPhone, '08')) {
+                                                $cleanPhone = '628' . substr($cleanPhone, 2);
+                                            } elseif (str_starts_with($cleanPhone, '8')) {
+                                                $cleanPhone = '628' . substr($cleanPhone, 1);
+                                            } elseif (str_starts_with($cleanPhone, '6208')) {
+                                                $cleanPhone = '628' . substr($cleanPhone, 4);
+                                            }
+                                            $userUname = $employee->user?->username ?? ($employee->user?->email ?? $employee->email);
+                                            $manualWaText = rawurlencode("Halo *{$employee->full_name}*,\n\nBerikut informasi akun login sistem Anda:\n━━━━━━━━━━━━━━━━━━━━\n🏢 *Aplikasi:* MStore\n👤 *Nama:* {$employee->full_name}\n💼 *Jabatan:* " . ($employee->position ?: 'Staff') . "\n🌐 *Link Login:* " . route('login') . "\n\n🔐 *Kredensial Login:*\n• Username: *{$userUname}*\n• Password: *Password123!*\n━━━━━━━━━━━━━━━━━━━━\nSilakan gunakan informasi di atas untuk masuk ke sistem. Demi keamanan, segera ganti password Anda setelah login pertama kali.\n\nTerima kasih.");
+                                        @endphp
+                                        @if($cleanPhone)
+                                            <div class="dropdown d-inline">
+                                                <button class="btn btn-sm btn-outline-success dropdown-toggle" type="button" data-bs-toggle="dropdown" title="Kirim Akun via WhatsApp">
+                                                    <i class="fa-brands fa-whatsapp"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end shadow border-0 small">
+                                                    <li>
+                                                        <form action="{{ route('employees.send-whatsapp', $employee) }}" method="POST">
+                                                            @csrf
+                                                            <button type="submit" class="dropdown-item py-2 text-success">
+                                                                <i class="fa-solid fa-paper-plane me-2"></i> Kirim Otomatis via Gateway
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item py-2 text-secondary" href="https://wa.me/{{ $cleanPhone }}?text={{ $manualWaText }}" target="_blank">
+                                                            <i class="fa-solid fa-arrow-up-right-from-square me-2"></i> Buka WhatsApp Web Manual
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        @endif
+                                        <form action="{{ route('employees.sync-dsbilling', $employee) }}" method="POST" class="d-inline form-sync-dsbilling" data-name="{{ $employee->full_name }}">
+                                            @csrf
+                                            <button class="btn btn-sm btn-outline-info" type="button" onclick="confirmDsBillingSync(this)" title="Kirim ke dsBilling">
+                                                <i class="fa-solid fa-satellite-dish"></i>
+                                            </button>
+                                        </form>
+                                        <a href="{{ route('employees.id-card', $employee) }}" class="btn btn-sm btn-outline-dark" title="ID Card">
+                                            <i class="fa-solid fa-id-card"></i>
+                                        </a>
+                                        @if($employee->document_path)
+                                            <a class="btn btn-sm btn-outline-secondary" href="{{ asset('storage/'.$employee->document_path) }}" target="_blank" title="Dokumen">
+                                                <i class="fa-regular fa-file-lines"></i>
+                                            </a>
+                                        @endif
+                                        <a href="{{ route('employees.edit', $employee) }}" class="btn btn-sm btn-outline-primary" title="Edit">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </a>
+                                        <form action="{{ route('employees.destroy', $employee) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin hapus data ini?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button class="btn btn-sm btn-outline-danger" type="submit" title="Hapus">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="10" class="text-center text-muted py-5">
+                                    <i class="fa-solid fa-user-slash fa-2x opacity-25 d-block mb-2"></i>
+                                    {{ __('Belum ada data karyawan.') }}
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            @if($employees->hasPages())
+                <div class="mt-4">
+                    {{ $employees->appends(request()->query())->links() }}
+                </div>
+            @endif
         </div>
-    </div>
-    @if($employees->hasPages())
-        <div class="card-footer bg-transparent py-2 border-0">
-            {{ $employees->appends(request()->query())->links() }}
-        </div>
-    @endif
     </div>
 </div>
 

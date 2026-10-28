@@ -63,8 +63,8 @@ class UserController extends Controller implements HasMiddleware
             $query->where('role_id', $request->integer('role_id'));
         }
 
-        if ($request->filled('job_title')) {
-            $query->where('job_title', $request->job_title);
+        if ($request->filled('job_title') || $request->filled('position')) {
+            $query->where('job_title', $request->filled('job_title') ? $request->job_title : $request->position);
         }
 
         if ($request->filled('department')) {
@@ -148,8 +148,8 @@ class UserController extends Controller implements HasMiddleware
             $query->where('role_id', $request->integer('role_id'));
         }
 
-        if ($request->filled('job_title')) {
-            $query->where('job_title', $request->job_title);
+        if ($request->filled('job_title') || $request->filled('position')) {
+            $query->where('job_title', $request->filled('job_title') ? $request->job_title : $request->position);
         }
 
         if ($request->filled('department')) {
