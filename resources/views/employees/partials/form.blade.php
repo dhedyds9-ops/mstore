@@ -134,7 +134,7 @@
                     </div>
 
                     <div class="col-12">
-                        <label for="wash_employee_id" class="form-label small fw-semibold text-body-secondary">{{ __('Integrasi Operator Cuci (Wash Employee)') }}</label>
+                        <label for="wash_employee_id" class="form-label small fw-semibold text-body-secondary">{{ __('Integrasi Operator Cuci (Wash Operator)') }}</label>
                         <select name="wash_employee_id" id="wash_employee_id" class="form-select form-select-sm @error('wash_employee_id') is-invalid @enderror">
                             <option value="">{{ __('-- Tidak Terkait Unit Cuci Kendaraan --') }}</option>
                             @foreach(($washEmployees ?? []) as $we)
@@ -182,7 +182,7 @@
                     </div>
 
                     <div class="col-12 col-md-4">
-                        <label for="attendance_card_code" class="form-label small fw-semibold text-body-secondary">{{ __('Kode ID Card Absensi') }}</label>
+                        <label for="attendance_card_code" class="form-label small fw-semibold text-body-secondary">{{ __('Kode Kartu Absensi (ID Card)') }}</label>
                         <input type="text" name="attendance_card_code" id="attendance_card_code" value="{{ old('attendance_card_code', $employee->attendance_card_code ?? '') }}" class="form-control form-control-sm font-monospace @error('attendance_card_code') is-invalid @enderror" placeholder="Contoh: EMP001">
                         <div class="form-text small">{{ __('Rujukan barcode / QR Code mesin kios absensi.') }}</div>
                         @error('attendance_card_code') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -395,7 +395,7 @@
                 {{ __('Batal') }}
             </a>
             <button type="submit" class="btn btn-primary btn-sm shadow-sm px-4">
-                <i class="fa-solid fa-floppy-disk me-1"></i> {{ __('Simpan Data Karyawan') }}
+                <i class="fa-solid fa-floppy-disk me-1"></i> {{ !empty($employee?->id) ? __('Perbarui Data Karyawan') : __('Simpan Data Karyawan') }}
             </button>
         </div>
     </div>

@@ -158,7 +158,7 @@
                             </div>
 
                             <div class="col-12 col-md-6 mt-3">
-                                <label for="department" class="form-label small fw-semibold text-body-secondary">{{ __('Departemen') }}</label>
+                                <label for="department" class="form-label small fw-semibold text-body-secondary">{{ __('Departemen / Divisi') }}</label>
                                 <select name="department" id="department" class="form-select form-select-sm @error('department') is-invalid @enderror">
                                     <option value="">{{ __('— Pilih (opsional) —') }}</option>
                                     @foreach($departmentOptions as $deptCode => $deptLabel)
@@ -168,7 +168,7 @@
                                 @error('department') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             <div class="col-12 col-md-6 mt-3">
-                                <label for="bu_level" class="form-label small fw-semibold text-body-secondary">{{ __('Level Operasional BU') }}</label>
+                                <label for="bu_level" class="form-label small fw-semibold text-body-secondary">{{ __('Tingkat Operasional (Level BU)') }}</label>
                                 <select name="bu_level" id="bu_level" class="form-select form-select-sm @error('bu_level') is-invalid @enderror">
                                     <option value="">{{ __('— Pilih (opsional) —') }}</option>
                                     @foreach($buLevelOptions as $lv)
@@ -242,7 +242,7 @@
                         {{ __('Batal') }}
                     </a>
                     <button type="submit" class="btn btn-primary btn-sm shadow-sm px-4">
-                        <i class="fa-solid fa-floppy-disk me-1"></i> {{ __('Simpan Perubahan') }}
+                        <i class="fa-solid fa-floppy-disk me-1"></i> {{ __('Perbarui Data Pengguna') }}
                     </button>
                 </div>
             </form>
