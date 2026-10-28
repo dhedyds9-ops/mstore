@@ -15,12 +15,21 @@
     <div class="card-body p-3">
         <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
             <div class="d-flex align-items-center">
-                <div class="p-2 rounded-circle bg-primary-subtle text-primary-emphasis me-2.5 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
-                    <i class="fas fa-user-tie fs-5"></i>
-                </div>
+                @php
+                    $empPhoto = $user->employee?->id_card_photo_path ? asset('storage/' . $user->employee->id_card_photo_path) : ($user->avatar ? (str_starts_with($user->avatar, 'http') ? $user->avatar : asset('storage/' . $user->avatar)) : null);
+                @endphp
+                @if($empPhoto)
+                    <img src="{{ $empPhoto }}" alt="{{ $user->name }}" class="rounded-circle border me-2.5 flex-shrink-0" style="width: 38px; height: 38px; object-fit: cover;">
+                @else
+                    <div class="rounded-circle bg-primary-subtle text-primary fw-bold me-2.5 d-flex align-items-center justify-content-center border border-primary-subtle flex-shrink-0" style="width: 38px; height: 38px; font-size: 0.9rem;">
+                        {{ strtoupper(substr($user->name, 0, 1)) }}
+                    </div>
+                @endif
                 <div>
                     <h6 class="mb-0 fw-bold text-body-emphasis text-truncate" style="max-width: 130px;" title="{{ $user->name }}">{{ $user->name }}</h6>
-                    <small class="text-body-secondary">{{ $user->role->name ?? 'Staf' }}</small>
+                    <small class="text-body-secondary text-truncate d-block" style="max-width: 130px;">
+                        {{ $user->employee?->position ?: ($user->job_title ?: ($user->role?->label ?: 'Staf')) }}
+                    </small>
                 </div>
             </div>
             @if($outstanding > 0)

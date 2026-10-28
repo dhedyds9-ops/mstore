@@ -84,12 +84,15 @@ class SalaryAdjustmentController extends Controller
 
         $loans = $loanQuery->get();
 
-        $allUsers = User::whereHas('role', function ($q) {
-            $q->whereNotIn('name', ['customer', 'pelanggan', 'partner', 'mitra', 'reseller', 'super-admin']);
-        })->where('is_active', true)
-          ->with('role')
-          ->orderBy('name')
-          ->get();
+        $allUsers = User::query()
+            ->whereHas('employee')
+            ->whereHas('role', function ($q) {
+                $q->whereNotIn('name', Role::hiddenInUserManagement());
+            })
+            ->where('is_active', true)
+            ->with(['role', 'employee'])
+            ->orderBy('name')
+            ->get();
 
         $recapUsers = $allUsers;
         if ($request->filled('user_id')) {

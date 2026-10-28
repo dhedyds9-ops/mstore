@@ -149,7 +149,7 @@
                             <option value="">{{ __('Semua Karyawan') }}</option>
                             @foreach($users as $user)
                                 <option value="{{ $user->id }}" {{ request('user_id') == $user->id ? 'selected' : '' }}>
-                                    {{ $user->name }}
+                                    {{ $user->name }} ({{ $user->employee?->position ?: ($user->job_title ?: ($user->role?->label ?: 'Staf')) }})
                                 </option>
                             @endforeach
                         </select>
@@ -725,7 +725,7 @@
                         <select name="user_id" id="add_user_id" class="form-select bg-body border @error('user_id') is-invalid @enderror" required>
                             <option value="">{{ __('-- Pilih Karyawan --') }}</option>
                             @foreach($users as $user)
-                                <option value="{{ $user->id }}" {{ old('user_id') == $user->id ? 'selected' : '' }}>{{ $user->name }} ({{ $user->role->name ?? 'Staf' }})</option>
+                                <option value="{{ $user->id }}" {{ old('user_id') == $user->id ? 'selected' : '' }}>{{ $user->name }} ({{ $user->employee?->position ?: ($user->job_title ?: ($user->role?->label ?: 'Staf')) }})</option>
                             @endforeach
                         </select>
                         @error('user_id')
@@ -793,7 +793,7 @@
                         <select name="user_id" id="add_loan_user_id" class="form-select bg-body border @error('user_id') is-invalid @enderror" required>
                             <option value="">{{ __('-- Pilih Karyawan --') }}</option>
                             @foreach($users as $user)
-                                <option value="{{ $user->id }}" {{ old('user_id') == $user->id ? 'selected' : '' }}>{{ $user->name }} ({{ $user->role->name ?? 'Staf' }})</option>
+                                <option value="{{ $user->id }}" {{ old('user_id') == $user->id ? 'selected' : '' }}>{{ $user->name }} ({{ $user->employee?->position ?: ($user->job_title ?: ($user->role?->label ?: 'Staf')) }})</option>
                             @endforeach
                         </select>
                         @error('user_id')
@@ -878,7 +878,7 @@
                         <select name="user_id" id="add_bonus_user_id" class="form-select bg-body border @error('user_id') is-invalid @enderror" required>
                             <option value="">{{ __('-- Pilih Karyawan --') }}</option>
                             @foreach($users as $user)
-                                <option value="{{ $user->id }}" {{ old('user_id') == $user->id ? 'selected' : '' }}>{{ $user->name }} ({{ $user->role->name ?? 'Staf' }})</option>
+                                <option value="{{ $user->id }}" {{ old('user_id') == $user->id ? 'selected' : '' }}>{{ $user->name }} ({{ $user->employee?->position ?: ($user->job_title ?: ($user->role?->label ?: 'Staf')) }})</option>
                             @endforeach
                         </select>
                         @error('user_id')
