@@ -27,3 +27,4 @@ Thumbs.db
 /public/.well-known/
 /database/*.sqlite
 composer.phar
+*.sql

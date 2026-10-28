@@ -107,8 +107,9 @@ class SidebarMenu
                         self::link('attendance-kiosk', 'Kiosk Presensi', 'attendance.kiosk', permissions: ['attendance.create']),
                         self::link('attendance-daily', 'Presensi Harian', 'attendance.daily', permissions: ['attendance.view']),
                         self::link('attendance-payslip', 'Slip Gaji', 'attendance.payslip', permissions: ['attendance.view']),
+                        self::link('kasbon', 'Kasbon Karyawan', 'technicians.kasbon.index', permissions: ['kasbon.view', 'kasbon.manage']),
                         self::link('attendance-recap', 'Rekap Presensi', 'attendance.index', permissions: ['attendance.view']),
-                    ], permissions: ['attendance.view', 'attendance.create']),
+                    ], permissions: ['attendance.view', 'attendance.create', 'kasbon.view']),
                 ],
             ],
             [
@@ -226,6 +227,7 @@ class SidebarMenu
             'periode' => 'fa-solid fa-calendar-check',
             'kiosk' => 'fa-solid fa-tablet-screen-button',
             'investor' => 'fa-solid fa-hand-holding-dollar',
+            'kasbon' => 'fa-solid fa-hand-holding-dollar',
             'employee' => 'fa-solid fa-id-card',
             'karyawan' => 'fa-solid fa-id-card',
             'attendance' => 'fa-solid fa-fingerprint',
