@@ -33,47 +33,65 @@
 
         {{-- Row 2: Filter & Search --}}
         <form method="GET" class="row g-2 align-items-center">
-            <div class="col-md-3">
-                <div class="input-group input-group-sm">
-                    <span class="input-group-text bg-transparent border-end-0 text-muted">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                    </span>
-                    <input type="text" class="form-control border-start-0 ps-0" name="search" value="{{ $search }}" placeholder="Cari nama, NIK, jabatan...">
-                </div>
+            <!-- Pagination per_page -->
+            <div class="col-auto">
+                <select name="per_page" class="form-select form-select-sm" onchange="this.form.submit()" style="cursor: pointer; min-width: 90px;">
+                    <option value="10" @selected(request('per_page') == '10' || !request()->has('per_page'))>10 Data</option>
+                    <option value="20" @selected(request('per_page') == '20')>20 Data</option>
+                    <option value="50" @selected(request('per_page') == '50')>50 Data</option>
+                    <option value="100" @selected(request('per_page') == '100')>100 Data</option>
+                    <option value="all" @selected(request('per_page') == 'all')>Semua</option>
+                </select>
             </div>
-            <div class="col-md-2">
-                <select name="department" class="form-select form-select-sm" onchange="this.form.submit()">
+
+            <div class="col-auto">
+                <select name="department" class="form-select form-select-sm" onchange="this.form.submit()" style="cursor: pointer; min-width: 130px;">
                     <option value="">Semua Dept</option>
                     @foreach($departments as $dep)
                         <option value="{{ $dep }}" {{ $department === $dep ? 'selected' : '' }}>{{ $dep }}</option>
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-2">
-                <select name="position" class="form-select form-select-sm" onchange="this.form.submit()">
+
+            <div class="col-auto">
+                <select name="position" class="form-select form-select-sm" onchange="this.form.submit()" style="cursor: pointer; min-width: 130px;">
                     <option value="">Semua Jabatan</option>
                     @foreach($positions as $pos)
                         <option value="{{ $pos }}" {{ $position === $pos ? 'selected' : '' }}>{{ $pos }}</option>
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-2">
-                <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+
+            <div class="col-auto">
+                <select name="role_id" class="form-select form-select-sm" onchange="this.form.submit()" style="cursor: pointer; min-width: 130px;">
+                    <option value="">Semua Peran</option>
+                    @foreach($roles as $r)
+                        <option value="{{ $r->id }}" @selected((string) request('role_id') === (string) $r->id)>{{ $r->label }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="col-auto">
+                <select name="status" class="form-select form-select-sm" onchange="this.form.submit()" style="cursor: pointer; min-width: 120px;">
                     <option value="">Semua Status</option>
                     @foreach($statuses as $st)
                         <option value="{{ $st }}" {{ $status === $st ? 'selected' : '' }}>{{ $st }}</option>
                     @endforeach
                 </select>
             </div>
-            <div class="col-auto d-flex gap-2">
-                <button type="submit" class="btn btn-sm btn-primary px-3">
-                    <i class="fa-solid fa-filter me-1"></i>Filter
-                </button>
-                @if(request('search') || request('department') || request('position') || request('status') || request('company_id'))
-                    <a href="{{ route('employees.index') }}" class="btn btn-sm btn-outline-secondary" title="Reset Filter">
-                        <i class="fa-solid fa-rotate-left"></i>
-                    </a>
-                @endif
+
+            <div class="col-auto flex-grow-1 flex-md-grow-0">
+                <div class="input-group input-group-sm">
+                    <input type="text" class="form-control" name="search" value="{{ $search }}" placeholder="Cari nama, NIK, jabatan..." style="min-width: 160px;">
+                    <button class="btn btn-primary px-3" type="submit" title="Cari">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+                    @if(request('search') || request('department') || request('position') || request('role_id') || request('status') || request('per_page') || request('company_id'))
+                        <a href="{{ route('employees.index') }}" class="btn btn-outline-secondary px-3" title="Reset Filter">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </a>
+                    @endif
+                </div>
             </div>
 
             {{-- Row 2 Right: Export Actions --}}
@@ -83,12 +101,12 @@
                         <i class="fa-solid fa-file-export me-1"></i> Ekspor
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                        <li><a class="dropdown-item py-2" href="{{ route('employees.export.pdf', request()->only(['search','department','position','status'])) }}"><i class="fa-regular fa-file-pdf me-2 text-danger"></i> PDF</a></li>
-                        <li><a class="dropdown-item py-2" href="{{ route('employees.export.excel', request()->only(['search','department','position','status'])) }}"><i class="fa-regular fa-file-excel me-2 text-success"></i> Excel</a></li>
-                        <li><a class="dropdown-item py-2" href="{{ route('employees.export.csv', request()->only(['search','department','position','status'])) }}"><i class="fa-solid fa-file-csv me-2 text-secondary"></i> CSV</a></li>
+                        <li><a class="dropdown-item py-2" href="{{ route('employees.export.pdf', request()->query()) }}"><i class="fa-regular fa-file-pdf me-2 text-danger"></i> PDF</a></li>
+                        <li><a class="dropdown-item py-2" href="{{ route('employees.export.excel', request()->query()) }}"><i class="fa-regular fa-file-excel me-2 text-success"></i> Excel</a></li>
+                        <li><a class="dropdown-item py-2" href="{{ route('employees.export.csv', request()->query()) }}"><i class="fa-solid fa-file-csv me-2 text-secondary"></i> CSV</a></li>
                     </ul>
                 </div>
-                <a href="{{ route('employees.print.cards', request()->only(['search','department','position','status'])) }}" target="_blank" class="btn btn-sm btn-outline-dark">
+                <a href="{{ route('employees.print.cards', request()->query()) }}" target="_blank" class="btn btn-sm btn-outline-dark">
                     <i class="fa-solid fa-print me-1"></i> ID Cards
                 </a>
             </div>
@@ -103,6 +121,7 @@
             <input type="hidden" name="search" value="{{ $search }}">
             <input type="hidden" name="department" value="{{ $department }}">
             <input type="hidden" name="position" value="{{ $position }}">
+            <input type="hidden" name="role_id" value="{{ request('role_id') }}">
             <input type="hidden" name="status" value="{{ $status }}">
             <button type="submit" class="btn btn-xs btn-outline-dark" id="printSelectedBtn" disabled>
                 <i class="fa-solid fa-id-card me-1"></i> Print Pilihan

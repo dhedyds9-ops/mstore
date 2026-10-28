@@ -37,7 +37,7 @@ class UserController extends Controller implements HasMiddleware
     public function index(Request $request)
     {
         $hiddenNames = Role::hiddenInUserManagement();
-        $query = User::with('role')
+        $query = User::with(['role', 'employee'])
             ->whereHas('role', function ($q) use ($hiddenNames) {
                 $q->whereNotIn('name', $hiddenNames);
             })
@@ -65,6 +65,21 @@ class UserController extends Controller implements HasMiddleware
 
         if ($request->filled('job_title')) {
             $query->where('job_title', $request->job_title);
+        }
+
+        if ($request->filled('department')) {
+            $dept = $request->department;
+            $query->whereHas('employee', function ($eq) use ($dept) {
+                $eq->where('department', $dept);
+            });
+        }
+
+        if ($request->filled('status')) {
+            if ($request->status === 'active' || $request->status === '1') {
+                $query->where('is_active', true);
+            } elseif ($request->status === 'inactive' || $request->status === '0') {
+                $query->where('is_active', false);
+            }
         }
 
         $perPage = $request->input('per_page', 10);
@@ -88,13 +103,26 @@ class UserController extends Controller implements HasMiddleware
             ->orderBy('job_title')
             ->pluck('job_title');
 
-        return view('users.index', compact('users', 'roles', 'jobTitles'));
+        $departments = \App\Models\Employee::query()
+            ->select('department')
+            ->whereNotNull('department')
+            ->where('department', '!=', '')
+            ->distinct()
+            ->orderBy('department')
+            ->pluck('department');
+
+        $statuses = [
+            'active' => __('Aktif'),
+            'inactive' => __('Nonaktif'),
+        ];
+
+        return view('users.index', compact('users', 'roles', 'jobTitles', 'departments', 'statuses'));
     }
 
     public function export(Request $request)
     {
         $hiddenNames = Role::hiddenInUserManagement();
-        $query = User::with('role')
+        $query = User::with(['role', 'employee'])
             ->whereHas('role', function ($q) use ($hiddenNames) {
                 $q->whereNotIn('name', $hiddenNames);
             })
@@ -122,6 +150,21 @@ class UserController extends Controller implements HasMiddleware
 
         if ($request->filled('job_title')) {
             $query->where('job_title', $request->job_title);
+        }
+
+        if ($request->filled('department')) {
+            $dept = $request->department;
+            $query->whereHas('employee', function ($eq) use ($dept) {
+                $eq->where('department', $dept);
+            });
+        }
+
+        if ($request->filled('status')) {
+            if ($request->status === 'active' || $request->status === '1') {
+                $query->where('is_active', true);
+            } elseif ($request->status === 'inactive' || $request->status === '0') {
+                $query->where('is_active', false);
+            }
         }
 
         $users = $query->get();

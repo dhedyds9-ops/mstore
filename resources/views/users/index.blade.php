@@ -26,10 +26,14 @@
                 <x-table-toolbar 
                     :route="route('users.index')" 
                     searchPlaceholder="Cari pengguna..." 
+                    :showDepartmentFilter="true"
+                    :departments="$departments ?? collect()"
                     :showRoleFilter="true" 
                     :roles="$roles ?? collect()" 
                     :showJobTitleFilter="true"
                     :jobTitles="$jobTitles ?? collect()"
+                    :showStatusFilter="true"
+                    :statuses="$statuses ?? []"
                 />
             </div>
             <div class="card-body pt-0">

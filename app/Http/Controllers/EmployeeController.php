@@ -48,6 +48,7 @@ class EmployeeController extends Controller implements HasMiddleware
         $department = trim((string) $request->query('department', ''));
         $position = trim((string) $request->query('position', ''));
         $status = trim((string) $request->query('status', ''));
+        $roleId = $request->filled('role_id') ? $request->integer('role_id') : null;
 
         $query = Employee::query()
             ->with(['user.role', 'washEmployee'])
@@ -67,6 +68,11 @@ class EmployeeController extends Controller implements HasMiddleware
             ->when($position !== '', function ($query) use ($position) {
                 $query->where('position', $position);
             })
+            ->when($roleId !== null, function ($query) use ($roleId) {
+                $query->whereHas('user', function ($uq) use ($roleId) {
+                    $uq->where('role_id', $roleId);
+                });
+            })
             ->when($status !== '', function ($query) use ($status) {
                 $query->where('employment_status', $status);
             })
@@ -77,11 +83,12 @@ class EmployeeController extends Controller implements HasMiddleware
         $employees = $query;
         $departments = Employee::query()->select('department')->whereNotNull('department')->where('department', '!=', '')->distinct()->orderBy('department')->pluck('department');
         $positions = Employee::query()->select('position')->whereNotNull('position')->where('position', '!=', '')->distinct()->orderBy('position')->pluck('position');
+        $roles = Role::query()->orderBy('label')->get();
         $defaultStatuses = ['Tetap', 'Training', 'Pendaftar'];
         $dbStatuses = Employee::query()->select('employment_status')->whereNotNull('employment_status')->distinct()->pluck('employment_status')->toArray();
         $statuses = array_values(array_unique(array_filter(array_merge($defaultStatuses, $dbStatuses))));
 
-        return view('employees.index', compact('employees', 'search', 'departments', 'positions', 'statuses', 'department', 'position', 'status'));
+        return view('employees.index', compact('employees', 'search', 'departments', 'positions', 'roles', 'statuses', 'department', 'position', 'status'));
     }
 
     public function create()
@@ -340,6 +347,7 @@ class EmployeeController extends Controller implements HasMiddleware
         $department = trim((string) $request->query('department', ''));
         $position = trim((string) $request->query('position', ''));
         $status = trim((string) $request->query('status', ''));
+        $roleId = $request->filled('role_id') ? $request->integer('role_id') : null;
 
         $rows = Employee::query()
             ->when($search !== '', function ($query) use ($search) {
@@ -357,6 +365,11 @@ class EmployeeController extends Controller implements HasMiddleware
             })
             ->when($position !== '', function ($query) use ($position) {
                 $query->where('position', $position);
+            })
+            ->when($roleId !== null, function ($query) use ($roleId) {
+                $query->whereHas('user', function ($uq) use ($roleId) {
+                    $uq->where('role_id', $roleId);
+                });
             })
             ->when($status !== '', function ($query) use ($status) {
                 $query->where('employment_status', $status);
@@ -852,6 +865,7 @@ class EmployeeController extends Controller implements HasMiddleware
         $department = trim((string) $request->query('department', ''));
         $status = trim((string) $request->query('status', ''));
         $position = trim((string) $request->query('position', ''));
+        $roleId = $request->filled('role_id') ? $request->integer('role_id') : null;
 
         return Employee::query()
             ->when($search !== '', function ($query) use ($search) {
@@ -872,6 +886,11 @@ class EmployeeController extends Controller implements HasMiddleware
             })
             ->when($position !== '', function ($query) use ($position) {
                 $query->where('position', $position);
+            })
+            ->when($roleId !== null, function ($query) use ($roleId) {
+                $query->whereHas('user', function ($uq) use ($roleId) {
+                    $uq->where('role_id', $roleId);
+                });
             });
     }
 
