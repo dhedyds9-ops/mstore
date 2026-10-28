@@ -170,8 +170,16 @@ class AttendanceSyncApiController extends Controller
                 'phone' => $user->phone,
                 'user_id' => $user->id,
             ]);
-        } elseif (empty($employee->user_id)) {
-            $employee->user_id = $user->id;
+        } else {
+            if ($cleanNik && ! str_starts_with($cleanNik, 'AUTO-') && ($employee->nik !== $cleanNik || str_starts_with($employee->nik, 'AUTO-'))) {
+                $employee->nik = $cleanNik;
+            }
+            if ($cleanName && $employee->full_name !== $cleanName) {
+                $employee->full_name = $cleanName;
+            }
+            if (empty($employee->user_id)) {
+                $employee->user_id = $user->id;
+            }
             $employee->saveQuietly();
         }
 
