@@ -34,7 +34,7 @@
         <div class="card-body p-3">
             <form action="{{ route('attendance.daily') }}" method="GET" class="w-100" id="dailyAttendanceFilterForm">
                 <div class="row g-2 align-items-end">
-                    <div class="col-12 col-sm-6 col-md-2">
+                    <div class="col-6 col-sm-6 col-md-2">
                         <label class="form-label x-small fw-bold text-muted mb-1 text-uppercase">{{ __('Bulan') }}</label>
                         <input type="month" name="month" value="{{ request('month') }}" class="form-control form-control-sm">
                     </div>
@@ -47,25 +47,36 @@
                         <input type="date" name="end_date" value="{{ $endDate }}" class="form-control form-control-sm">
                     </div>
                     <div class="col-6 col-sm-6 col-md-2">
+                        <label class="form-label x-small fw-bold text-muted mb-1 text-uppercase">{{ __('Divisi / Unit') }}</label>
+                        <select name="category" class="form-select form-select-sm" onchange="this.form.submit()">
+                            <option value="">{{ __('Semua Divisi') }}</option>
+                            <option value="technician" @selected(request('category') === 'technician')>{{ __('Teknisi Lapangan') }}</option>
+                            <option value="wash" @selected(request('category') === 'wash')>{{ __('Wash (Cuci & Kasir)') }}</option>
+                            <option value="atk" @selected(request('category') === 'atk')>{{ __('ATK (Kasir & Toko)') }}</option>
+                        </select>
+                    </div>
+                    <div class="col-6 col-sm-6 col-md-2">
                         <label class="form-label x-small fw-bold text-muted mb-1 text-uppercase">{{ __('Status') }}</label>
-                        <select name="status" class="form-select form-select-sm">
+                        <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
                             <option value="">{{ __('Semua Status') }}</option>
                             @foreach(['present' => 'Hadir', 'late' => 'Terlambat', 'leave' => 'Cuti', 'permit' => 'Izin', 'sick' => 'Sakit', 'alpha' => 'Alpha', 'off' => 'Off', 'belum_absen' => 'Belum Absen'] as $val => $label)
                                 <option value="{{ $val }}" {{ ($status ?? '') === $val ? 'selected' : '' }}>{{ __($label) }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-6 col-sm-6 col-md-3">
+                    <div class="col-12 col-sm-6 col-md-2">
                         <label class="form-label x-small fw-bold text-muted mb-1 text-uppercase">{{ __('Cari Nama / Email') }}</label>
-                        <input type="text" name="search" value="{{ $search }}" placeholder="{{ __('Ketik nama karyawan...') }}" class="form-control form-control-sm">
-                    </div>
-                    <div class="col-12 col-md-1 d-flex gap-1">
-                        <button type="submit" class="btn btn-primary btn-sm w-100" title="{{ __('Terapkan Filter') }}">
-                            <i class="fa-solid fa-filter me-1"></i>{{ __('Filter') }}
-                        </button>
-                        <a href="{{ route('attendance.daily') }}" class="btn btn-outline-secondary btn-sm" title="{{ __('Reset Filter') }}">
-                            <i class="fa-solid fa-rotate"></i>
-                        </a>
+                        <div class="input-group input-group-sm">
+                            <input type="text" name="search" value="{{ $search }}" placeholder="{{ __('Cari nama...') }}" class="form-control">
+                            <button type="submit" class="btn btn-primary" title="{{ __('Terapkan Filter') }}">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                            </button>
+                            @if(request()->hasAny(['search', 'status', 'category', 'month', 'start_date', 'end_date']))
+                                <a href="{{ route('attendance.daily') }}" class="btn btn-outline-secondary" title="{{ __('Reset Filter') }}">
+                                    <i class="fa-solid fa-rotate-left"></i>
+                                </a>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </form>

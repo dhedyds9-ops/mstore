@@ -70,33 +70,92 @@ class TechnicianAttendanceController extends Controller implements HasMiddleware
     }
 
     /**
-     * Query dasar untuk mengambil akun Teknisi Lapangan yang valid untuk modul presensi teknisi.
-     * Mengabaikan Leader/Koordinator, Kasir, Staff Finance, Operator Cuci, dan Manajemen.
+     * Query dasar untuk mengambil akun staf operasional (Teknisi Lapangan, Operator Wash, Kasir Wash, Kasir ATK).
+     * Mengecualikan Koordinator Wilayah (Andi, Bulloh, dll), Mitra, Reseller, Pelanggan, dan Manajemen Kantor.
      */
-    protected function getTechniciansBaseQuery()
+    protected function getTechniciansBaseQuery(?string $category = null)
     {
-        return User::query()
+        $query = User::query()
             ->where('is_active', true)
             ->whereHas('role', function ($q) {
                 $q->whereNotIn('name', [
                     'customer', 'pelanggan', 'partner', 'mitra', 'reseller',
-                    'super-admin', 'manager', 'finance',
-                    'field-leader', 'leader', 'noc-operator', 'noc-legacy', 'noc',
-                    'wash-operator', 'wash-cashier', 'atk-cashier',
+                    'super-admin', 'manager', 'direktur', 'finance',
+                    'field-leader', 'leader', 'coordinator',
+                    'noc-operator', 'noc-legacy', 'noc',
                 ]);
             })
             ->where(function ($query) {
+                // Role staf operasional yang diizinkan
                 $query->whereHas('role', function ($q) {
-                    $q->whereIn('name', ['field-technician', 'technician']);
+                    $q->whereIn('name', [
+                        'field-technician', 'technician',
+                        'wash-operator', 'karyawan-wash',
+                        'wash-cashier', 'kasir-wash',
+                        'atk-cashier', 'kasir-atk',
+                        'staff-gudang', 'staff',
+                    ]);
                 })
-                ->orWhere('job_title', 'like', '%Teknisi%')
+                // Atau job_title operasional pada tabel users
+                ->orWhere(function ($q) {
+                    $q->where(function ($sub) {
+                        $sub->where('job_title', 'like', '%Teknisi%')
+                            ->orWhere('job_title', 'like', '%Cuci%')
+                            ->orWhere('job_title', 'like', '%Operator%')
+                            ->orWhere('job_title', 'like', '%Kasir%')
+                            ->orWhere('job_title', 'like', '%Wash%')
+                            ->orWhere('job_title', 'like', '%ATK%')
+                            ->orWhere('job_title', 'like', '%Gudang%');
+                    })
+                    ->where('job_title', 'not like', '%Koordinator%')
+                    ->where('job_title', 'not like', '%Leader%')
+                    ->where('job_title', 'not like', '%Direktur%')
+                    ->where('job_title', 'not like', '%Manager%')
+                    ->where('job_title', 'not like', '%Finance%');
+                })
+                // Atau jabatan/departemen operasional pada tabel employees
                 ->orWhereHas('employee', function ($q) {
-                    $q->where('position', 'like', '%Teknisi%')
-                      ->orWhere('department', 'like', '%Teknis%');
+                    $q->where(function ($sub) {
+                        $sub->where('position', 'like', '%Teknisi%')
+                            ->orWhere('position', 'like', '%Cuci%')
+                            ->orWhere('position', 'like', '%Operator%')
+                            ->orWhere('position', 'like', '%Kasir%')
+                            ->orWhere('position', 'like', '%Wash%')
+                            ->orWhere('position', 'like', '%ATK%')
+                            ->orWhere('department', 'like', '%Teknis%')
+                            ->orWhere('department', 'like', '%Wash%')
+                            ->orWhere('department', 'like', '%Cuci%')
+                            ->orWhere('department', 'like', '%ATK%');
+                    })
+                    ->where('position', 'not like', '%Koordinator%')
+                    ->where('position', 'not like', '%Leader%');
                 });
             })
             ->with(['role', 'employee'])
             ->orderBy('name');
+
+        if ($category === 'technician') {
+            $query->where(function ($q) {
+                $q->whereHas('role', fn ($rq) => $rq->whereIn('name', ['field-technician', 'technician']))
+                    ->orWhere('job_title', 'like', '%Teknisi%')
+                    ->orWhereHas('employee', fn ($eq) => $eq->where('position', 'like', '%Teknisi%'));
+            });
+        } elseif ($category === 'wash') {
+            $query->where(function ($q) {
+                $q->whereHas('role', fn ($rq) => $rq->whereIn('name', ['wash-operator', 'karyawan-wash', 'wash-cashier', 'kasir-wash']))
+                    ->orWhere('job_title', 'like', '%Wash%')
+                    ->orWhere('job_title', 'like', '%Cuci%')
+                    ->orWhereHas('employee', fn ($eq) => $eq->where('position', 'like', '%Wash%')->orWhere('position', 'like', '%Cuci%')->orWhere('department', 'like', '%Wash%'));
+            });
+        } elseif ($category === 'atk') {
+            $query->where(function ($q) {
+                $q->whereHas('role', fn ($rq) => $rq->whereIn('name', ['atk-cashier', 'kasir-atk']))
+                    ->orWhere('job_title', 'like', '%ATK%')
+                    ->orWhereHas('employee', fn ($eq) => $eq->where('position', 'like', '%ATK%')->orWhere('department', 'like', '%ATK%'));
+            });
+        }
+
+        return $query;
     }
 
     public static function middleware(): array
@@ -126,12 +185,13 @@ class TechnicianAttendanceController extends Controller implements HasMiddleware
         }
         $status = (string) $request->query('status', '');
         $search = (string) $request->query('search', '');
+        $category = (string) $request->query('category', '');
 
         if (Carbon::parse($startDate)->gt(Carbon::parse($endDate))) {
             [$startDate, $endDate] = [$endDate, $startDate];
         }
 
-        $usersQuery = $this->getTechniciansBaseQuery();
+        $usersQuery = $this->getTechniciansBaseQuery($category);
 
         if (!$this->attendanceService->canViewAllAttendanceData($user)) {
             $usersQuery->where('id', Auth::id());
@@ -174,7 +234,7 @@ class TechnicianAttendanceController extends Controller implements HasMiddleware
         }
 
         return view('technicians.attendance.daily', compact(
-            'users', 'attendancesByDate', 'dates', 'startDate', 'endDate', 'status', 'search', 'isOffByUserAndDate'
+            'users', 'attendancesByDate', 'dates', 'startDate', 'endDate', 'status', 'search', 'category', 'isOffByUserAndDate'
         ));
     }
 
@@ -311,7 +371,8 @@ class TechnicianAttendanceController extends Controller implements HasMiddleware
                 [$startDate, $endDate] = [$endDate, $startDate];
             }
 
-            $usersQuery = $this->getTechniciansBaseQuery();
+            $category = (string) $request->query('category', '');
+            $usersQuery = $this->getTechniciansBaseQuery($category);
                 
             if (!$this->attendanceService->canViewAllAttendanceData($user)) {
                 $usersQuery->where('id', Auth::id());
