@@ -82,13 +82,51 @@ class RoleController extends Controller implements HasMiddleware
         $user = auth()->user();
         $superAdminRoles = (array) config('auth.super_admin_roles', []);
 
+        $disabledPrefixes = collect(config('module_gating.permission_prefixes', []))
+            ->filter(fn ($p, $module) => ! \App\Support\ModuleGate::isEnabled($module))
+            ->flatten()
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        if (! \App\Support\ModuleGate::isEnabled('isp')) {
+            $disabledPrefixes[] = 'customer.';
+            $disabledPrefixes[] = 'installation.';
+            $disabledPrefixes[] = 'hotspot.';
+            $disabledPrefixes[] = 'pppoe.';
+            $disabledPrefixes[] = 'modem-data.';
+            $disabledPrefixes[] = 'genieacs.';
+            $disabledPrefixes[] = 'network-monitor.';
+        }
+        if (! \App\Support\ModuleGate::isEnabled('ticketing')) {
+            $disabledPrefixes[] = 'ticket.';
+            $disabledPrefixes[] = 'sla.';
+        }
+        $disabledPrefixes = array_unique(array_filter($disabledPrefixes));
+
+        $isSuperAdmin = false;
         foreach ($superAdminRoles as $superRole) {
             if ($user?->hasRole($superRole)) {
-                return Permission::all();
+                $isSuperAdmin = true;
+                break;
             }
         }
 
-        return $user->role?->permissions ?? collect();
+        $query = $isSuperAdmin ? Permission::query() : $user->role?->permissions();
+        if (! $query) {
+            return collect();
+        }
+
+        if (! empty($disabledPrefixes)) {
+            $query->where(function ($q) use ($disabledPrefixes) {
+                foreach ($disabledPrefixes as $prefix) {
+                    $q->where('name', 'not like', $prefix . '%');
+                }
+            });
+        }
+
+        return $query->get();
     }
 
     /**
