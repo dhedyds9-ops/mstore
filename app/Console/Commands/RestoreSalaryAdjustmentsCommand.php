@@ -20,34 +20,77 @@ class RestoreSalaryAdjustmentsCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Restore missing salary adjustments (kasbon & bonus) from public/backup_mstore_oktober2026.sql';
+    protected $description = 'Restore missing salary adjustments (kasbon & bonus) from embedded backup data';
 
     /**
      * Execute the console command.
      */
     public function handle(): int
     {
-        $backupFile = public_path('backup_mstore_oktober2026.sql');
-        if (! file_exists($backupFile)) {
-            $this->error("Backup file not found at: {$backupFile}");
+        $this->info("Initializing kasbon & salary adjustments restoration...");
+
+        $sql = null;
+        if (class_exists(\App\Support\KasbonBackupData::class)) {
+            $sql = \App\Support\KasbonBackupData::getSql();
+        } elseif (class_exists(\Database\Data\KasbonBackupData::class)) {
+            $sql = \Database\Data\KasbonBackupData::getSql();
+        }
+
+        if (! $sql) {
+            $candidatePaths = [
+                database_path('data/salary_adjustments_backup.sql'),
+                base_path('database/data/salary_adjustments_backup.sql'),
+                base_path('public/backup_mstore_oktober2026.sql'),
+                public_path('backup_mstore_oktober2026.sql'),
+                base_path('backup_mstore_oktober2026.sql'),
+            ];
+
+            foreach ($candidatePaths as $path) {
+                if (file_exists($path)) {
+                    $sql = file_get_contents($path);
+                    break;
+                }
+            }
+        }
+
+        if (! $sql) {
+            $this->error('Failed to locate backup SQL data.');
             return Command::FAILURE;
         }
 
-        $this->info("Reading backup file: {$backupFile}...");
-        $sql = file_get_contents($backupFile);
-
         if (! preg_match('/INSERT INTO `salary_adjustments` VALUES (.*?);/s', $sql, $matches)) {
-            $this->error('No salary_adjustments insert statements found in backup file.');
+            $this->error('No salary_adjustments insert statements found in backup.');
             return Command::FAILURE;
+        }
+
+        $driver = DB::connection()->getDriverName();
+        $this->info("Database driver: {$driver}");
+
+        if ($driver === 'mysql' && ! $this->option('force')) {
+            // Fast direct execution via MySQL INSERT IGNORE
+            $this->info("Restoring directly via MySQL INSERT IGNORE...");
+            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+            try {
+                $rawInsert = $matches[0];
+                $mysqlInsert = preg_replace('/^INSERT INTO/i', 'INSERT IGNORE INTO', $rawInsert);
+                DB::unprepared($mysqlInsert);
+                $count = DB::table('salary_adjustments')->count();
+                $this->info("Restoration completed successfully!");
+                $this->line("   - Total in Database: <info>{$count}</info>");
+                return Command::SUCCESS;
+            } catch (\Throwable $e) {
+                $this->warn("Fast insert failed (" . $e->getMessage() . "), falling back to row-by-row parser...");
+            } finally {
+                DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+            }
         }
 
         $raw = $matches[1];
         preg_match_all('/\((.*?)\)(?:,|$)/s', $raw, $tuples);
 
         $totalTuples = count($tuples[1]);
-        $this->info("Found {$totalTuples} salary_adjustments records in backup. Restoring...");
+        $this->info("Found {$totalTuples} salary_adjustments records in backup. Parsing...");
 
-        $driver = DB::connection()->getDriverName();
         if ($driver === 'sqlite') {
             DB::statement('PRAGMA foreign_keys = OFF;');
         } elseif ($driver === 'mysql') {
