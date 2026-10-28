@@ -37,3 +37,10 @@ Route::prefix('whatsapp')->group(function () {
         ->middleware('throttle:120,1')
         ->name('api.whatsapp.webhook');
 });
+
+// dsBilling Attendance Sync Webhook
+Route::post('/v1/attendance/sync', [\App\Http\Controllers\Api\AttendanceSyncApiController::class, 'sync'])
+    ->middleware('throttle:120,1')
+    ->name('api.attendance.sync');
+Route::post('/attendance/sync', [\App\Http\Controllers\Api\AttendanceSyncApiController::class, 'sync']);
+
