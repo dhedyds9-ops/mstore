@@ -46,6 +46,7 @@ class EmployeeController extends Controller implements HasMiddleware
     {
         $search = trim((string) $request->query('search', ''));
         $department = trim((string) $request->query('department', ''));
+        $position = trim((string) $request->query('position', ''));
         $status = trim((string) $request->query('status', ''));
 
         $query = Employee::query()
@@ -63,6 +64,9 @@ class EmployeeController extends Controller implements HasMiddleware
             ->when($department !== '', function ($query) use ($department) {
                 $query->where('department', $department);
             })
+            ->when($position !== '', function ($query) use ($position) {
+                $query->where('position', $position);
+            })
             ->when($status !== '', function ($query) use ($status) {
                 $query->where('employment_status', $status);
             })
@@ -71,12 +75,13 @@ class EmployeeController extends Controller implements HasMiddleware
             ->withQueryString();
 
         $employees = $query;
-        $departments = Employee::query()->select('department')->whereNotNull('department')->distinct()->orderBy('department')->pluck('department');
+        $departments = Employee::query()->select('department')->whereNotNull('department')->where('department', '!=', '')->distinct()->orderBy('department')->pluck('department');
+        $positions = Employee::query()->select('position')->whereNotNull('position')->where('position', '!=', '')->distinct()->orderBy('position')->pluck('position');
         $defaultStatuses = ['Tetap', 'Training', 'Pendaftar'];
         $dbStatuses = Employee::query()->select('employment_status')->whereNotNull('employment_status')->distinct()->pluck('employment_status')->toArray();
         $statuses = array_values(array_unique(array_filter(array_merge($defaultStatuses, $dbStatuses))));
 
-        return view('employees.index', compact('employees', 'search', 'departments', 'statuses', 'department', 'status'));
+        return view('employees.index', compact('employees', 'search', 'departments', 'positions', 'statuses', 'department', 'position', 'status'));
     }
 
     public function create()
@@ -333,6 +338,7 @@ class EmployeeController extends Controller implements HasMiddleware
 
         $search = trim((string) $request->query('search', ''));
         $department = trim((string) $request->query('department', ''));
+        $position = trim((string) $request->query('position', ''));
         $status = trim((string) $request->query('status', ''));
 
         $rows = Employee::query()
@@ -348,6 +354,9 @@ class EmployeeController extends Controller implements HasMiddleware
             })
             ->when($department !== '', function ($query) use ($department) {
                 $query->where('department', $department);
+            })
+            ->when($position !== '', function ($query) use ($position) {
+                $query->where('position', $position);
             })
             ->when($status !== '', function ($query) use ($status) {
                 $query->where('employment_status', $status);

@@ -28,6 +28,8 @@
                     searchPlaceholder="Cari pengguna..." 
                     :showRoleFilter="true" 
                     :roles="$roles ?? collect()" 
+                    :showJobTitleFilter="true"
+                    :jobTitles="$jobTitles ?? collect()"
                 />
             </div>
             <div class="card-body pt-0">

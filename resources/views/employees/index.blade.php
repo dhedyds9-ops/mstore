@@ -33,7 +33,7 @@
 
         {{-- Row 2: Filter & Search --}}
         <form method="GET" class="row g-2 align-items-center">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="input-group input-group-sm">
                     <span class="input-group-text bg-transparent border-end-0 text-muted">
                         <i class="fa-solid fa-magnifying-glass"></i>
@@ -50,6 +50,14 @@
                 </select>
             </div>
             <div class="col-md-2">
+                <select name="position" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">Semua Jabatan</option>
+                    @foreach($positions as $pos)
+                        <option value="{{ $pos }}" {{ $position === $pos ? 'selected' : '' }}>{{ $pos }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-2">
                 <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
                     <option value="">Semua Status</option>
                     @foreach($statuses as $st)
@@ -61,7 +69,7 @@
                 <button type="submit" class="btn btn-sm btn-primary px-3">
                     <i class="fa-solid fa-filter me-1"></i>Filter
                 </button>
-                @if(request('search') || request('department') || request('status') || request('company_id'))
+                @if(request('search') || request('department') || request('position') || request('status') || request('company_id'))
                     <a href="{{ route('employees.index') }}" class="btn btn-sm btn-outline-secondary" title="Reset Filter">
                         <i class="fa-solid fa-rotate-left"></i>
                     </a>
@@ -75,12 +83,12 @@
                         <i class="fa-solid fa-file-export me-1"></i> Ekspor
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                        <li><a class="dropdown-item py-2" href="{{ route('employees.export.pdf', request()->only(['search','department','status'])) }}"><i class="fa-regular fa-file-pdf me-2 text-danger"></i> PDF</a></li>
-                        <li><a class="dropdown-item py-2" href="{{ route('employees.export.excel', request()->only(['search','department','status'])) }}"><i class="fa-regular fa-file-excel me-2 text-success"></i> Excel</a></li>
-                        <li><a class="dropdown-item py-2" href="{{ route('employees.export.csv', request()->only(['search','department','status'])) }}"><i class="fa-solid fa-file-csv me-2 text-secondary"></i> CSV</a></li>
+                        <li><a class="dropdown-item py-2" href="{{ route('employees.export.pdf', request()->only(['search','department','position','status'])) }}"><i class="fa-regular fa-file-pdf me-2 text-danger"></i> PDF</a></li>
+                        <li><a class="dropdown-item py-2" href="{{ route('employees.export.excel', request()->only(['search','department','position','status'])) }}"><i class="fa-regular fa-file-excel me-2 text-success"></i> Excel</a></li>
+                        <li><a class="dropdown-item py-2" href="{{ route('employees.export.csv', request()->only(['search','department','position','status'])) }}"><i class="fa-solid fa-file-csv me-2 text-secondary"></i> CSV</a></li>
                     </ul>
                 </div>
-                <a href="{{ route('employees.print.cards', request()->only(['search','department','status'])) }}" target="_blank" class="btn btn-sm btn-outline-dark">
+                <a href="{{ route('employees.print.cards', request()->only(['search','department','position','status'])) }}" target="_blank" class="btn btn-sm btn-outline-dark">
                     <i class="fa-solid fa-print me-1"></i> ID Cards
                 </a>
             </div>
@@ -94,6 +102,7 @@
         <form method="GET" action="{{ route('employees.print.cards') }}" target="_blank" id="printSelectedForm" class="m-0">
             <input type="hidden" name="search" value="{{ $search }}">
             <input type="hidden" name="department" value="{{ $department }}">
+            <input type="hidden" name="position" value="{{ $position }}">
             <input type="hidden" name="status" value="{{ $status }}">
             <button type="submit" class="btn btn-xs btn-outline-dark" id="printSelectedBtn" disabled>
                 <i class="fa-solid fa-id-card me-1"></i> Print Pilihan

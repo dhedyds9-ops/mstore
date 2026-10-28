@@ -48,7 +48,8 @@ class UserController extends Controller implements HasMiddleware
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('username', 'like', "%{$search}%");
+                    ->orWhere('username', 'like', "%{$search}%")
+                    ->orWhere('job_title', 'like', "%{$search}%");
 
                 if ($this->hasAttendanceCardColumn()) {
                     $q->orWhere('attendance_card_code', 'like', "%{$search}%");
@@ -62,6 +63,10 @@ class UserController extends Controller implements HasMiddleware
             $query->where('role_id', $request->integer('role_id'));
         }
 
+        if ($request->filled('job_title')) {
+            $query->where('job_title', $request->job_title);
+        }
+
         $perPage = $request->input('per_page', 10);
         
         if ($perPage === 'all') {
@@ -73,8 +78,17 @@ class UserController extends Controller implements HasMiddleware
 
         $users = $query->paginate($perPage)->withQueryString();
         $roles = Role::whereNotIn('name', $hiddenNames)->orderBy('label')->get();
+        $jobTitles = User::query()
+            ->whereHas('role', function ($q) use ($hiddenNames) {
+                $q->whereNotIn('name', $hiddenNames);
+            })
+            ->whereNotNull('job_title')
+            ->where('job_title', '!=', '')
+            ->distinct()
+            ->orderBy('job_title')
+            ->pluck('job_title');
 
-        return view('users.index', compact('users', 'roles'));
+        return view('users.index', compact('users', 'roles', 'jobTitles'));
     }
 
     public function export(Request $request)
@@ -91,7 +105,8 @@ class UserController extends Controller implements HasMiddleware
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('username', 'like', "%{$search}%");
+                    ->orWhere('username', 'like', "%{$search}%")
+                    ->orWhere('job_title', 'like', "%{$search}%");
 
                 if ($this->hasAttendanceCardColumn()) {
                     $q->orWhere('attendance_card_code', 'like', "%{$search}%");
@@ -105,6 +120,10 @@ class UserController extends Controller implements HasMiddleware
             $query->where('role_id', $request->integer('role_id'));
         }
 
+        if ($request->filled('job_title')) {
+            $query->where('job_title', $request->job_title);
+        }
+
         $users = $query->get();
 
         return response()->streamDownload(function () use ($users) {
@@ -114,6 +133,7 @@ class UserController extends Controller implements HasMiddleware
             $writer->addRow(Row::fromValues([
                 'ID',
                 'Name',
+                'Job Title',
                 'Email',
                 'Username',
                 'Attendance Card Code',
@@ -128,6 +148,7 @@ class UserController extends Controller implements HasMiddleware
                 $writer->addRow(Row::fromValues([
                     $user->id,
                     $user->name,
+                    $user->job_title,
                     $user->email,
                     $user->username,
                     $user->attendance_card_code,

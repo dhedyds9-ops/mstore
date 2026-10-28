@@ -3,6 +3,8 @@
     'searchPlaceholder' => __('Cari...'),
     'showRoleFilter' => false,
     'roles' => collect(),
+    'showJobTitleFilter' => false,
+    'jobTitles' => collect(),
 ])
 
 <form action="{{ $route ?? url()->current() }}" method="GET" class="m-0">
@@ -35,6 +37,18 @@
             </div>
         @endif
 
+        <!-- Job Title Select (Optional) -->
+        @if($showJobTitleFilter)
+            <div class="col-auto">
+                <select name="job_title" class="form-select form-select-sm" onchange="this.form.submit()" style="cursor: pointer; min-width: 140px;">
+                    <option value="">{{ __('Semua Jabatan') }}</option>
+                    @foreach($jobTitles as $jt)
+                        <option value="{{ $jt }}" @selected((string) request('job_title') === (string) $jt)>{{ $jt }}</option>
+                    @endforeach
+                </select>
+            </div>
+        @endif
+
         <!-- Search Input -->
         <div class="col-auto flex-grow-1 flex-md-grow-0">
             <div class="input-group input-group-sm">
@@ -42,7 +56,7 @@
                 <button class="btn btn-primary px-3" type="submit" title="{{ __('Cari') }}">
                     <i class="fa-solid fa-magnifying-glass"></i>
                 </button>
-                @if(request()->filled('search') || request()->filled('role_id') || request()->filled('per_page'))
+                @if(request()->filled('search') || request()->filled('role_id') || request()->filled('job_title') || request()->filled('per_page'))
                     <a href="{{ $route ?? url()->current() }}" class="btn btn-outline-secondary px-3" title="{{ __('Reset Filter') }}">
                         <i class="fa-solid fa-rotate-left"></i>
                     </a>
