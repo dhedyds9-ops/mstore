@@ -84,11 +84,65 @@ class SalaryAdjustmentController extends Controller
 
         $loans = $loanQuery->get();
 
-        $allUsers = User::query()
-            ->whereHas('employee')
-            ->whereHas('role', function ($q) {
-                $q->whereNotIn('name', Role::hiddenInUserManagement());
+        // Pastikan data teknisi dsBilling & karyawan terhubung ke user account
+        if (\App\Models\Employee::where('position', 'Teknisi Lapangan')->count() < 7) {
+            try {
+                \Illuminate\Support\Facades\Artisan::call('attendance:sync-employees');
+            } catch (\Throwable $e) {
+                // ignore
+            }
+        }
+
+        $employeesWithoutUser = \App\Models\Employee::whereNull('user_id')->get();
+        if ($employeesWithoutUser->isNotEmpty()) {
+            $techRole = Role::whereIn('name', ['field-technician', 'technician'])->first()
+                ?: Role::whereIn('name', ['wash-operator', 'operator', 'staff'])->first();
+
+            foreach ($employeesWithoutUser as $emp) {
+                $digits = preg_replace('/\D+/', '', (string) $emp->phone);
+                $last8 = strlen($digits) >= 8 ? substr($digits, -8) : $digits;
+
+                $user = null;
+                if (!empty($emp->email)) {
+                    $user = User::where('email', $emp->email)->first();
+                }
+                if (!$user && !empty($last8)) {
+                    $user = User::where('phone', 'like', "%{$last8}%")->first();
+                }
+                if (!$user) {
+                    $user = User::whereRaw('LOWER(TRIM(name)) = ?', [strtolower(trim($emp->full_name))])->first();
+                }
+
+                if (!$user) {
+                    $uname = User::generateUniqueUsername($emp->full_name, $emp->email);
+                    $user = User::create([
+                        'name' => $emp->full_name,
+                        'username' => $uname,
+                        'email' => !empty($emp->email) ? $emp->email : ($uname . '@mstore.id'),
+                        'phone' => $emp->phone,
+                        'job_title' => $emp->position ?: 'Teknisi Lapangan',
+                        'role_id' => $techRole?->id,
+                        'password' => bcrypt('Password123!'),
+                        'is_active' => true,
+                    ]);
+                }
+
+                $emp->user_id = $user->id;
+                $emp->saveQuietly();
+            }
+        }
+
+        $employeeUserIds = \App\Models\Employee::query()
+            ->where(function ($q) {
+                $q->whereNull('employment_status')
+                  ->orWhereNotIn('employment_status', ['Resigned', 'Keluar', 'Nonaktif']);
             })
+            ->pluck('user_id')
+            ->filter()
+            ->unique();
+
+        $allUsers = User::query()
+            ->whereIn('id', $employeeUserIds)
             ->where('is_active', true)
             ->with(['role', 'employee'])
             ->orderBy('name')

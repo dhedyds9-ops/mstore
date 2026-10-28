@@ -133,7 +133,19 @@ class SyncAttendanceEmployeesCommand extends Command
                 }
             }
 
-            if ($user) {
+            if (! $user) {
+                $uname = User::generateUniqueUsername($ds['name'], $ds['email']);
+                $user = User::create([
+                    'name' => $ds['name'],
+                    'username' => $uname,
+                    'email' => $ds['email'],
+                    'phone' => $ds['phone'],
+                    'job_title' => 'Teknisi Lapangan',
+                    'role_id' => $techRole?->id,
+                    'password' => bcrypt('Password123!'),
+                    'is_active' => true,
+                ]);
+            } else {
                 $user->name = $ds['name'];
                 $user->email = $ds['email'];
                 $user->phone = $ds['phone'];
@@ -152,7 +164,7 @@ class SyncAttendanceEmployeesCommand extends Command
                 $employee->position = 'Teknisi Lapangan';
                 $employee->department = 'Teknis & Jaringan';
                 $employee->join_date = $ds['join_date'];
-                if ($user && empty($employee->user_id)) {
+                if ($user) {
                     $employee->user_id = $user->id;
                 }
                 $employee->saveQuietly();
@@ -168,7 +180,7 @@ class SyncAttendanceEmployeesCommand extends Command
                     'join_date' => $ds['join_date'],
                     'email' => $ds['email'],
                     'phone' => $ds['phone'],
-                    'user_id' => $user?->id,
+                    'user_id' => $user->id,
                 ]);
                 $updatedDsCount++;
                 $this->info(" + Tambahkan data dsBilling baru: {$ds['name']} (NIK: {$ds['nik']})");

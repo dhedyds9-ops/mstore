@@ -491,6 +491,12 @@ class EmployeeController extends Controller implements HasMiddleware
 
     public function syncExisting()
     {
+        try {
+            \Illuminate\Support\Facades\Artisan::call('attendance:sync-employees');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('attendance:sync-employees failed in syncExisting: ' . $e->getMessage());
+        }
+
         $users = User::query()->with('role')->whereHas('role', function ($query) {
             $query->whereIn('name', $this->employeeSyncService->allowedRoles());
         })->get();
