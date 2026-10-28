@@ -70,10 +70,13 @@
                             <tr data-filter="{{ $filterType }}">
                                 <td data-label="Gambar">
                                     @if($service->image)
-                                        <img src="{{ Storage::url($service->image) }}" alt="{{ $service->name }}" width="50" height="50" class="img-thumbnail object-fit-cover">
+                                        <img src="{{ asset('storage/' . $service->image) }}" alt="{{ $service->name }}" width="50" height="50" class="img-thumbnail object-fit-cover" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.classList.remove('d-none'); this.nextElementSibling.classList.add('d-flex');">
+                                        <div class="d-none align-items-center justify-content-center text-muted border rounded" style="width: 50px; height: 50px;">
+                                            <i class="fas {{ $service->vehicle_type === 'motor' ? 'fa-motorcycle' : ($service->vehicle_type === 'car' ? 'fa-car' : 'fa-spray-can-sparkles') }}"></i>
+                                        </div>
                                     @else
-                                        <div class=" d-flex align-items-center justify-content-center text-muted border rounded" style="width: 50px; height: 50px;">
-                                            <i class="fas fa-image"></i>
+                                        <div class="d-flex align-items-center justify-content-center text-muted border rounded" style="width: 50px; height: 50px;">
+                                            <i class="fas {{ $service->vehicle_type === 'motor' ? 'fa-motorcycle' : ($service->vehicle_type === 'car' ? 'fa-car' : 'fa-spray-can-sparkles') }}"></i>
                                         </div>
                                     @endif
                                 </td>

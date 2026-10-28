@@ -228,7 +228,8 @@
                     <label for="image" class="form-label" id="imageLabel">Gambar Layanan</label>
                     @if($service->image)
                         <div class="mb-2">
-                            <img src="{{ Storage::url($service->image) }}" alt="Service Image" class="img-thumbnail" style="max-height: 150px;">
+                            <img src="{{ asset('storage/' . $service->image) }}" alt="Service Image" class="img-thumbnail" style="max-height: 150px;" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.classList.remove('d-none');">
+                            <div class="alert alert-warning py-1 px-2 small d-none"><i class="fa-solid fa-triangle-exclamation me-1"></i> File gambar (<code>{{ $service->image }}</code>) tidak ditemukan di server. Silakan upload file baru.</div>
                         </div>
                     @endif
                     <input type="file" class="form-control @error('image') is-invalid @enderror" id="image" name="image" accept="image/*">

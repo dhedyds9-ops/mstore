@@ -98,7 +98,8 @@
                                      data-rules='@json($rulePayload)'>
                                     <div class="service-image-wrap">
                                         @if($service->image)
-                                            <img src="{{ Storage::url($service->image) }}" class="img-fluid service-image" alt="{{ $service->name }}">
+                                            <img src="{{ asset('storage/' . $service->image) }}" class="img-fluid service-image" alt="{{ $service->name }}" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                            <i class="fas {{ $fallbackIcon }} service-fallback-icon" style="display: none;"></i>
                                         @else
                                             <i class="fas {{ $fallbackIcon }} service-fallback-icon"></i>
                                         @endif
