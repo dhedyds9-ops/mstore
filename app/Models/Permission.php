@@ -51,32 +51,47 @@ class Permission extends Model
             });
         }
 
-        $allPermissions = $query->get()->groupBy('group');
+        $allPermissions = $query->get()->map(function ($p) {
+            if (empty($p->group)) {
+                if (str_starts_with($p->name, 'accounting.')) {
+                    $p->group = 'Accounting';
+                } else {
+                    $p->group = 'General';
+                }
+            }
+            return $p;
+        })->groupBy('group');
 
         $tabMap = [
             'Cuci Kendaraan' => ['Car Wash'],
             'Toko ATK' => ['ATK Store'],
-            'Keuangan' => ['Finance', 'Investor Management', 'Accounting'],
+            'Keuangan' => ['Finance', 'Investor Management', 'Accounting', 'Company Management'],
             'Operasional & SDM' => [
-                'Technician Management', 'Attendance', 'Leave Management', 'Schedule Management',
-                'Inventory (Alat & Material)', 'Employee Management'
+                'Attendance', 'Leave Management', 'Schedule Management',
+                'Inventory (Alat & Material)', 'Employee Management', 'Technician Management'
             ],
-            'Wedding & Event' => ['Wedding & Event'],
-            'CCTV Installation' => ['CCTV Installation'],
             'Sistem' => [
                 'User Management', 'Role Management', 'Settings', 'Coordinator Management',
                 'Region Management', 'Package Management', 'WhatsApp', 'Telegram', 'Notification', 'Integrasi',
-                'Security'
+                'Security', 'Utilities'
             ],
             'Reporting' => ['Reporting'],
-            'Umum' => ['Dashboard', 'Profile'],
+            'Umum' => ['Dashboard', 'Profile', 'General'],
         ];
+
+        if (\App\Support\ModuleGate::isEnabled('wedding')) {
+            $tabMap['Wedding & Event'] = ['Wedding & Event'];
+        }
+
+        if (\App\Support\ModuleGate::isEnabled('cctv')) {
+            $tabMap['CCTV Installation'] = ['CCTV Installation'];
+        }
 
         if (\App\Support\ModuleGate::isEnabled('isp')) {
             $tabMap['Pelanggan & Layanan'] = ['Customer Management', 'Ticket Management', 'Installation Management', 'Service Management'];
             $tabMap['Jaringan'] = [
                 'ODC Management', 'ODP Management', 'HTB Management', 'OLT Management', 'Router Management',
-                'Closure Management', 'PPPoE Management', 'Hotspot Management', 'Radius', 'Map', 'Network Monitor', 'Utilities',
+                'Closure Management', 'PPPoE Management', 'Hotspot Management', 'Radius', 'Map', 'Network Monitor',
                 'NOC Center'
             ];
         }
@@ -90,12 +105,19 @@ class Permission extends Model
             'Sistem',
             'Umum',
             'Reporting',
-            'Wedding & Event',
-            'CCTV Installation',
-            'Pelanggan & Layanan',
-            'Jaringan',
-            'Lainnya',
         ];
+
+        if (\App\Support\ModuleGate::isEnabled('wedding')) {
+            $tabsOrder[] = 'Wedding & Event';
+        }
+        if (\App\Support\ModuleGate::isEnabled('cctv')) {
+            $tabsOrder[] = 'CCTV Installation';
+        }
+        if (\App\Support\ModuleGate::isEnabled('isp')) {
+            $tabsOrder[] = 'Pelanggan & Layanan';
+            $tabsOrder[] = 'Jaringan';
+        }
+        $tabsOrder[] = 'Lainnya';
 
         foreach ($allPermissions as $group => $perms) {
             $foundTab = 'Lainnya';

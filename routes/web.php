@@ -732,22 +732,22 @@ Route::get('/webhooks/payment/return', [\App\Http\Controllers\PaymentController:
             ->middleware('permission:wash.expense.view|wash.report|wash.manage')
             ->name('expenses.index');
         Route::get('/expenses/create', [\App\Http\Controllers\WashExpenseController::class, 'create'])
-            ->middleware('permission:wash.expense.create|wash.manage')
+            ->middleware('permission:wash.expense.view|wash.manage')
             ->name('expenses.create');
         Route::post('/expenses', [\App\Http\Controllers\WashExpenseController::class, 'store'])
-            ->middleware('permission:wash.expense.create|wash.manage')
+            ->middleware('permission:wash.expense.view|wash.manage')
             ->name('expenses.store');
         Route::post('/expenses/stock-out', [\App\Http\Controllers\WashExpenseController::class, 'stockOut'])
-            ->middleware('permission:wash.expense.update|wash.manage')
+            ->middleware('permission:wash.expense.view|wash.manage')
             ->name('expenses.stock_out');
         Route::get('/expenses/{expense}/edit', [\App\Http\Controllers\WashExpenseController::class, 'edit'])
-            ->middleware('permission:wash.expense.update|wash.manage')
+            ->middleware('permission:wash.expense.view|wash.manage')
             ->name('expenses.edit');
         Route::put('/expenses/{expense}', [\App\Http\Controllers\WashExpenseController::class, 'update'])
-            ->middleware('permission:wash.expense.update|wash.manage')
+            ->middleware('permission:wash.expense.view|wash.manage')
             ->name('expenses.update');
         Route::delete('/expenses/{expense}', [\App\Http\Controllers\WashExpenseController::class, 'destroy'])
-            ->middleware('permission:wash.expense.delete|wash.manage')
+            ->middleware('permission:wash.expense.view|wash.manage')
             ->name('expenses.destroy');
         Route::get('/customer/check', [\App\Http\Controllers\WashTransactionController::class, 'checkCustomer'])
             ->middleware('permission:wash.pos')
@@ -786,10 +786,10 @@ Route::get('/webhooks/payment/return', [\App\Http\Controllers\PaymentController:
             ->middleware('permission:wash.view')
             ->name('export');
         Route::get('/template', [\App\Http\Controllers\WashStockController::class, 'downloadTemplate'])
-            ->middleware('permission:wash.manage')
+            ->middleware('permission:wash.stock.view|wash.manage')
             ->name('template');
         Route::post('/import', [\App\Http\Controllers\WashStockController::class, 'import'])
-            ->middleware('permission:wash.manage')
+            ->middleware('permission:wash.stock.view|wash.manage')
             ->name('import');
         Route::get('/create', [\App\Http\Controllers\WashStockController::class, 'create'])->name('create');
         Route::post('/', [\App\Http\Controllers\WashStockController::class, 'store'])->name('store');

@@ -25,7 +25,6 @@ return [
         'pos',        // POS Retail
         'wash',       // GT Wash
         'wedding',    // Wedding & Event
-        'cctv',       // Solusi CCTV
         'hr',         // Manajemen SDM & Karyawan
         'inventory',  // Inventaris & Stok
         'messaging',  // WhatsApp & Telegram Gateway, Bot, Chat
@@ -131,10 +130,10 @@ return [
     // Prefix nama permission yang dicabut dari semua role saat prune.
     'permission_prefixes' => [
         'isp' => [
-            'olt.', 'odc.', 'odp.', 'closure.', 'htb.', 'router.', 'vpn.',
-            'hotspot.', 'pppoe.', 'package.', 'voucher.', 'map.',
+            'olt.', 'ont.', 'odc.', 'odp.', 'closure.', 'htb.', 'router.', 'vpn.',
+            'hotspot.', 'pppoe.', 'package.', 'voucher.', 'map.', 'radius.',
             'genieacs', 'network-monitor.', 'noc.', 'modem-data.',
-            'installation.', 'technician.view',
+            'installation.', 'customer.', 'technician.',
         ],
         'ticketing' => [
             'ticket.', 'sla.',
@@ -143,13 +142,13 @@ return [
             'chat.', 'ai.', 'whatsapp.', 'telegram.',
         ],
         'reporting' => [
-            'report.noc.', 'report.whatsapp.', 'report.sla.',
+            'report.noc.', 'report.whatsapp.', 'report.sla.', 'report.cctv.',
         ],
         'wedding' => [
-            'wedding.',
+            'wedding.', 'report.wedding.',
         ],
         'cctv' => [
-            'cctv.',
+            'cctv.', 'report.cctv.',
         ],
         'hr' => [
             'employee.', 'schedule.', 'leave.', 'kasbon.', 'admin.dashboard.view',

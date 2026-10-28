@@ -16,8 +16,7 @@ class WashShiftSessionController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('permission:wash.shift.view', only: ['index', 'show']),
-            new Middleware('permission:wash.shift.open', only: ['create', 'store']),
-            new Middleware('permission:wash.shift.close', only: ['edit', 'update']),
+            new Middleware('permission:wash.shift.view|wash.pos|wash.manage', only: ['create', 'store', 'edit', 'update']),
         ];
     }
 
