@@ -86,7 +86,7 @@
         <div class="card-body">
             @if(isset($txCount))
             <div class="row g-3 mb-3">
-                <div class="col-6 col-md-2">
+                <div class="col-6 col-md-3">
                     <div class="card border-0 bg-primary-subtle shadow-sm h-100">
                         <div class="card-body p-2 p-md-3">
                             <div class="small text-primary-emphasis mb-1"><i class="fa-solid fa-receipt me-1"></i> Jml. Transaksi</div>
@@ -94,7 +94,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-6 col-md-2">
+                <div class="col-6 col-md-3">
                     <div class="card border-0 bg-info-subtle shadow-sm h-100">
                         <div class="card-body p-2 p-md-3">
                             <div class="small text-info-emphasis mb-1"><i class="fa-solid fa-sack-dollar me-1"></i> Penjualan Kotor</div>
@@ -102,7 +102,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-6 col-md-2">
+                <div class="col-6 col-md-3">
                     <div class="card border-0 bg-warning-subtle shadow-sm h-100">
                         <div class="card-body p-2 p-md-3">
                             <div class="small text-warning-emphasis mb-1"><i class="fa-solid fa-tags me-1"></i> Total Diskon</div>
@@ -110,23 +110,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-6 col-md-2">
-                    <div class="card border-0 bg-body-secondary shadow-sm h-100">
-                        <div class="card-body p-2 p-md-3">
-                            <div class="small text-body-emphasis mb-1"><i class="fa-solid fa-wallet me-1"></i> Bersih (sblm komisi)</div>
-                            <div class="fw-bold fs-4 text-body-emphasis">Rp {{ number_format($netSales ?? 0, 0, ',', '.') }}</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-6 col-md-2">
-                    <div class="card border-0 bg-danger-subtle shadow-sm h-100">
-                        <div class="card-body p-2 p-md-3">
-                            <div class="small text-danger-emphasis mb-1"><i class="fa-solid fa-users-line me-1"></i> Komisi Karyawan</div>
-                            <div class="fw-bold fs-4 text-danger-emphasis">- Rp {{ number_format($totalCommission ?? 0, 0, ',', '.') }}</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-6 col-md-2">
+                <div class="col-6 col-md-3">
                     <div class="card border-0 bg-success-subtle shadow-sm h-100">
                         <div class="card-body p-2 p-md-3">
                             <div class="small text-success-emphasis mb-1"><i class="fa-solid fa-chart-line me-1"></i> Pendapatan Bersih</div>
@@ -135,49 +119,6 @@
                     </div>
                 </div>
             </div>
-
-            @if(($commissionPerEmployee ?? collect())->count() > 0)
-            <div class="card border border-secondary-subtle mb-3 shadow-sm">
-                <div class="card-header py-2 bg-body-tertiary">
-                    <h6 class="m-0 fw-semibold"><i class="fa-solid fa-coins me-1 text-warning"></i> Rincian Komisi Karyawan Periode Ini</h6>
-                </div>
-                <div class="card-body py-2">
-                    <div class="table-responsive">
-                        <table class="table table-sm align-middle mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Karyawan</th>
-                                    <th class="text-center">Jumlah Item</th>
-                                    <th class="text-end">Total Komisi</th>
-                                    <th class="text-end">%</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach(($commissionPerEmployee ?? collect()) as $row)
-                                @php
-                                    $pct = ($totalCommission ?? 0) > 0 ? round((($row->total ?? 0) / ($totalCommission ?? 0)) * 100, 1) : 0;
-                                @endphp
-                                <tr>
-                                    <td class="fw-medium">{{ $row->name }}</td>
-                                    <td class="text-center"><span class="badge bg-info-subtle text-info-emphasis">{{ $row->cnt }}x</span></td>
-                                    <td class="text-end fw-semibold text-body-emphasis">Rp {{ number_format($row->total ?? 0, 0, ',', '.') }}</td>
-                                    <td class="text-end small text-body-secondary">{{ $pct }}%</td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                            <tfoot class="table-group-divider fw-semibold">
-                                <tr>
-                                    <td>TOTAL</td>
-                                    <td class="text-center">{{ number_format(($commissionPerEmployee ?? collect())->sum('cnt'), 0, ',', '.') }}</td>
-                                    <td class="text-end text-danger">Rp {{ number_format($totalCommission ?? 0, 0, ',', '.') }}</td>
-                                    <td class="text-end">100%</td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            @endif
             @endif
 
             @if(Auth::user()->hasPermission('wash.manage'))

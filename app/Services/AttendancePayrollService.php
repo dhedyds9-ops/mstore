@@ -85,35 +85,14 @@ class AttendancePayrollService
             // Kasbon Lainnya (Total Kasbon - Specific Kasbons)
             $kasbonLainnya = $totalKasbon - ($kasbonKantor + $kasbonWarung);
 
-            // Calculate Wash Commission (if user is linked to WashEmployee)
-            $washEmployee = \App\Models\WashEmployee::where('user_id', $user->id)->first();
+            // Wash commission disabled
             $washCommission = 0;
             $washCommissionCount = 0;
-            if ($washEmployee) {
-                $commissionQuery = \App\Models\WashCommissionEarning::where('wash_employee_id', $washEmployee->id)
-                    ->where('status', \App\Models\WashCommissionEarning::STATUS_EARNED);
-                
-                if ($request) {
-                    if ($request->filled('start_date') && $request->filled('end_date')) {
-                        $commissionQuery->whereBetween('created_at', [
-                            \Carbon\Carbon::parse($request->start_date)->startOfDay(),
-                            \Carbon\Carbon::parse($request->end_date)->endOfDay(),
-                        ]);
-                    } elseif ($request->filled('month')) {
-                        $m = \Carbon\Carbon::parse($request->month);
-                        $commissionQuery->whereBetween('created_at', [$m->copy()->startOfMonth(), $m->copy()->endOfMonth()]);
-                    } elseif ($request->filled('date')) {
-                        $commissionQuery->whereDate('created_at', $request->date);
-                    }
-                }
-                
-                $washCommission = (float) $commissionQuery->sum('total_earned');
-                $washCommissionCount = (int) $commissionQuery->sum('quantity');
-            }
+            $washEmployee = null;
 
             $totalDailySalary = $paidDays * $dailySalary;
             $totalDeductions = $lateDeduction + $totalKasbon;
-            $totalSalary = $totalDailySalary + $totalBonus + $washCommission - $totalDeductions;
+            $totalSalary = $totalDailySalary + $totalBonus - $totalDeductions;
 
             return [
                 'user' => $user,

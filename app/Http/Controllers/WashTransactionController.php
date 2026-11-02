@@ -1055,7 +1055,7 @@ class WashTransactionController extends Controller implements HasMiddleware
             }
         } catch (\Throwable) {}
 
-        $finalNetIncome = max(0, $netSales - $totalCommission);
+        $finalNetIncome = $netSales;
 
         $per = $request->get('per_page', '10');
         if ($per === 'all') {

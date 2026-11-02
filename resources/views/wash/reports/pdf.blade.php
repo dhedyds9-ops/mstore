@@ -36,13 +36,9 @@
             <td><strong>Laba Kotor</strong></td><td class="right"><strong>{{ number_format($dailyIncome-$dailyExpense,0,',','.') }}</strong></td>
             <td><strong>Laba Kotor</strong></td><td class="right"><strong>{{ number_format($monthlyIncome-$monthlyExpense,0,',','.') }}</strong></td>
         </tr>
-        <tr style="background-color: #fde2e2;">
-            <td>Potongan Komisi Operator Wash</td><td class="right">- {{ number_format($dailyCommission,0,',','.') }}</td>
-            <td>Potongan Komisi Operator Wash</td><td class="right">- {{ number_format($monthlyCommission,0,',','.') }}</td>
-        </tr>
         <tr style="background-color: #e3f2fd;">
-            <td><strong>Laba Bersih (Setelah Komisi)</strong></td><td class="right"><strong>{{ number_format($dailyTotalNetProfit,0,',','.') }}</strong></td>
-            <td><strong>Laba Bersih (Setelah Komisi)</strong></td><td class="right"><strong>{{ number_format($monthlyTotalNetProfit,0,',','.') }}</strong></td>
+            <td><strong>Laba Bersih</strong></td><td class="right"><strong>{{ number_format($dailyTotalNetProfit,0,',','.') }}</strong></td>
+            <td><strong>Laba Bersih</strong></td><td class="right"><strong>{{ number_format($monthlyTotalNetProfit,0,',','.') }}</strong></td>
         </tr>
         <tr>
             <td>Modal Awal Caffe</td><td class="right">{{ number_format($dailyCaffeInitialCapital,0,',','.') }}</td>

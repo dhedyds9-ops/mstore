@@ -748,7 +748,7 @@ body #page-content-wrapper .wash-reports-page > div.card,
                     <h6 class="fw-bold text-muted mb-3 text-uppercase small"><i class="bi bi-lightning-charge-fill text-warning me-1"></i> Ringkasan Cepat</h6>
                     <div class="row g-3 mb-4">
                         <!-- Pemasukan -->
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <div class="card stat-card-summary h-100 border-0 shadow-sm bg-success bg-opacity-10">
                                 <div class="card-body">
                                     <div class="d-flex">
@@ -764,7 +764,7 @@ body #page-content-wrapper .wash-reports-page > div.card,
                             </div>
                         </div>
                         <!-- Pengeluaran -->
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <div class="card stat-card-summary h-100 border-0 shadow-sm bg-danger bg-opacity-10">
                                 <div class="card-body">
                                     <div class="d-flex">
@@ -779,24 +779,8 @@ body #page-content-wrapper .wash-reports-page > div.card,
                                 </div>
                             </div>
                         </div>
-                        <!-- Potongan Komisi -->
-                        <div class="col-md-3">
-                            <div class="card stat-card-summary h-100 border-0 shadow-sm bg-warning bg-opacity-10">
-                                <div class="card-body">
-                                    <div class="d-flex">
-                                        <div>
-                                            <div class="small text-uppercase fw-bold text-warning opacity-75">Potongan Komisi</div>
-                                            <div class="display-6 fw-bold text-warning">- Rp {{ number_format($dailyCommission,0,',','.') }}</div>
-                                        </div>
-                                    </div>
-                                    <div class="small text-muted">
-                                        <i class="bi bi-person-check me-1"></i>{{ $dailyCommissionEmpCount }} karyawan &bull; {{ $dailyCommissionItemCount }} item
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                         <!-- Laba Bersih -->
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <div class="card stat-card-summary h-100 border-0 shadow-sm {{ $dailyTotalNetProfit >= 0 ? 'bg-primary bg-opacity-10' : 'bg-danger bg-opacity-10' }}">
                                 <div class="card-body">
                                     <div class="d-flex">
@@ -993,10 +977,7 @@ body #page-content-wrapper .wash-reports-page > div.card,
                                                 <td class="fw-semibold"><i class="bi bi-wallet2 me-1"></i>Setoran Cash (Cash - Pengeluaran)</td>
                                                 <td class="text-end fw-bold {{ $dailySetoranCash < 0 ? 'text-danger' : '' }}">Rp {{ number_format($dailySetoranCash,0,',','.') }}</td>
                                             </tr>
-                                            <tr class="table-primary">
-                                                <td class="fw-semibold"><i class="bi bi-wallet-fill me-1"></i>Setoran Cash BERSIH (- Komisi)</td>
-                                                <td class="text-end fw-bold {{ $dailySetoranCashBersih < 0 ? 'text-danger' : 'text-primary' }}">Rp {{ number_format($dailySetoranCashBersih,0,',','.') }}</td>
-                                            </tr>
+
                                             @if($loyaltyBonusCount > 0)
                                             <tr class="table-success">
                                                 <td class="fw-semibold"><i class="bi bi-gift me-1"></i>Transaksi Bonus Gratis</td>
@@ -1312,7 +1293,7 @@ body #page-content-wrapper .wash-reports-page > div.card,
                     <!-- =============== RINGKASAN UTAMA (CARD) =============== -->
                     <h6 class="fw-bold text-muted mb-3 text-uppercase small"><i class="bi bi-lightning-charge-fill text-warning me-1"></i> Ringkasan Bulan {{ $month }}</h6>
                     <div class="row g-3 mb-4">
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <div class="card stat-card-summary h-100 border-0 shadow-sm bg-success bg-opacity-10">
                                 <div class="card-body">
                                     <div class="d-flex">
@@ -1325,7 +1306,7 @@ body #page-content-wrapper .wash-reports-page > div.card,
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <div class="card stat-card-summary h-100 border-0 shadow-sm bg-danger bg-opacity-10">
                                 <div class="card-body">
                                     <div class="d-flex">
@@ -1338,20 +1319,7 @@ body #page-content-wrapper .wash-reports-page > div.card,
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="card stat-card-summary h-100 border-0 shadow-sm bg-warning bg-opacity-10">
-                                <div class="card-body">
-                                    <div class="d-flex">
-                                        <div>
-                                            <div class="small text-uppercase fw-bold text-warning opacity-75">Potongan Komisi</div>
-                                            <div class="display-6 fw-bold text-warning">- Rp {{ number_format($monthlyCommission,0,',','.') }}</div>
-                                        </div>
-                                        <div class="bg-warning rounded-pill"><i class="bi bi-people-fill text-white"></i></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <div class="card stat-card-summary h-100 border-0 shadow-sm {{ $monthlyTotalNetProfit >= 0 ? 'bg-primary bg-opacity-10' : 'bg-danger bg-opacity-10' }}">
                                 <div class="card-body">
                                     <div class="d-flex">
@@ -1400,7 +1368,6 @@ body #page-content-wrapper .wash-reports-page > div.card,
                                 <div class="card-header bg-dark text-white fw-semibold py-2"><i class="bi bi-calculator me-1"></i> Ringkasan Total</div>
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between py-1"><span class="text-muted">Laba Kotor</span><span class="fw-bold">Rp {{ number_format($monthlyLabaKotor,0,',','.') }}</span></div>
-                                    <div class="d-flex justify-content-between py-1"><span class="text-muted">(-) Komisi</span><span class="fw-bold text-danger">- Rp {{ number_format($monthlyCommission,0,',','.') }}</span></div>
                                     <hr class="my-2">
                                     <div class="d-flex justify-content-between py-1"><span class="fw-semibold">Laba Bersih Akhir</span><span class="fw-bold fs-5 {{ $monthlyTotalNetProfit >= 0 ? 'text-primary' : 'text-danger' }}">Rp {{ number_format($monthlyTotalNetProfit,0,',','.') }}</span></div>
                                 </div>
@@ -1446,17 +1413,15 @@ body #page-content-wrapper .wash-reports-page > div.card,
                     <div class="card border-0 shadow-sm mb-4">
                         <div class="card-header bg-primary bg-opacity-25 fw-semibold py-2 d-flex justify-content-between align-items-center">
                             <span><i class="bi bi-calendar-week me-1"></i> Rekap Harian (Per Tanggal)</span>
-                            <span class="badge bg-danger text-white">Total Komisi Bulan Ini: -Rp {{ number_format($monthlyCommission,0,',','.') }}</span>
                         </div>
                         <div class="table-responsive table-responsive-mobile">
                             <table class="table table-sm align-middle mb-0">
                                 <thead class="table-light">
                                     <tr>
-                                        <th style="width: 18%;">Tanggal</th>
-                                        <th class="text-end" style="width: 20%;">Pemasukan</th>
-                                        <th class="text-end" style="width: 20%;">Pengeluaran</th>
-                                        <th class="text-end" style="width: 20%;">(-) Komisi</th>
-                                        <th class="text-end" style="width: 22%;">Laba Bersih</th>
+                                        <th style="width: 25%;">Tanggal</th>
+                                        <th class="text-end" style="width: 25%;">Pemasukan</th>
+                                        <th class="text-end" style="width: 25%;">Pengeluaran</th>
+                                        <th class="text-end" style="width: 25%;">Laba Bersih</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1476,11 +1441,10 @@ body #page-content-wrapper .wash-reports-page > div.card,
                                         <td class="fw-semibold" data-label="Tanggal">{{ $d }}</td>
                                         <td class="text-end text-success" data-label="Pemasukan">Rp {{ number_format($inc,0,',','.') }}</td>
                                         <td class="text-end text-danger" data-label="Pengeluaran">Rp {{ number_format($exp,0,',','.') }}</td>
-                                        <td class="text-end text-danger" data-label="(-) Komisi">- Rp {{ number_format($com,0,',','.') }}</td>
                                         <td class="text-end fw-bold {{ $net < 0 ? 'text-danger' : 'text-primary' }}" data-label="Laba Bersih">Rp {{ number_format($net,0,',','.') }}</td>
                                     </tr>
                                     @empty
-                                    <tr><td colspan="5" class="text-center py-4 text-muted">Tidak ada data</td></tr>
+                                    <tr><td colspan="4" class="text-center py-4 text-muted">Tidak ada data</td></tr>
                                     @endforelse
                                 </tbody>
                                 <tfoot>
@@ -1488,7 +1452,6 @@ body #page-content-wrapper .wash-reports-page > div.card,
                                         <td class="text-end">TOTAL BULAN INI &rarr;</td>
                                         <td class="text-end text-success">Rp {{ number_format($monthlyIncome,0,',','.') }}</td>
                                         <td class="text-end text-danger">Rp {{ number_format($monthlyExpense,0,',','.') }}</td>
-                                        <td class="text-end text-danger">- Rp {{ number_format($monthlyCommission,0,',','.') }}</td>
                                         <td class="text-end {{ $monthlyTotalNetProfit < 0 ? 'text-danger' : 'text-primary' }}">Rp {{ number_format($monthlyTotalNetProfit,0,',','.') }}</td>
                                     </tr>
                                 </tfoot>

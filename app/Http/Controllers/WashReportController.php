@@ -130,54 +130,11 @@ class WashReportController extends Controller implements HasMiddleware
         $monthlyCommission = 0;
         $dailyCommissionDetail = collect();
         $monthlyDailyCommissionMap = collect();
-        try {
-            if (Schema::hasTable('wash_commission_earnings')) {
-                $dailyCommBaseQ = WashCommissionEarning::query()
-                    ->join('wash_transactions as t', 't.id', '=', 'wash_commission_earnings.wash_transaction_id')
-                    ->whereIn('wash_commission_earnings.status', [WashCommissionEarning::STATUS_EARNED, WashCommissionEarning::STATUS_PAID])
-                    ->whereBetween('t.created_at', [
-                        $startDate.' 00:00:00',
-                        $endDate.' 23:59:59',
-                    ]);
-                if ($normalizedVehiclePlate !== '') {
-                    $dailyCommBaseQ->whereRaw(
-                        "UPPER(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(t.vehicle_plate, ''), ' ', ''), '-', ''), '.', ''), '/', '')) = ?",
-                        [$normalizedVehiclePlate]
-                    );
-                }
-                $dailyCommission = (int) (clone $dailyCommBaseQ)->sum('wash_commission_earnings.total_earned');
-                $dailyCommissionDetail = (clone $dailyCommBaseQ)
-                    ->join('wash_employees as emp', 'emp.id', '=', 'wash_commission_earnings.wash_employee_id')
-                    ->join('wash_transaction_items as wti', 'wti.id', '=', 'wash_commission_earnings.wash_transaction_item_id')
-                    ->selectRaw('emp.id as employee_id, emp.name, wti.service_name, wash_commission_earnings.rate_per_unit, count(*) as item_count, sum(wash_commission_earnings.total_earned) as total_commission')
-                    ->groupBy(['emp.id', 'emp.name', 'wti.service_name', 'wash_commission_earnings.rate_per_unit'])
-                    ->orderBy('emp.name')
-                    ->orderByDesc('total_commission')
-                    ->get();
 
-                $monthlyCommBaseQ = WashCommissionEarning::query()
-                    ->join('wash_transactions as t', 't.id', '=', 'wash_commission_earnings.wash_transaction_id')
-                    ->whereIn('wash_commission_earnings.status', [WashCommissionEarning::STATUS_EARNED, WashCommissionEarning::STATUS_PAID])
-                    ->where('t.created_at', 'like', "$month%");
-                if ($normalizedVehiclePlate !== '') {
-                    $monthlyCommBaseQ->whereRaw(
-                        "UPPER(REPLACE(REPLACE(REPLACE(REPLACE(COALESCE(t.vehicle_plate, ''), ' ', ''), '-', ''), '.', ''), '/', '')) = ?",
-                        [$normalizedVehiclePlate]
-                    );
-                }
-                $monthlyCommission = (int) (clone $monthlyCommBaseQ)->sum('wash_commission_earnings.total_earned');
-                $monthlyDailyCommissionMap = (clone $monthlyCommBaseQ)
-                    ->select(DB::raw('DATE(t.created_at) as d'), DB::raw('SUM(wash_commission_earnings.total_earned) as total'))
-                    ->groupBy(DB::raw('DATE(t.created_at)'))
-                    ->get()
-                    ->keyBy('d');
-            }
-        } catch (\Throwable) {}
-
-        $dailyWashNetProfit = $dailyWashIncome - $dailyWashExpense - $dailyCommission;
-        $dailyTotalNetProfit = $dailyIncome - $dailyExpense - $dailyCommission;
-        $monthlyWashNetProfit = $monthlyWashIncome - $monthlyWashExpense - $monthlyCommission;
-        $monthlyTotalNetProfit = $monthlyIncome - $monthlyExpense - $monthlyCommission;
+        $dailyWashNetProfit = $dailyWashIncome - $dailyWashExpense;
+        $dailyTotalNetProfit = $dailyIncome - $dailyExpense;
+        $monthlyWashNetProfit = $monthlyWashIncome - $monthlyWashExpense;
+        $monthlyTotalNetProfit = $monthlyIncome - $monthlyExpense;
 
         $dailyIncomeRowsQuery = WashTransaction::query()
             ->with('user:id,name')

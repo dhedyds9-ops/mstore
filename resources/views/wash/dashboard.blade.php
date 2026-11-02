@@ -429,8 +429,6 @@
                                     <th>{{ __('Nama Karyawan') }}</th>
                                     <th>{{ __('Jam Masuk') }}</th>
                                     <th>{{ __('Pekerjaan') }}</th>
-                                    <th><i class="fa-solid fa-coins text-warning me-1"></i> {{ __('Komisi Hari Ini') }}</th>
-                                    <th><i class="fa-solid fa-clock text-warning me-1"></i> {{ __('Belum Dibayar') }}</th>
                                     <th>{{ __('Status') }}</th>
                                     <th>{{ __('Jam Pulang') }}</th>
                                 </tr>
@@ -445,21 +443,7 @@
                                                 {{ $attendance->total_jobs ?? 0 }} {{ __('Jobs') }}
                                             </span>
                                         </td>
-                                        <td>
-                                            @if(($attendance->commission_today ?? 0) > 0)
-                                                <div class="text-success fw-semibold small">+ Rp {{ number_format($attendance->commission_today ?? 0, 0, ',', '.') }}</div>
-                                                <div class="small text-muted">{{ $attendance->commission_today_items ?? 0 }} item</div>
-                                            @else
-                                                <span class="text-muted small">-</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if(($attendance->commission_earned_unpaid ?? 0) > 0)
-                                                <span class="badge bg-warning-subtle text-warning-emphasis">Rp {{ number_format($attendance->commission_earned_unpaid ?? 0, 0, ',', '.') }}</span>
-                                            @else
-                                                <span class="text-muted small">-</span>
-                                            @endif
-                                        </td>
+
                                         <td>
                                             <span class="badge bg-{{ $attendance->status == 'present' ? 'success' : ($attendance->status == 'late' ? 'warning' : 'secondary') }}">
                                                 {{ __(ucfirst($attendance->status)) }}
