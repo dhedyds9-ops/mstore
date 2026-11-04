@@ -11,9 +11,16 @@
             </div>
             <div class="card-body">
                 <!-- Panduan -->
-                <div class="alert alert-info py-2 mb-4">
-                    <i class="fa-solid fa-circle-info me-2"></i>
-                    <strong>Panduan:</strong> Halaman ini untuk mengatur <strong>template jadwal default per grup</strong> (Teknisi, Operator Wash, Lainnya). Untuk mengatur jadwal <strong>individual per karyawan</strong>, gunakan menu <strong>"Jadwal Karyawan"</strong>!
+                <div class="alert alert-info d-flex align-items-center justify-content-between flex-wrap gap-2 py-3 mb-4">
+                    <div>
+                        <i class="fa-solid fa-circle-info me-2"></i>
+                        <strong>Panduan:</strong> Halaman ini untuk mengatur <strong>template jadwal & jam shift default</strong> (Teknisi, Operator Wash, dll). Untuk mengatur pembagian shift <strong>individual per karyawan</strong>, gunakan menu <strong>Jadwal Shift Karyawan</strong>.
+                    </div>
+                    @if(\Illuminate\Support\Facades\Route::has('schedules.index'))
+                        <a href="{{ route('schedules.index') }}" class="btn btn-sm btn-primary text-nowrap">
+                            <i class="fa-solid fa-calendar-days me-1"></i> Buka Jadwal Shift Karyawan
+                        </a>
+                    @endif
                 </div>
                 <form action="{{ route('settings.update') }}" method="POST">
                     @csrf

@@ -94,9 +94,10 @@ class SidebarMenu
                 'items' => [
                     self::group('hr-staff', 'Kepegawaian', [
                         self::link('employees', 'Data Karyawan', 'employees.index', permissions: ['employee.view']),
+                        self::link('schedules', 'Jadwal Shift Karyawan', 'schedules.index', permissions: ['schedule.view'], routePatterns: ['schedules.*']),
                         self::link('employee-leave', 'Pengajuan Cuti', 'employee.leave-requests', permissions: ['leave.view']),
                         self::link('admin-leave', 'Kelola Cuti', 'admin.leave-requests', permissions: ['leave.manage']),
-                    ], permissions: ['employee.view', 'leave.view', 'leave.manage']),
+                    ], permissions: ['employee.view', 'schedule.view', 'leave.view', 'leave.manage']),
                     self::group('hr-attendance', 'Presensi & Payroll', [
                         self::link('attendance-kiosk', 'Kiosk Presensi', 'attendance.kiosk', permissions: ['attendance.create']),
                         self::link('attendance-daily', 'Presensi Harian', 'attendance.daily', permissions: ['attendance.view']),
@@ -116,7 +117,7 @@ class SidebarMenu
                         self::link('subscription', 'Langganan Usaha', 'subscription.index', permissions: ['setting.view'], roles: ['super-admin', 'manager']),
                         self::link('atk-settings', 'Setting Toko', 'settings.atk.index', permissions: ['setting.view']),
                         self::link('wash-settings', 'Setting Layanan', 'settings.wash.index', permissions: ['setting.view']),
-                        self::link('attendance-settings', 'Setting Presensi', 'settings.attendance.index', permissions: ['setting.view']),
+                        self::link('attendance-settings', 'Setting Presensi & Shift', 'settings.attendance.index', permissions: ['setting.view']),
                         self::link('whatsapp-settings', 'Gateway WhatsApp', 'whatsapp.index', permissions: ['chat.view', 'setting.view']),
                         self::link('telegram-settings', 'Bot Telegram', 'telegram.index', permissions: ['telegram.view', 'setting.view']),
                     ], permissions: ['setting.view']),
