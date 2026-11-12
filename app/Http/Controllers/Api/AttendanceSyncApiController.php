@@ -42,19 +42,23 @@ class AttendanceSyncApiController extends Controller
             trim((string) config('services.dsbilling.token')),
             trim((string) env('DSBILLING_API_TOKEN')),
             trim((string) env('MSTORE_SYNC_TOKEN')),
-            'mstore-sync-secret-2026',
-            'mstore sync secret 2026',
-            'mstore',
+            ...(! app()->isProduction() ? [
+                'mstore-sync-secret-2026',
+                'mstore sync secret 2026',
+                'mstore',
+            ] : []),
         ])));
 
-        $isValid = $isLocalPrivateIp;
-        if (! $isValid && $providedToken !== '') {
+        $isValid = false;
+        if ($providedToken !== '') {
             foreach ($candidateTokens as $candidate) {
                 if ($candidate !== '' && hash_equals($candidate, $providedToken)) {
                     $isValid = true;
                     break;
                 }
             }
+        } elseif ($isLocalPrivateIp && ! app()->isProduction()) {
+            $isValid = true;
         }
 
         if (! $isValid) {
