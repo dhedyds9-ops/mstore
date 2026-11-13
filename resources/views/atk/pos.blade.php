@@ -5,8 +5,25 @@
 @section('content')
 <div class="atk-pos-page">
     <div class="atk-pos-shell">
-        <header class="atk-pos-header d-flex justify-content-between align-items-center">
-            <span id="current-time" class="atk-current-time"></span>
+        <header class="atk-pos-header d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <div class="d-flex align-items-center flex-wrap gap-2">
+                <span id="current-time" class="atk-current-time"></span>
+                @php
+                    $posActiveRegister = \App\Models\AtkCashRegister::where('user_id', Auth::id())->where('status', 'open')->latest()->first();
+                @endphp
+                @if($posActiveRegister)
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1.5 small rounded-pill fw-semibold">
+                        <i class="fa-solid fa-cash-register me-1"></i>Shift: {{ $posActiveRegister->name }}
+                    </span>
+                @else
+                    <a href="{{ route('atk.cash-registers.create') }}" class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2.5 py-1.5 small rounded-pill text-decoration-none fw-semibold">
+                        <i class="fa-solid fa-triangle-exclamation me-1"></i>Shift Belum Dibuka &bull; <u>Buka Shift</u>
+                    </a>
+                @endif
+                <span class="badge bg-light text-muted border px-2 py-1 small d-none d-md-inline-block">
+                    <kbd>F2</kbd> Cari &bull; <kbd>F4</kbd> Bayar &bull; <kbd>F9</kbd> Selesai &bull; <kbd>Esc</kbd> Reset
+                </span>
+            </div>
             <div class="d-flex align-items-center gap-3">
                 <div class="text-end">
                     <small class="text-muted">Kas Utama</small>
@@ -401,9 +418,15 @@
                     </div>
                     <div class="atk-card-body">
                         <form id="checkoutForm" class="checkout-form">
-                            <div class="mb-3">
-                                <label class="atk-field-label">No. WhatsApp (opsional)</label>
-                                <input type="text" class="form-control atk-input" id="customerPhone" placeholder="08xxxxxxxxxx">
+                            <div class="row g-2 mb-2">
+                                <div class="col-12 col-sm-6">
+                                    <label class="atk-field-label">Nama Pelanggan (opsional)</label>
+                                    <input type="text" class="form-control form-control-sm atk-input" id="customerName" placeholder="Umum / Pembeli">
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <label class="atk-field-label">No. WhatsApp (opsional)</label>
+                                    <input type="text" class="form-control form-control-sm atk-input" id="customerPhone" placeholder="08xxxxxxxxxx">
+                                </div>
                             </div>
                             <div class="form-check mb-3 atk-inline-check">
                                 <input class="form-check-input" type="checkbox" value="" id="sendWhatsapp">
@@ -427,7 +450,7 @@
                                 <div class="col-12">
                                     <label class="atk-field-label">Metode Pembayaran</label>
                                     <select class="form-select atk-input" id="paymentMethod">
-                                        <option value="cash">💵 Tunai</option>
+                                        <option value="cash">💵 Tunai (Cash)</option>
                                         <option value="transfer">🏦 Transfer</option>
                                         <option value="qris">📱 QRIS</option>
                                         <option value="hutang">📜 Hutang</option>
@@ -435,9 +458,16 @@
                                 </div>
                                 <div class="col-12" id="cashInputDiv">
                                     <label class="atk-field-label">Uang Diterima</label>
-                                    <div class="input-group">
+                                    <div class="input-group mb-1">
                                         <span class="input-group-text atk-input-group-text">Rp</span>
                                         <input type="number" class="form-control atk-input" id="cashAmount" placeholder="0">
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-1 mt-1" id="quickCashButtons">
+                                        <button type="button" class="btn btn-outline-success btn-sm py-0.5 px-2 quick-cash-btn" data-type="exact">Uang Pas</button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm py-0.5 px-2 quick-cash-btn" data-value="10000">10rb</button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm py-0.5 px-2 quick-cash-btn" data-value="20000">20rb</button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm py-0.5 px-2 quick-cash-btn" data-value="50000">50rb</button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm py-0.5 px-2 quick-cash-btn" data-value="100000">100rb</button>
                                     </div>
                                 </div>
                             </div>
@@ -665,22 +695,43 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Keyboard shortcuts
+    // Keyboard shortcuts for Professional POS
     document.addEventListener('keydown', function(e) {
-        // Focus search with /
-        if (e.key === '/' && !e.ctrlKey && !e.altKey) {
+        // If modal is open, avoid hotkeys
+        if (document.querySelector('.modal.show')) return;
+
+        // Focus search with F2 or /
+        if (e.key === 'F2' || (e.key === '/' && !e.ctrlKey && !e.altKey && !['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName))) {
             e.preventDefault();
             const searchInput = document.getElementById('productSearch');
             if (searchInput) {
                 searchInput.focus();
+                searchInput.select();
             }
         }
-        // Submit checkout with Enter (when not in input)
-        if (e.key === 'Enter' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+        // Focus cash input with F4
+        if (e.key === 'F4') {
+            e.preventDefault();
+            const cashInput = document.getElementById('cashAmount');
+            if (cashInput && document.getElementById('paymentMethod').value === 'cash') {
+                cashInput.focus();
+                cashInput.select();
+            }
+        }
+        // Complete checkout with F9
+        if (e.key === 'F9') {
+            e.preventDefault();
             const btnCheckout = document.getElementById('btnCheckout');
             if (btnCheckout && !btnCheckout.disabled) {
-                e.preventDefault();
                 processTransaction();
+            }
+        }
+        // Clear search or filter with Escape
+        if (e.key === 'Escape') {
+            const searchInput = document.getElementById('productSearch');
+            if (searchInput && document.activeElement === searchInput) {
+                searchInput.value = '';
+                document.querySelectorAll('.product-item, .service-item').forEach(i => i.style.display = '');
             }
         }
         // Clear cart with Ctrl+Shift+K
@@ -693,29 +744,69 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    // Quick cash denomination buttons
+    document.getElementById('quickCashButtons')?.addEventListener('click', function(e) {
+        const btn = e.target.closest('.quick-cash-btn');
+        if (!btn) return;
+        const type = btn.dataset.type;
+        const cashInput = document.getElementById('cashAmount');
+        if (!cashInput) return;
+        if (type === 'exact') {
+            cashInput.value = calculateTotal();
+        } else {
+            cashInput.value = parseFloat(btn.dataset.value) || 0;
+        }
+        calculateChange();
+    });
+
     // Cash amount input listener
     const cashAmountInput = document.getElementById('cashAmount');
     if (cashAmountInput) {
         cashAmountInput.addEventListener('input', calculateChange);
     }
 
-    // Product search
-    document.getElementById('productSearch').addEventListener('input', function(e) {
-        const search = e.target.value.toLowerCase();
-        let activeList = '.product-item';
-        if (!document.getElementById('serviceList').classList.contains('d-none')) {
-            activeList = '.service-item';
-        } else if (!document.getElementById('manualPanel').classList.contains('d-none')) {
-            return;
-        } else if (!document.getElementById('customerPaymentList').classList.contains('d-none')) {
-            return;
-        }
-        document.querySelectorAll(activeList).forEach(item => {
-            const name = String(item.dataset.name || '').toLowerCase();
-            const code = String(item.dataset.code || '').toLowerCase();
-            item.style.display = (name.includes(search) || code.includes(search)) ? '' : 'none';
+    // Product search with instant Enter key support
+    const searchInputEl = document.getElementById('productSearch');
+    if (searchInputEl) {
+        searchInputEl.addEventListener('input', function(e) {
+            const search = e.target.value.toLowerCase();
+            let activeList = '.product-item';
+            if (!document.getElementById('serviceList').classList.contains('d-none')) {
+                activeList = '.service-item';
+            } else if (!document.getElementById('manualPanel').classList.contains('d-none')) {
+                return;
+            } else if (!document.getElementById('customerPaymentList').classList.contains('d-none')) {
+                return;
+            }
+            document.querySelectorAll(activeList).forEach(item => {
+                const name = String(item.dataset.name || '').toLowerCase();
+                const code = String(item.dataset.code || '').toLowerCase();
+                item.style.display = (name.includes(search) || code.includes(search)) ? '' : 'none';
+            });
         });
-    });
+
+        searchInputEl.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const term = this.value.trim().toLowerCase();
+                if (!term) return;
+
+                const visibleItems = Array.from(document.querySelectorAll('#productList .product-item')).filter(i => i.style.display !== 'none');
+                // Try exact barcode/code match first
+                const exactItem = visibleItems.find(i => String(i.dataset.code || '').toLowerCase() === term);
+                const target = exactItem || (visibleItems.length === 1 ? visibleItems[0] : null);
+
+                if (target) {
+                    const card = target.querySelector('.product-card');
+                    if (card) {
+                        card.click();
+                        this.value = '';
+                        document.querySelectorAll('#productList .product-item').forEach(i => i.style.display = '');
+                    }
+                }
+            }
+        });
+    }
 
     const timeEl = document.getElementById('current-time');
     if (timeEl) {
@@ -1229,18 +1320,39 @@ function addPPOBToCart() {
     renderCart();
 }
 
+function playBeep(success = true) {
+    try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(success ? 880 : 250, ctx.currentTime);
+        gain.gain.setValueAtTime(0.08, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + (success ? 0.1 : 0.2));
+        osc.start();
+        osc.stop(ctx.currentTime + (success ? 0.1 : 0.2));
+    } catch (e) {}
+}
+
 function addToCart(id, name, price, maxStock, type = 'product') {
     const existingItem = cart.find(item => item.id === id);
     if (existingItem) {
         if (existingItem.quantity < maxStock) {
             existingItem.quantity++;
+            playBeep(true);
         } else {
+            playBeep(false);
             alert('Stok limit tercapai!');
         }
     } else {
         const isService = (type === 'service');
         const isCustomerPayment = (type === 'customer_payment');
         cart.push({ id, name, price, quantity: 1, maxStock, service: isService, customerPayment: isCustomerPayment });
+        playBeep(true);
     }
     renderCart();
 }
@@ -1551,7 +1663,22 @@ function processTransaction() {
         const paymentMethod = document.getElementById('paymentMethod').value;
         const transactionCategory = cart.some(item => item.customerPayment === true) ? 'pembayaran_pelanggan' : 'penjualan_atk';
         const cashAmount = paymentMethod === 'cash' ? (parseFloat(document.getElementById('cashAmount').value) || 0) : null;
+        const customerName = document.getElementById('customerName')?.value?.trim() || '';
+        const customerPhone = document.getElementById('customerPhone')?.value?.trim() || '';
+        const shouldSendWa = document.getElementById('sendWhatsapp')?.checked || false;
         let total = calculateTotal();
+
+        // Create snapshot for WhatsApp receipt before cart is cleared
+        const receiptSnapshot = {
+            items: cart.map(item => ({
+                name: item.name,
+                quantity: item.quantity,
+                price: item.price,
+                subtotal: (item.bank || item.cashOut || item.topUp || item.ppob) ? ((item.nominal_transaksi || 0) + (item.fee || 0)) : (item.price * item.quantity)
+            })),
+            paymentMethod: paymentMethod,
+            total: total
+        };
         
         // Cek apakah ada cash_out dan filter fee only for outside
         const hasCashOut = cart.some(item => item.cashOut === true);
@@ -1603,7 +1730,9 @@ function processTransaction() {
         transaction_category: transactionCategory,
         payment_method: paymentMethod,
         cash_amount: cashAmount,
-        coordinator_id: coordinatorId
+        coordinator_id: coordinatorId,
+        customer_name: customerName,
+        customer_phone: customerPhone
     };
 
     const btn = document.getElementById('btnCheckout');
@@ -1654,9 +1783,12 @@ function processTransaction() {
     })
     .then(async result => {
         if (result.success) {
-            // 1. First reset cart and form inputs immediately
+            playBeep(true);
+
+            // 1. Reset cart and form inputs immediately
             cart = [];
             document.getElementById('cashAmount').value = '';
+            if (document.getElementById('customerName')) document.getElementById('customerName').value = '';
             document.getElementById('customerPhone').value = '';
             document.getElementById('sendWhatsapp').checked = false;
             
@@ -1667,11 +1799,11 @@ function processTransaction() {
                     '<i class="fa-solid fa-wallet me-1"></i>' + formattedBalance;
             }
             
-            // 3. Try to send WhatsApp receipt if needed
-            const sendWa = document.getElementById('sendWhatsapp').checked;
-            const phone = document.getElementById('customerPhone').value;
-            if (sendWa && phone) {
-                await sendAtkWhatsappReceipt(result.transaction_id, phone).catch(() => {});
+            // 3. Send WhatsApp receipt if requested using the captured snapshot & phone
+            if (shouldSendWa && customerPhone) {
+                await sendAtkWhatsappReceipt(result.transaction_id, customerPhone, receiptSnapshot).catch((err) => {
+                    console.warn('Gagal mengirim WhatsApp receipt:', err);
+                });
             }
 
             // 4. Re-render empty cart

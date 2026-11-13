@@ -144,25 +144,30 @@ class AtkCashRegisterController extends Controller
 
         DB::beginTransaction();
         try {
+            $systemBalanceBeforeClose = (float) $register->closing_balance;
+            $actualClosingBalance = (float) $request->closing_balance;
+            $discrepancy = $actualClosingBalance - $systemBalanceBeforeClose;
+
             $register->update([
-                'closing_balance' => $request->closing_balance,
+                'closing_balance' => $actualClosingBalance,
                 'status' => 'closed',
                 'closed_at' => now(),
             ]);
 
-            // Create closing movement
+            // Create closing movement recording discrepancy if any
             AtkCashMovement::create([
                 'atk_cash_register_id' => $register->id,
                 'movement_type' => 'closing',
-                'amount' => $request->closing_balance - $register->closing_balance,
-                'balance_before' => $register->closing_balance,
-                'balance_after' => $request->closing_balance,
-                'description' => 'Tutup shift',
+                'amount' => abs($discrepancy),
+                'direction' => $discrepancy >= 0 ? 'in' : 'out',
+                'balance_before' => $systemBalanceBeforeClose,
+                'balance_after' => $actualClosingBalance,
+                'description' => 'Tutup shift' . ($discrepancy != 0 ? ' (Selisih kas: Rp ' . number_format($discrepancy, 0, ',', '.') . ')' : ' (Kas pas)'),
                 'created_by' => Auth::id(),
             ]);
 
             DB::commit();
-            return redirect()->route('atk.dashboard')->with('success', 'Shift kasir berhasil ditutup!');
+            return redirect()->route('atk.cash-registers.show', $register)->with('success', 'Shift kasir berhasil ditutup dengan sukses!');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Gagal menutup shift: ' . $e->getMessage());
@@ -174,6 +179,23 @@ class AtkCashRegisterController extends Controller
         $register->load(['movements' => function($q) {
             $q->latest();
         }, 'user']);
-        return view('atk.cash-registers.show', compact('register'));
+
+        $shiftTransactions = \App\Models\AtkTransaction::where('atk_cash_register_id', $register->id)
+            ->whereNull('reversed_at')
+            ->where('status', '!=', 'reversed')
+            ->latest()
+            ->get();
+
+        $totalCashSales = $shiftTransactions->where('payment_method', 'cash')->sum('total_amount');
+        $totalNonCashSales = $shiftTransactions->where('payment_method', '!=', 'cash')->sum('total_amount');
+        $transactionCount = $shiftTransactions->count();
+
+        return view('atk.cash-registers.show', compact(
+            'register',
+            'shiftTransactions',
+            'totalCashSales',
+            'totalNonCashSales',
+            'transactionCount'
+        ));
     }
 }

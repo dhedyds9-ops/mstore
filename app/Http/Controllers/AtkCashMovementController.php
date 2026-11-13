@@ -45,17 +45,16 @@ class AtkCashMovementController extends Controller implements HasMiddleware
         // Dapatkan transaksi tanpa pagination untuk menghitung running balance
         $movementsCollection = $query->get();
         
-        // Hitung saldo awal dari opening_balance shift terakhir
-        $lastShift = \App\Models\AtkCashRegister::latest()->first();
-        $initialBalance = $lastShift ? $lastShift->opening_balance : 0;
-        
-        // Jika ada filter tanggal, gunakan saldo sebelum start_date
+        // Hitung saldo awal secara matematis dari mutasi
         if ($startDate) {
             $lastMovementBefore = (clone $baseQuery)
                 ->whereDate('created_at', '<', $startDate)
                 ->orderBy('created_at', 'desc')
                 ->first();
-            $initialBalance = $lastMovementBefore ? $lastMovementBefore->balance_after : $initialBalance;
+            $initialBalance = $lastMovementBefore ? (float)$lastMovementBefore->balance_after : 0;
+        } else {
+            $firstMovement = $movementsCollection->first();
+            $initialBalance = $firstMovement ? (float)$firstMovement->balance_before : 0;
         }
 
         // Hitung running balance untuk setiap transaksi

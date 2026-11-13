@@ -114,8 +114,10 @@ class AtkTransactionController extends Controller implements HasMiddleware
             ->whereDate('created_at', today())
             ->sum('amount');
 
-        // Get today's top up
+        // Get today's top up (exclude reversed)
         $todayTopUp = AtkTransaction::whereDate('created_at', today())
+            ->whereNull('reversed_at')
+            ->where('status', '!=', 'reversed')
             ->whereHas('items', function ($query) {
                 $query->where('item_type', 'top_up');
             })
@@ -123,8 +125,10 @@ class AtkTransactionController extends Controller implements HasMiddleware
             ->get()
             ->sum('items_sum_nominal_transaksi');
 
-        // Get today's withdrawal (cash out)
+        // Get today's withdrawal (cash out) (exclude reversed)
         $todayWithdrawal = AtkTransaction::whereDate('created_at', today())
+            ->whereNull('reversed_at')
+            ->where('status', '!=', 'reversed')
             ->whereHas('items', function ($query) {
                 $query->where('item_type', 'cash_out');
             })
@@ -132,8 +136,10 @@ class AtkTransactionController extends Controller implements HasMiddleware
             ->get()
             ->sum('items_sum_nominal_transaksi');
 
-        // Get today's PPOB
+        // Get today's PPOB (exclude reversed)
         $todayPpob = AtkTransaction::whereDate('created_at', today())
+            ->whereNull('reversed_at')
+            ->where('status', '!=', 'reversed')
             ->whereHas('items', function ($query) {
                 $query->where('item_type', 'ppob');
             })
@@ -141,8 +147,10 @@ class AtkTransactionController extends Controller implements HasMiddleware
             ->get()
             ->sum('items_sum_nominal_transaksi');
 
-        // Get today's Transfer
+        // Get today's Transfer (exclude reversed)
         $todayTransfer = AtkTransaction::whereDate('created_at', today())
+            ->whereNull('reversed_at')
+            ->where('status', '!=', 'reversed')
             ->whereHas('items', function ($query) {
                 $query->where('item_type', 'bank');
             })
@@ -150,41 +158,68 @@ class AtkTransactionController extends Controller implements HasMiddleware
             ->get()
             ->sum('items_sum_nominal_transaksi');
 
-        // Calculate total fees
+        // Calculate total fees (exclude reversed)
         $todayFees = AtkTransactionItem::whereHas('atkTransaction', function ($q) use ($today) {
-            $q->whereDate('created_at', $today);
+            $q->whereDate('created_at', $today)->whereNull('reversed_at')->where('status', '!=', 'reversed');
         })->sum('fee');
         
         $monthlyFees = AtkTransactionItem::whereHas('atkTransaction', function ($q) use ($month) {
-            $q->where('created_at', 'like', "$month%");
+            $q->where('created_at', 'like', "$month%")->whereNull('reversed_at')->where('status', '!=', 'reversed');
         })->sum('fee');
         
         $todayFeesBank = AtkTransactionItem::where('item_type', 'bank')
             ->whereHas('atkTransaction', function ($q) use ($today) {
-                $q->whereDate('created_at', $today);
+                $q->whereDate('created_at', $today)->whereNull('reversed_at')->where('status', '!=', 'reversed');
             })->sum('fee');
             
         $todayFeesPpob = AtkTransactionItem::where('item_type', 'ppob')
             ->whereHas('atkTransaction', function ($q) use ($today) {
-                $q->whereDate('created_at', $today);
+                $q->whereDate('created_at', $today)->whereNull('reversed_at')->where('status', '!=', 'reversed');
             })->sum('fee');
             
         $todayFeesTopUp = AtkTransactionItem::where('item_type', 'top_up')
             ->whereHas('atkTransaction', function ($q) use ($today) {
-                $q->whereDate('created_at', $today);
+                $q->whereDate('created_at', $today)->whereNull('reversed_at')->where('status', '!=', 'reversed');
             })->sum('fee');
             
         $todayFeesCashOut = AtkTransactionItem::where('item_type', 'cash_out')
             ->whereHas('atkTransaction', function ($q) use ($today) {
-                $q->whereDate('created_at', $today);
+                $q->whereDate('created_at', $today)->whereNull('reversed_at')->where('status', '!=', 'reversed');
             })->sum('fee');
 
-        // Top selling products
+        // Top selling products (excluding reversed transactions)
         $topProducts = AtkTransactionItem::select('product_name', DB::raw('sum(quantity) as total_qty'))
+            ->whereHas('atkTransaction', function ($q) {
+                $q->whereNull('reversed_at')->where('status', '!=', 'reversed');
+            })
+            ->whereNotNull('product_name')
             ->groupBy('product_name')
             ->orderByDesc('total_qty')
             ->limit(5)
             ->get();
+
+        // Smart inventory alerts for low and out-of-stock products
+        $lowStockProducts = AtkProduct::where('is_active', true)
+            ->where('stock', '<=', 5)
+            ->where(function ($q) {
+                $q->whereNull('category')->orWhereNotIn('category', ['JASA POTOCOPY', 'JASA TRANSFER BANK']);
+            })
+            ->orderBy('stock', 'asc')
+            ->limit(6)
+            ->get();
+
+        $outOfStockCount = AtkProduct::where('is_active', true)
+            ->where('stock', '<=', 0)
+            ->where(function ($q) {
+                $q->whereNull('category')->orWhereNotIn('category', ['JASA POTOCOPY', 'JASA TRANSFER BANK']);
+            })
+            ->count();
+
+        // Active Cashier Shift for quick banner status
+        $activeShift = \App\Models\AtkCashRegister::where('user_id', Auth::id())
+            ->where('status', 'open')
+            ->latest()
+            ->first();
 
         return view('atk.dashboard', compact(
             'dailySales',
@@ -207,13 +242,16 @@ class AtkTransactionController extends Controller implements HasMiddleware
             'todayFeesBank',
             'todayFeesPpob',
             'todayFeesTopUp',
-            'todayFeesCashOut'
+            'todayFeesCashOut',
+            'lowStockProducts',
+            'outOfStockCount',
+            'activeShift'
         ));
     }
 
     public function pos()
     {
-        $products = AtkProduct::where(function ($q) {
+        $products = AtkProduct::where('is_active', true)->where(function ($q) {
             $q->whereNull('category')
               ->orWhereNotIn('category', ['JASA POTOCOPY', 'JASA TRANSFER BANK']);
         })->where('stock', '>', 0)->orderBy('name')->get();
@@ -270,6 +308,8 @@ class AtkTransactionController extends Controller implements HasMiddleware
             'transaction_category' => 'nullable|string|in:penjualan_atk,pembayaran_pelanggan',
             'payment_method' => 'required|string',
             'cash_amount' => 'nullable|numeric',
+            'customer_name' => 'nullable|string|max:255',
+            'customer_phone' => 'nullable|string|max:50',
         ]);
 
         try {
@@ -667,6 +707,11 @@ class AtkTransactionController extends Controller implements HasMiddleware
             $lastQueue = AtkTransaction::whereDate('created_at', today())->max('queue_number');
             $queueNumber = $lastQueue ? $lastQueue + 1 : 1;
 
+            $activeRegister = \App\Models\AtkCashRegister::where('user_id', Auth::id())
+                ->where('status', 'open')
+                ->latest()
+                ->first();
+
             // Hitung total cash_amount khusus untuk transaksi yang memiliki cash_out with fee_type outside
             $hasCashOut = $request->items && collect($request->items)->contains(fn($item) => ($item['type'] ?? '') === 'cash_out');
             $hasCashOutOutside = $hasCashOut && collect($request->items)->contains(fn($item) => ($item['type'] ?? '') === 'cash_out' && ($item['fee_type'] ?? 'outside') === 'outside');
@@ -676,15 +721,24 @@ class AtkTransactionController extends Controller implements HasMiddleware
                     ->sum('fee') 
                 : 0;
 
+            $customerName = trim((string)($request->input('customer_name') ?? ''));
+            $customerPhone = trim((string)($request->input('customer_phone') ?? ''));
+
             $payload = [
                 'user_id' => Auth::id(),
+                'atk_cash_register_id' => $activeRegister?->id,
                 'queue_number' => $queueNumber,
                 'transaction_number' => 'TRX-'.time(),
                 'invoice_number' => 'INV-'.time(), // Added to satisfy legacy constraint
                 'total_amount' => $total,
+                'grand_total' => $total,
                 'payment_method' => $request->payment_method,
+                'customer_name' => $customerName ?: null,
+                'customer_phone' => $customerPhone ?: null,
                 'cash_amount' => $hasCashOutOutside ? $totalFeeForCashOut : $request->cash_amount,
                 'change_amount' => $hasCashOutOutside ? 0 : ($request->cash_amount ? ($request->cash_amount - $total) : 0),
+                'amount_paid' => $request->payment_method === 'cash' ? min((float)$request->cash_amount, $total) : ($request->payment_method === 'hutang' ? 0 : $total),
+                'is_debt' => $request->payment_method === 'hutang' ? 1 : 0,
                 'coordinator_id' => ($request->payment_method === 'hutang' || $transactionCategory === 'pembayaran_pelanggan') ? ($request->coordinator_id ?? null) : null,
                 'status' => 'posted', // Set to posted immediately for POS
                 'posted_at' => now(),
@@ -819,6 +873,7 @@ class AtkTransactionController extends Controller implements HasMiddleware
 
                 if ($totalCashIn > 0) {
                     $cashService->recordMovement($cash, [
+                        'atk_cash_register_id' => $activeRegister?->id,
                         'atk_transaction_id' => $transaction->id,
                         'movement_type' => 'sale',
                         'direction' => 'in',
@@ -833,6 +888,7 @@ class AtkTransactionController extends Controller implements HasMiddleware
                 if ($totalCashOut > 0) {
                     $balanceBeforeForOut = $totalCashIn > 0 ? $balanceBefore + $totalCashIn : $balanceBefore;
                     $cashService->recordMovement($cash, [
+                        'atk_cash_register_id' => $activeRegister?->id,
                         'atk_transaction_id' => $transaction->id,
                         'movement_type' => 'cash_out',
                         'direction' => 'out',
@@ -846,6 +902,11 @@ class AtkTransactionController extends Controller implements HasMiddleware
                 } else if ($totalCashIn > 0) {
                     // If only cash in, apply projection here
                     $cashService->applyProjection($cash, $balanceAfter);
+                }
+
+                // Keep active register drawer balance in sync
+                if ($activeRegister && $netCashChange != 0) {
+                    $activeRegister->increment('closing_balance', $netCashChange);
                 }
             }
 
@@ -900,8 +961,11 @@ class AtkTransactionController extends Controller implements HasMiddleware
 
     public function index(Request $request)
     {
-        $categories = ['ATK', 'JASA POTOCOPY', 'JASA TRANSFER BANK'];
-        $query = AtkTransaction::with(['user', 'items.product']);
+        $categories = AtkProduct::whereNotNull('category')->distinct()->pluck('category')->filter()->values()->all();
+        if (empty($categories)) {
+            $categories = ['ATK', 'JASA POTOCOPY', 'JASA TRANSFER BANK'];
+        }
+        $query = AtkTransaction::with(['user', 'atkCustomer', 'items.product']);
 
         if ($request->start_date && $request->end_date) {
             $query->whereBetween('created_at', [
@@ -911,8 +975,11 @@ class AtkTransactionController extends Controller implements HasMiddleware
         }
 
         if ($request->filled('category')) {
-            $query->whereHas('items.product', function ($q) use ($request) {
-                $q->where('category', $request->get('category'));
+            $cat = $request->get('category');
+            $query->whereHas('items', function ($q) use ($cat) {
+                $q->whereHas('product', function ($qp) use ($cat) {
+                    $qp->where('category', $cat);
+                })->orWhere('item_type', $cat);
             });
         }
 
@@ -920,6 +987,8 @@ class AtkTransactionController extends Controller implements HasMiddleware
             $search = $request->get('search');
             $query->where(function ($q) use ($search) {
                 $q->where('transaction_number', 'like', "%{$search}%")
+                  ->orWhere('customer_name', 'like', "%{$search}%")
+                  ->orWhere('customer_phone', 'like', "%{$search}%")
                   ->orWhereHas('items', function ($qi) use ($search) {
                       $qi->where('product_name', 'like', "%{$search}%");
                   })
@@ -929,22 +998,11 @@ class AtkTransactionController extends Controller implements HasMiddleware
             });
         }
 
-        $transactions = $query->latest()->customPaginate()->appends($request->query());
-
-        // Total revenue for current filter
-        $sumQuery = AtkTransaction::query();
-        if ($request->start_date && $request->end_date) {
-            $sumQuery->whereBetween('created_at', [
-                $request->start_date.' 00:00:00',
-                $request->end_date.' 23:59:59',
-            ]);
-        }
-        if ($request->filled('category')) {
-            $sumQuery->whereHas('items.product', function ($q) use ($request) {
-                $q->where('category', $request->get('category'));
-            });
-        }
+        // Total revenue accurately matching current filter (excluding reversed)
+        $sumQuery = (clone $query)->whereNull('reversed_at')->where('status', '!=', 'reversed');
         $totalRevenue = $sumQuery->sum('total_amount');
+
+        $transactions = $query->latest()->customPaginate()->appends($request->query());
 
         return view('atk.transactions.index', compact('transactions', 'categories', 'totalRevenue'));
     }

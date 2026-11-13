@@ -47,6 +47,11 @@
                             <i class="fa-solid fa-file-excel text-success me-2"></i>{{ __('Ekspor Spreadsheet Excel') }}
                         </a>
                     </li>
+                    <li>
+                        <a class="dropdown-item py-2" href="{{ route('atk.transactions.export.excel', array_merge(request()->all(), ['format' => 'csv'])) }}">
+                            <i class="fa-solid fa-file-csv text-primary me-2"></i>{{ __('Ekspor Format CSV') }}
+                        </a>
+                    </li>
                 </ul>
             </div>
 
@@ -104,6 +109,24 @@
     {{-- Filter Card & Tabel Transaksi --}}
     <div class="card border-0 shadow-sm rounded-4 mb-4">
         <div class="card-header bg-white border-bottom py-3 px-3 px-md-4">
+            <div class="d-flex flex-wrap align-items-center gap-1 mb-2.5">
+                <span class="text-muted small me-1"><i class="fa-solid fa-clock-rotate-left me-1"></i>{{ __('Filter Cepat:') }}</span>
+                <a href="{{ route('atk.transactions.index', array_merge(request()->except(['start_date', 'end_date', 'page']), ['start_date' => today()->toDateString(), 'end_date' => today()->toDateString()])) }}" class="badge {{ request('start_date') === today()->toDateString() && request('end_date') === today()->toDateString() ? 'bg-primary text-white' : 'bg-light text-dark border' }} text-decoration-none px-2.5 py-1 small rounded-pill">
+                    {{ __('Hari Ini') }}
+                </a>
+                <a href="{{ route('atk.transactions.index', array_merge(request()->except(['start_date', 'end_date', 'page']), ['start_date' => today()->subDay()->toDateString(), 'end_date' => today()->subDay()->toDateString()])) }}" class="badge {{ request('start_date') === today()->subDay()->toDateString() && request('end_date') === today()->subDay()->toDateString() ? 'bg-primary text-white' : 'bg-light text-dark border' }} text-decoration-none px-2.5 py-1 small rounded-pill">
+                    {{ __('Kemarin') }}
+                </a>
+                <a href="{{ route('atk.transactions.index', array_merge(request()->except(['start_date', 'end_date', 'page']), ['start_date' => now()->startOfMonth()->toDateString(), 'end_date' => now()->endOfMonth()->toDateString()])) }}" class="badge {{ request('start_date') === now()->startOfMonth()->toDateString() && request('end_date') === now()->endOfMonth()->toDateString() ? 'bg-primary text-white' : 'bg-light text-dark border' }} text-decoration-none px-2.5 py-1 small rounded-pill">
+                    {{ __('Bulan Ini') }}
+                </a>
+                @if(request('start_date') || request('end_date') || request('category') || request('search'))
+                <a href="{{ route('atk.transactions.index') }}" class="badge bg-danger-subtle text-danger border border-danger-subtle text-decoration-none px-2.5 py-1 small rounded-pill">
+                    <i class="fa-solid fa-rotate-left me-1"></i>{{ __('Reset') }}
+                </a>
+                @endif
+            </div>
+
             <form action="{{ route('atk.transactions.index') }}" method="GET" class="row g-2 align-items-center">
                 <div class="col-12 col-md-3">
                     <div class="input-group input-group-sm">
@@ -191,6 +214,11 @@
                                 <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill ms-1 small">
                                     {{ __('Dibatalkan') }}
                                 </span>
+                            @endif
+                            @if($transaction->customer_name || $transaction->atkCustomer?->name)
+                                <div class="small text-muted text-truncate mt-0.5">
+                                    <i class="fa-regular fa-user text-primary me-1"></i>{{ $transaction->customer_name ?: $transaction->atkCustomer?->name }}
+                                </div>
                             @endif
                         </td>
                         <td>

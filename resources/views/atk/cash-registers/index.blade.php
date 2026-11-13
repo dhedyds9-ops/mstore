@@ -56,6 +56,9 @@
                         </div>
                     </div>
                     <div class="d-flex gap-2">
+                        <a href="{{ route('atk.cash-registers.show', $activeRegister) }}" class="btn btn-sm btn-outline-success px-3 shadow-2xs">
+                            <i class="fa-solid fa-eye me-1"></i>{{ __('Rincian Shift') }}
+                        </a>
                         <button type="button" class="btn btn-sm btn-danger px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#closeShiftModal">
                             <i class="fa-solid fa-door-closed me-1"></i>{{ __('Tutup Shift Ini') }}
                         </button>
@@ -130,6 +133,9 @@
                             </td>
                             <td class="text-center">
                                 <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{{ route('atk.cash-registers.show', $register) }}" class="btn btn-outline-secondary" title="{{ __('Lihat Rincian') }}">
+                                        <i class="fa-solid fa-eye text-info"></i>
+                                    </a>
                                     <a href="{{ route('atk.cash-registers.edit', $register) }}" class="btn btn-outline-secondary" title="{{ __('Ubah') }}">
                                         <i class="fa-solid fa-pen-to-square text-primary"></i>
                                     </a>

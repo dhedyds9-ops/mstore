@@ -31,6 +31,57 @@
         </div>
     </div>
 
+    {{-- Banner Status Shift Kasir --}}
+    @if(isset($activeShift) && $activeShift)
+    <div class="card border-0 shadow-sm rounded-4 mb-4 border-start border-4 border-success bg-gradient-light">
+        <div class="card-body p-3 p-md-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle p-3 bg-success-subtle text-success fs-4 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                    <i class="fa-solid fa-cash-register"></i>
+                </div>
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <h6 class="fw-bold mb-0 text-gray-900">{{ __('Shift Kasir Aktif:') }} {{ $activeShift->name }}</h6>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-0.5 rounded-pill small fw-semibold">
+                            <i class="fa-solid fa-circle-dot me-1"></i>{{ __('Berjalan') }}
+                        </span>
+                    </div>
+                    <div class="small text-muted d-flex flex-wrap align-items-center gap-3">
+                        <span><i class="fa-regular fa-clock me-1 text-info"></i>{{ __('Buka:') }} {{ $activeShift->opened_at->format('H:i') }} WIB</span>
+                        <span><i class="fa-solid fa-wallet me-1 text-primary"></i>{{ __('Modal Awal:') }} <strong>Rp {{ number_format($activeShift->opening_balance, 0, ',', '.') }}</strong></span>
+                        <span><i class="fa-solid fa-money-bill-wave me-1 text-success"></i>{{ __('Saldo Laci Saat Ini:') }} <strong>Rp {{ number_format($activeShift->closing_balance, 0, ',', '.') }}</strong></span>
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ route('atk.pos') }}" class="btn btn-sm btn-primary px-3 shadow-sm">
+                    <i class="fa-solid fa-cart-shopping me-1"></i>{{ __('Buka Kasir (POS)') }}
+                </a>
+                <a href="{{ route('atk.cash-registers.show', $activeShift) }}" class="btn btn-sm btn-outline-secondary px-3">
+                    <i class="fa-solid fa-eye me-1"></i>{{ __('Rincian Shift') }}
+                </a>
+            </div>
+        </div>
+    </div>
+    @elseif(Auth::user()->hasPermission('atk.manage'))
+    <div class="card border-0 shadow-sm rounded-4 mb-4 border-start border-4 border-warning bg-light">
+        <div class="card-body p-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle p-3 bg-warning-subtle text-warning-emphasis fs-4 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                    <i class="fa-solid fa-door-open"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-1 text-gray-900">{{ __('Shift Kasir Belum Dibuka') }}</h6>
+                    <small class="text-muted">{{ __('Buka sesi shift kasir untuk mencatat saldo kas laci awal dan merekonsiliasi kas fisik secara akurat.') }}</small>
+                </div>
+            </div>
+            <a href="{{ route('atk.cash-registers.create') }}" class="btn btn-sm btn-warning text-dark fw-bold px-3 shadow-sm">
+                <i class="fa-solid fa-door-open me-1"></i>{{ __('Buka Shift Sekarang') }}
+            </a>
+        </div>
+    </div>
+    @endif
+
     {{-- Widget Absensi Kasir --}}
     @if(Auth::user()->hasPermission('attendance.view') || Auth::user()->hasPermission('attendance.create'))
     <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden border-start border-4 border-primary">
@@ -243,6 +294,50 @@
             </a>
         </div>
     </div>
+
+    {{-- Widget Cerdas: Peringatan Stok Rendah & Habis --}}
+    @if(($outOfStockCount ?? 0) > 0 || (($lowStockProducts ?? collect())->count() > 0))
+    <div class="card border-0 shadow-sm rounded-4 mb-4 border-start border-4 border-danger">
+        <div class="card-header bg-white border-bottom py-3 px-3 px-md-4 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+                <span class="rounded-circle p-2 bg-danger-subtle text-danger">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </span>
+                <div>
+                    <h6 class="fw-bold mb-0 text-gray-900">{{ __('Peringatan Ketersediaan Stok Produk') }}</h6>
+                    <small class="text-muted">
+                        @if(($outOfStockCount ?? 0) > 0)
+                            <strong class="text-danger">{{ $outOfStockCount }} {{ __('produk habis') }}</strong> &bull;
+                        @endif
+                        {{ ($lowStockProducts ?? collect())->count() }} {{ __('produk stok menipis (&le; 5 unit)') }}
+                    </small>
+                </div>
+            </div>
+            <a href="{{ route('atk.products.index', ['status' => 'out_of_stock']) }}" class="btn btn-sm btn-outline-danger shadow-2xs">
+                <i class="fa-solid fa-boxes-stacked me-1"></i>{{ __('Kelola Stok Produk') }}
+            </a>
+        </div>
+        <div class="card-body p-3 p-md-4">
+            <div class="row g-2">
+                @foreach(($lowStockProducts ?? []) as $lowItem)
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <div class="p-2 px-3 border rounded-3 bg-light-subtle d-flex align-items-center justify-content-between">
+                        <div class="text-truncate me-2">
+                            <a href="{{ route('atk.products.edit', $lowItem) }}" class="fw-semibold text-dark text-decoration-none small text-truncate d-block" title="{{ $lowItem->name }}">
+                                {{ $lowItem->name }}
+                            </a>
+                            <small class="text-muted font-monospace">{{ $lowItem->code ?: ($lowItem->barcode ?: '-') }}</small>
+                        </div>
+                        <span class="badge {{ $lowItem->stock <= 0 ? 'bg-danger text-white' : 'bg-warning-subtle text-warning-emphasis border border-warning-subtle' }} rounded-pill px-2.5 py-1 small fw-bold">
+                            {{ $lowItem->stock <= 0 ? __('Habis (0)') : __('Sisa ' . $lowItem->stock) }}
+                        </span>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    @endif
 
     {{-- Aktivitas Layanan Digital & Perbankan Hari Ini --}}
     <div class="card border-0 shadow-sm rounded-4 mb-4">
