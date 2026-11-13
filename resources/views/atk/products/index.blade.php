@@ -74,10 +74,10 @@
                     <div class="flex-grow-1">
                         <h6 class="fw-bold mb-1 text-gray-800">{{ __('Petunjuk Manajemen Produk ATK') }}</h6>
                         <ul class="mb-0 small text-muted ps-3">
-                            <li><strong>{{ __('Tambah & Edit Produk:') }}</strong> Gunakan tombol "Tambah Produk" untuk input manual, atau klik tombol pensil di baris produk untuk mengubah harga/stok.</li>
-                            <li><strong>{{ __('Impor Excel/CSV:') }}</strong> Unduh template resmi melalui menu "Impor / Ekspor", isi data produk Anda, lalu unggah kembali untuk impor massal cepat.</li>
+                            <li><strong>{{ __('Tambah & Edit Produk:') }}</strong> Gunakan tombol "Tambah Produk" untuk input manual, atau klik tombol pensil di baris produk untuk mengubah harga/stok. Anda juga dapat menentukan <em>Batas Stok Minimal</em> & <em>Peringatan Stok</em> per produk.</li>
+                            <li><strong>{{ __('Impor Excel/CSV:') }}</strong> Unduh template resmi melalui menu "Impor / Ekspor", isi data produk Anda termasuk batas stok minimal, lalu unggah kembali untuk impor massal cepat.</li>
                             <li><strong>{{ __('Scan Barcode Kasir:') }}</strong> Klik ikon barcode pada kolom pencarian untuk mendeteksi barang lewat kamera handphone/laptop secara langsung.</li>
-                            <li><strong>{{ __('Filter Cepat & Stok:') }}</strong> Klik kartu statistik (Total Produk, Stok Aman, Stok Menipis, Stok Habis) untuk filter instan.</li>
+                            <li><strong>{{ __('Peringatan Stok Menipis:') }}</strong> Klik kartu statistik Stok Menipis atau Stok Habis untuk memfilter produk yang perlu segera dipesan atau dibeli ulang ke supplier.</li>
                             <li><strong>{{ __('Hapus Massal:') }}</strong> Centang kotak pilihan produk yang ingin dihapus, bilah aksi akan muncul secara otomatis.</li>
                         </ul>
                     </div>
@@ -85,6 +85,42 @@
             </div>
         </div>
     </div>
+
+    {{-- Stock Warning Alert Banner (Jika ada stok menipis / habis) --}}
+    @if(($stats['low_stock'] ?? 0) > 0 || ($stats['out_of_stock'] ?? 0) > 0)
+        <div class="alert alert-warning border-0 shadow-sm rounded-4 py-3 px-4 mb-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle bg-warning text-dark p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                    <i class="fa-solid fa-triangle-exclamation fs-5"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-0 text-dark">{{ __('Peringatan Stok Produk ATK!') }}</h6>
+                    <span class="small text-muted">
+                        Terdapat
+                        @if(($stats['out_of_stock'] ?? 0) > 0)
+                            <strong class="text-danger">{{ $stats['out_of_stock'] }} produk stok habis</strong>@if(($stats['low_stock'] ?? 0) > 0), @endif
+                        @endif
+                        @if(($stats['low_stock'] ?? 0) > 0)
+                            <strong class="text-warning-emphasis">{{ $stats['low_stock'] }} produk mencapai/di bawah stok minimal</strong>
+                        @endif
+                        yang membutuhkan pengadaan atau restok ulang.
+                    </span>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                @if(($stats['low_stock'] ?? 0) > 0)
+                    <a href="{{ route('atk.products.index', ['stock_status' => 'low']) }}" class="btn btn-sm btn-outline-dark bg-white">
+                        <i class="fa-solid fa-bell text-warning me-1"></i>{{ __('Filter Stok Menipis') }}
+                    </a>
+                @endif
+                @if(($stats['out_of_stock'] ?? 0) > 0)
+                    <a href="{{ route('atk.products.index', ['stock_status' => 'out']) }}" class="btn btn-sm btn-danger shadow-xs">
+                        <i class="fa-solid fa-circle-xmark me-1"></i>{{ __('Filter Stok Habis') }}
+                    </a>
+                @endif
+            </div>
+        </div>
+    @endif
 
     {{-- Mini Metric Stat Cards (Interaktif Filter) --}}
     <div class="row g-3 mb-4">
@@ -111,7 +147,7 @@
                             <i class="fa-solid fa-cubes"></i>
                         </div>
                         <div>
-                            <div class="text-muted small fw-medium">{{ __('Stok Aman (> 5)') }}</div>
+                            <div class="text-muted small fw-medium">{{ __('Stok Aman (> Min)') }}</div>
                             <div class="fs-5 fw-bold text-success">{{ number_format($stats['in_stock'] ?? 0, 0, ',', '.') }} <span class="small fw-normal text-muted">produk</span></div>
                         </div>
                     </div>
@@ -126,7 +162,7 @@
                             <i class="fa-solid fa-triangle-exclamation"></i>
                         </div>
                         <div>
-                            <div class="text-muted small fw-medium">{{ __('Stok Menipis (<= 5)') }}</div>
+                            <div class="text-muted small fw-medium">{{ __('Stok Menipis (<= Min)') }}</div>
                             <div class="fs-5 fw-bold text-warning-emphasis">{{ number_format($stats['low_stock'] ?? 0, 0, ',', '.') }}</div>
                         </div>
                     </div>
@@ -193,8 +229,8 @@
                             <span class="input-group-text bg-light text-muted small"><i class="fa-solid fa-boxes-stacked"></i></span>
                             <select name="stock_status" class="form-select bg-light" onchange="this.form.submit()">
                                 <option value="">{{ __('Semua Status Stok') }}</option>
-                                <option value="in" {{ request('stock_status') === 'in' ? 'selected' : '' }}>{{ __('Stok Aman (> 5)') }}</option>
-                                <option value="low" {{ request('stock_status') === 'low' ? 'selected' : '' }}>{{ __('Stok Menipis (<= 5)') }}</option>
+                                <option value="in" {{ request('stock_status') === 'in' ? 'selected' : '' }}>{{ __('Stok Aman (> Min)') }}</option>
+                                <option value="low" {{ request('stock_status') === 'low' ? 'selected' : '' }}>{{ __('Stok Menipis (<= Min)') }}</option>
                                 <option value="out" {{ request('stock_status') === 'out' ? 'selected' : '' }}>{{ __('Stok Habis (0)') }}</option>
                             </select>
                         </div>
@@ -259,7 +295,7 @@
                         @endif
                         @if(request('stock_status'))
                             @php
-                                $statusLabels = ['in' => 'Stok Aman (> 5)', 'low' => 'Stok Menipis (<= 5)', 'out' => 'Stok Habis (0)'];
+                                $statusLabels = ['in' => 'Stok Aman (> Min)', 'low' => 'Stok Menipis (<= Min)', 'out' => 'Stok Habis (0)'];
                             @endphp
                             <span class="badge bg-light text-dark border d-inline-flex align-items-center gap-1 py-1 px-2">
                                 {{ __('Status Stok:') }} {{ $statusLabels[request('stock_status')] ?? request('stock_status') }}
@@ -374,18 +410,27 @@
                             @endif
                         </td>
                         <td class="text-center">
-                            @if($product->stock > 10)
+                            @php
+                                $minStock = (int) ($product->minimum_stock ?? 5);
+                                $isAlertEnabled = $product->stock_alert !== null ? (bool) $product->stock_alert : true;
+                            @endphp
+                            @if($product->stock <= 0)
+                                <span class="badge bg-danger text-white px-2 py-1 fs-7 shadow-xs">
+                                    <i class="fa-solid fa-circle-xmark me-1"></i>{{ __('Habis (0)') }}
+                                </span>
+                                <div class="text-muted mt-1" style="font-size: 0.72rem;">Min: {{ $minStock }} {{ $product->unit ?: 'Pcs' }}</div>
+                            @elseif($product->stock <= $minStock && $isAlertEnabled)
+                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning px-2 py-1 fs-7 shadow-xs">
+                                    <i class="fa-solid fa-triangle-exclamation text-danger me-1"></i>{{ $product->stock }} {{ $product->unit ?: 'Pcs' }}
+                                </span>
+                                <div class="text-danger fw-semibold mt-1" style="font-size: 0.72rem;">
+                                    <i class="fa-solid fa-bell me-1"></i>{{ __('Menipis (Min: ') }}{{ $minStock }})
+                                </div>
+                            @else
                                 <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 fs-7">
                                     <i class="fa-solid fa-circle-check me-1"></i>{{ $product->stock }} {{ $product->unit ?: 'Pcs' }}
                                 </span>
-                            @elseif($product->stock > 0)
-                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1 fs-7">
-                                    <i class="fa-solid fa-triangle-exclamation me-1"></i>{{ $product->stock }} {{ $product->unit ?: 'Pcs' }}
-                                </span>
-                            @else
-                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 fs-7">
-                                    <i class="fa-solid fa-circle-xmark me-1"></i>{{ __('Habis (0)') }}
-                                </span>
+                                <div class="text-muted mt-1" style="font-size: 0.72rem;">Min: {{ $minStock }} {{ $product->unit ?: 'Pcs' }}</div>
                             @endif
                         </td>
                         <td class="text-center">

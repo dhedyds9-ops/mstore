@@ -107,7 +107,17 @@
                                     </div>
                                     <h5 class="product-title">{{ $product->name }}</h5>
                                     <div class="product-description-chips">
-                                        <span class="product-description-chip">Stok: {{ $product->stock }}</span>
+                                        @php
+                                            $pMin = (int) ($product->minimum_stock ?? 5);
+                                            $pAlert = $product->stock_alert !== null ? (bool) $product->stock_alert : true;
+                                        @endphp
+                                        @if($product->stock <= 0)
+                                            <span class="product-description-chip badge bg-danger text-white">Stok Habis (0)</span>
+                                        @elseif($product->stock <= $pMin && $pAlert)
+                                            <span class="product-description-chip badge bg-warning text-dark fw-bold">Sisa: {{ $product->stock }} (Menipis)</span>
+                                        @else
+                                            <span class="product-description-chip">Stok: {{ $product->stock }}</span>
+                                        @endif
                                     </div>
                                     <div class="product-meta">
                                         <span class="product-price">Rp {{ number_format($product->price, 0, ',', '.') }}</span>

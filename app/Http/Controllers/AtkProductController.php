@@ -126,7 +126,7 @@ class AtkProductController extends Controller implements HasMiddleware
         $products = AtkProduct::with('categoryModel')->orderBy('name')->get();
         $format = $request->get('format', 'xlsx');
 
-        $headers = ['Kode Barang', 'Nama Produk', 'Kategori', 'Harga Jual', 'Harga Beli / HPP', 'Stok', 'Satuan', 'Deskripsi'];
+        $headers = ['Kode Barang', 'Nama Produk', 'Kategori', 'Harga Jual', 'Harga Beli / HPP', 'Stok', 'Stok Minimal', 'Peringatan Stok', 'Satuan', 'Deskripsi'];
         $rows = [];
 
         foreach ($products as $product) {
@@ -137,6 +137,8 @@ class AtkProductController extends Controller implements HasMiddleware
                 (float) ($product->price ?? $product->selling_price ?? 0),
                 (float) ($product->cost_price ?? 0),
                 (int) ($product->stock ?? $product->current_stock ?? 0),
+                (int) ($product->minimum_stock ?? 5),
+                ($product->stock_alert ?? 1) ? 'YA' : 'TIDAK',
                 $product->unit ?: 'Pcs',
                 $product->description ?? '',
             ];
@@ -156,6 +158,8 @@ class AtkProductController extends Controller implements HasMiddleware
             'Harga Jual',
             'Harga Beli / HPP',
             'Stok Awal',
+            'Stok Minimal',
+            'Peringatan Stok (YA/TIDAK)',
             'Satuan',
             'Deskripsi / Keterangan',
         ];
@@ -168,6 +172,8 @@ class AtkProductController extends Controller implements HasMiddleware
                 55000,
                 48000,
                 50,
+                10,
+                'YA',
                 'Rim',
                 'Kertas HVS putih 75 gsm PaperOne isi 500 lembar',
             ],
@@ -178,6 +184,8 @@ class AtkProductController extends Controller implements HasMiddleware
                 3500,
                 2500,
                 120,
+                20,
+                'YA',
                 'Pcs',
                 'Pulpen tinta hitam mata pena 0.5mm',
             ],
@@ -188,6 +196,8 @@ class AtkProductController extends Controller implements HasMiddleware
                 4500,
                 3200,
                 80,
+                15,
+                'YA',
                 'Pcs',
                 'Buku tulis SIDU 38 lembar pack/eceran',
             ],
@@ -198,6 +208,8 @@ class AtkProductController extends Controller implements HasMiddleware
                 300,
                 150,
                 9999,
+                100,
+                'TIDAK',
                 'Lembar',
                 'Jasa fotocopy bolak balik / biasa',
             ],
@@ -281,6 +293,8 @@ class AtkProductController extends Controller implements HasMiddleware
                 'price' => null,
                 'cost_price' => null,
                 'stock' => null,
+                'minimum_stock' => null,
+                'stock_alert' => null,
                 'unit' => null,
                 'description' => null,
             ];
@@ -297,6 +311,12 @@ class AtkProductController extends Controller implements HasMiddleware
                     $hasHeader = true;
                 } elseif (str_contains($norm, 'jual') || str_contains($norm, 'price') || str_contains($norm, 'harga') || str_contains($norm, 'tarif')) {
                     $headerMap['price'] = $colIdx;
+                    $hasHeader = true;
+                } elseif (str_contains($norm, 'min') || str_contains($norm, 'batas') || str_contains($norm, 'minimum')) {
+                    $headerMap['minimum_stock'] = $colIdx;
+                    $hasHeader = true;
+                } elseif (str_contains($norm, 'alert') || str_contains($norm, 'peringatan') || str_contains($norm, 'notif')) {
+                    $headerMap['stock_alert'] = $colIdx;
                     $hasHeader = true;
                 } elseif (str_contains($norm, 'stok') || str_contains($norm, 'stock') || str_contains($norm, 'qty') || str_contains($norm, 'jumlah') || str_contains($norm, 'kuantitas')) {
                     $headerMap['stock'] = $colIdx;
@@ -328,8 +348,10 @@ class AtkProductController extends Controller implements HasMiddleware
                     'price' => 3,
                     'cost_price' => 4,
                     'stock' => 5,
-                    'unit' => 6,
-                    'description' => 7,
+                    'minimum_stock' => 6,
+                    'stock_alert' => 7,
+                    'unit' => 8,
+                    'description' => 9,
                 ];
                 $dataRows = $rowsData;
             } else {
@@ -356,6 +378,14 @@ class AtkProductController extends Controller implements HasMiddleware
                 $price = $headerMap['price'] !== null && isset($row[$headerMap['price']]) ? $this->cleanNumeric($row[$headerMap['price']]) : 0.0;
                 $costPrice = $headerMap['cost_price'] !== null && isset($row[$headerMap['cost_price']]) ? $this->cleanNumeric($row[$headerMap['cost_price']]) : 0.0;
                 $stock = $headerMap['stock'] !== null && isset($row[$headerMap['stock']]) ? (int) $this->cleanNumeric($row[$headerMap['stock']]) : 0;
+                $minStock = $headerMap['minimum_stock'] !== null && isset($row[$headerMap['minimum_stock']]) && trim((string) $row[$headerMap['minimum_stock']]) !== ''
+                    ? (int) $this->cleanNumeric($row[$headerMap['minimum_stock']])
+                    : null;
+                $stockAlert = null;
+                if ($headerMap['stock_alert'] !== null && isset($row[$headerMap['stock_alert']]) && trim((string) $row[$headerMap['stock_alert']]) !== '') {
+                    $saVal = strtoupper(trim((string) $row[$headerMap['stock_alert']]));
+                    $stockAlert = in_array($saVal, ['1', 'YA', 'YES', 'TRUE', 'Y', 'ON', 'AKTIF'], true);
+                }
                 $unit = $headerMap['unit'] !== null && isset($row[$headerMap['unit']]) && trim((string) $row[$headerMap['unit']]) !== '' ? trim((string) $row[$headerMap['unit']]) : 'Pcs';
                 $description = $headerMap['description'] !== null && isset($row[$headerMap['description']]) ? trim((string) $row[$headerMap['description']]) : null;
 
@@ -405,6 +435,16 @@ class AtkProductController extends Controller implements HasMiddleware
                 ];
                 if ($categoryId) {
                     $payload['category_id'] = $categoryId;
+                }
+                if ($minStock !== null && $minStock >= 0) {
+                    $payload['minimum_stock'] = $minStock;
+                } elseif (! $existing) {
+                    $payload['minimum_stock'] = 5;
+                }
+                if ($stockAlert !== null) {
+                    $payload['stock_alert'] = $stockAlert ? 1 : 0;
+                } elseif (! $existing) {
+                    $payload['stock_alert'] = 1;
                 }
 
                 if ($existing) {
@@ -515,9 +555,9 @@ class AtkProductController extends Controller implements HasMiddleware
             if ($stockStatus === 'out') {
                 $query->where('stock', '<=', 0);
             } elseif ($stockStatus === 'low') {
-                $query->where('stock', '<=', 5)->where('stock', '>', 0);
+                $query->where('stock', '<=', DB::raw('COALESCE(minimum_stock, 5)'))->where('stock', '>', 0);
             } elseif ($stockStatus === 'in') {
-                $query->where('stock', '>', 5);
+                $query->where('stock', '>', DB::raw('COALESCE(minimum_stock, 5)'));
             }
         }
 
@@ -564,8 +604,8 @@ class AtkProductController extends Controller implements HasMiddleware
         $stats = [
             'total_items' => AtkProduct::count(),
             'total_stock' => (int) AtkProduct::sum('stock'),
-            'in_stock' => AtkProduct::where('stock', '>', 5)->count(),
-            'low_stock' => AtkProduct::where('stock', '<=', 5)->where('stock', '>', 0)->count(),
+            'in_stock' => AtkProduct::where('stock', '>', DB::raw('COALESCE(minimum_stock, 5)'))->count(),
+            'low_stock' => AtkProduct::where('stock', '<=', DB::raw('COALESCE(minimum_stock, 5)'))->where('stock', '>', 0)->count(),
             'out_of_stock' => AtkProduct::where('stock', '<=', 0)->count(),
         ];
 
@@ -586,6 +626,8 @@ class AtkProductController extends Controller implements HasMiddleware
             'price' => 'nullable|numeric|min:0',
             'cost_price' => 'nullable|numeric|min:0',
             'stock' => 'nullable|integer|min:0',
+            'minimum_stock' => 'nullable|integer|min:0',
+            'stock_alert' => 'nullable',
             'unit' => 'nullable|string',
             'description' => 'nullable|string',
             'image' => 'nullable|image|max:2048',
@@ -608,6 +650,10 @@ class AtkProductController extends Controller implements HasMiddleware
         $validated['cost_price'] = (float) ($validated['cost_price'] ?? 0);
         $validated['stock'] = (int) ($validated['stock'] ?? 0);
         $validated['current_stock'] = $validated['stock'];
+        $validated['minimum_stock'] = isset($validated['minimum_stock']) && $validated['minimum_stock'] !== ''
+            ? (int) $validated['minimum_stock']
+            : 5;
+        $validated['stock_alert'] = $request->has('stock_alert') ? 1 : 0;
         $validated['unit'] = $validated['unit'] ?: 'Pcs';
 
         if (! empty($validated['category'])) {
@@ -649,6 +695,8 @@ class AtkProductController extends Controller implements HasMiddleware
             'price' => 'nullable|numeric|min:0',
             'cost_price' => 'nullable|numeric|min:0',
             'stock' => 'nullable|integer|min:0',
+            'minimum_stock' => 'nullable|integer|min:0',
+            'stock_alert' => 'nullable',
             'unit' => 'nullable|string',
             'description' => 'nullable|string',
             'image' => 'nullable|image|max:2048',
@@ -667,6 +715,13 @@ class AtkProductController extends Controller implements HasMiddleware
         $newStock = array_key_exists('stock', $validated) ? (int) $validated['stock'] : $oldStock;
         $validated['stock'] = $newStock;
         $validated['current_stock'] = $newStock;
+
+        if (array_key_exists('minimum_stock', $validated)) {
+            $validated['minimum_stock'] = $validated['minimum_stock'] !== null && $validated['minimum_stock'] !== ''
+                ? (int) $validated['minimum_stock']
+                : 5;
+        }
+        $validated['stock_alert'] = $request->has('stock_alert') ? 1 : 0;
         $validated['unit'] = $validated['unit'] ?? ($product->unit ?: 'Pcs');
 
         if (! empty($validated['category'])) {

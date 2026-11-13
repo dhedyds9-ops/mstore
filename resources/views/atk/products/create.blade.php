@@ -88,6 +88,26 @@
                                 @error('stock') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
 
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-muted">
+                                    <i class="fa-solid fa-triangle-exclamation text-warning me-1"></i>{{ __('Stok Minimal (Batas Peringatan)') }}
+                                </label>
+                                <input type="number" name="minimum_stock" class="form-control @error('minimum_stock') is-invalid @enderror" placeholder="5" value="{{ old('minimum_stock', 5) }}" min="0">
+                                <small class="text-muted">{{ __('Sistem memberi notifikasi peringatan jika stok mencapai atau di bawah batas ini.') }}</small>
+                                @error('minimum_stock') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-muted">{{ __('Peringatan Stok Menipis') }}</label>
+                                <div class="form-check form-switch mt-2">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="stockAlertSwitch" name="stock_alert" value="1" {{ old('stock_alert', 1) ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-semibold text-dark" for="stockAlertSwitch">
+                                        {{ __('Aktifkan notifikasi & badge stok menipis') }}
+                                    </label>
+                                </div>
+                                <small class="text-muted">{{ __('Tampilkan badge peringatan & sertakan dalam filter pantauan stok menipis.') }}</small>
+                            </div>
+
                             <div class="col-12">
                                 <label class="form-label fw-bold small text-muted">{{ __('Deskripsi / Spesifikasi Produk') }}</label>
                                 <textarea name="description" class="form-control @error('description') is-invalid @enderror" rows="2" placeholder="Catatan ukuran, warna, atau spesifikasi barang">{{ old('description') }}</textarea>
