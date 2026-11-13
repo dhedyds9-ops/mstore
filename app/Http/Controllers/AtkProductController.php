@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AtkCategory;
 use App\Models\AtkProduct;
+use App\Models\AtkStockMovement;
+use App\Services\Atk\AtkSpreadsheetService;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
-use OpenSpout\Common\Entity\Row;
-use OpenSpout\Reader\XLSX\Reader;
-use OpenSpout\Writer\XLSX\Writer;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class AtkProductController extends Controller implements HasMiddleware
 {
@@ -115,53 +119,47 @@ class AtkProductController extends Controller implements HasMiddleware
         return $pdf->stream('atk_barcodes.pdf');
     }
 
-    public function export()
+    public function export(Request $request, AtkSpreadsheetService $spreadsheet)
     {
-        $products = AtkProduct::all();
+        $products = AtkProduct::with('categoryModel')->orderBy('name')->get();
+        $format = $request->get('format', 'xlsx');
 
-        return response()->streamDownload(function () use ($products) {
-            $writer = new Writer;
-            $writer->openToFile('php://output');
+        $headers = ['Kode Barang', 'Nama Produk', 'Kategori', 'Harga Jual', 'Harga Beli / HPP', 'Stok', 'Satuan', 'Deskripsi'];
+        $rows = [];
 
-            $writer->addRow(Row::fromValues(['Kode Barang', 'Nama Produk', 'Kategori', 'Harga Jual', 'Harga Beli / HPP', 'Stok', 'Satuan', 'Deskripsi']));
+        foreach ($products as $product) {
+            $rows[] = [
+                $product->code ?: $product->barcode ?: '',
+                $product->name,
+                $product->category ?: ($product->categoryModel?->name ?? 'ATK'),
+                (float) ($product->price ?? $product->selling_price ?? 0),
+                (float) ($product->cost_price ?? 0),
+                (int) ($product->stock ?? $product->current_stock ?? 0),
+                $product->unit ?: 'Pcs',
+                $product->description ?? '',
+            ];
+        }
 
-            foreach ($products as $product) {
-                $writer->addRow(Row::fromValues([
-                    $product->code,
-                    $product->name,
-                    $product->category,
-                    $product->price,
-                    $product->cost_price,
-                    $product->stock,
-                    $product->unit,
-                    $product->description,
-                ]));
-            }
-
-            $writer->close();
-        }, 'daftar_produk_atk_'.now()->format('Ymd_His').'.xlsx');
+        $filename = 'daftar_produk_atk_' . now()->format('Ymd_His');
+        return $spreadsheet->download($filename, $headers, $rows, $format);
     }
 
-    public function downloadTemplate()
+    public function downloadTemplate(Request $request, AtkSpreadsheetService $spreadsheet)
     {
-        return response()->streamDownload(function () {
-            $writer = new Writer;
-            $writer->openToFile('php://output');
+        $format = $request->get('format', 'xlsx');
+        $headers = [
+            'Kode Barang',
+            'Nama Produk',
+            'Kategori',
+            'Harga Jual',
+            'Harga Beli / HPP',
+            'Stok Awal',
+            'Satuan',
+            'Deskripsi / Keterangan',
+        ];
 
-            // Header kolom resmi
-            $writer->addRow(Row::fromValues([
-                'Kode Barang',
-                'Nama Produk',
-                'Kategori',
-                'Harga Jual',
-                'Harga Beli / HPP',
-                'Stok Awal',
-                'Satuan',
-                'Deskripsi / Keterangan',
-            ]));
-
-            // Data Contoh ATK Riil
-            $writer->addRow(Row::fromValues([
+        $rows = [
+            [
                 'ATK-PAP-001',
                 'Kertas HVS A4 75gr PaperOne (1 Rim)',
                 'ATK',
@@ -170,8 +168,8 @@ class AtkProductController extends Controller implements HasMiddleware
                 50,
                 'Rim',
                 'Kertas HVS putih 75 gsm PaperOne isi 500 lembar',
-            ]));
-            $writer->addRow(Row::fromValues([
+            ],
+            [
                 'ATK-PEN-002',
                 'Pulpen Standard AE7 0.5 Black',
                 'ATK',
@@ -180,8 +178,8 @@ class AtkProductController extends Controller implements HasMiddleware
                 120,
                 'Pcs',
                 'Pulpen tinta hitam mata pena 0.5mm',
-            ]));
-            $writer->addRow(Row::fromValues([
+            ],
+            [
                 'ATK-BK-003',
                 'Buku Tulis Sinar Dunia 38 Lembar',
                 'ATK',
@@ -190,8 +188,8 @@ class AtkProductController extends Controller implements HasMiddleware
                 80,
                 'Pcs',
                 'Buku tulis SIDU 38 lembar pack/eceran',
-            ]));
-            $writer->addRow(Row::fromValues([
+            ],
+            [
                 'SVC-FCP-001',
                 'Jasa Fotocopy A4 Hitam Putih',
                 'JASA POTOCOPY',
@@ -200,10 +198,11 @@ class AtkProductController extends Controller implements HasMiddleware
                 9999,
                 'Lembar',
                 'Jasa fotocopy bolak balik / biasa',
-            ]));
+            ],
+        ];
 
-            $writer->close();
-        }, 'template_import_produk_atk.xlsx');
+        $filename = 'template_import_produk_atk';
+        return $spreadsheet->download($filename, $headers, $rows, $format);
     }
 
     private function cleanNumeric($value): float
@@ -251,7 +250,7 @@ class AtkProductController extends Controller implements HasMiddleware
         return is_numeric($str) ? (float) $str : 0.0;
     }
 
-    public function import(Request $request)
+    public function import(Request $request, AtkSpreadsheetService $spreadsheet)
     {
         $request->validate([
             'file' => 'required|file|max:10240',
@@ -266,41 +265,7 @@ class AtkProductController extends Controller implements HasMiddleware
         }
 
         try {
-            $rowsData = [];
-
-            if (in_array($ext, ['csv', 'txt'])) {
-                // Deteksi delimiter (; atau ,)
-                $firstLine = '';
-                $handle = fopen($realPath, 'r');
-                if ($handle) {
-                    $firstLine = fgets($handle) ?: '';
-                    fclose($handle);
-                }
-                $delimiter = (substr_count($firstLine, ';') > substr_count($firstLine, ',')) ? ';' : ',';
-
-                if (($h = fopen($realPath, 'r')) !== false) {
-                    while (($data = fgetcsv($h, 4000, $delimiter)) !== false) {
-                        $rowsData[] = array_map(fn($v) => trim((string)$v), $data);
-                    }
-                    fclose($h);
-                }
-            } else {
-                // XLSX / XLS
-                $reader = new Reader;
-                $reader->open($realPath);
-                foreach ($reader->getSheetIterator() as $sheet) {
-                    foreach ($sheet->getRowIterator() as $row) {
-                        $cells = $row->getCells();
-                        $rowVals = [];
-                        foreach ($cells as $cell) {
-                            $rowVals[] = trim((string)($cell->getValue() ?? ''));
-                        }
-                        $rowsData[] = $rowVals;
-                    }
-                    break; // Ambil sheet pertama saja
-                }
-                $reader->close();
-            }
+            $rowsData = $spreadsheet->parseFile($realPath, $ext);
 
             if (empty($rowsData)) {
                 return back()->withErrors(['file' => __('File Excel/CSV kosong.')]);
@@ -322,7 +287,7 @@ class AtkProductController extends Controller implements HasMiddleware
             $firstRow = $rowsData[0] ?? [];
 
             foreach ($firstRow as $colIdx => $colName) {
-                $norm = strtolower(trim($colName));
+                $norm = strtolower(trim((string) $colName));
                 if ($norm === '') continue;
 
                 if (str_contains($norm, 'beli') || str_contains($norm, 'hpp') || str_contains($norm, 'modal') || str_contains($norm, 'cost') || str_contains($norm, 'pokok')) {
@@ -354,8 +319,6 @@ class AtkProductController extends Controller implements HasMiddleware
 
             // Fallback jika tidak ada header terdeteksi
             if (! $hasHeader || $headerMap['name'] === null) {
-                // Cek kemungkinan posisi standar
-                // Kolom 0: Code, Kolom 1: Name, dst...
                 $headerMap = [
                     'code' => 0,
                     'name' => 1,
@@ -380,63 +343,95 @@ class AtkProductController extends Controller implements HasMiddleware
                     continue; // Skip baris kosong
                 }
 
-                $name = $headerMap['name'] !== null && isset($row[$headerMap['name']]) ? trim($row[$headerMap['name']]) : '';
+                $name = $headerMap['name'] !== null && isset($row[$headerMap['name']]) ? trim((string) $row[$headerMap['name']]) : '';
                 if ($name === '') {
                     $skippedCount++;
                     continue;
                 }
 
-                $code = $headerMap['code'] !== null && isset($row[$headerMap['code']]) ? trim($row[$headerMap['code']]) : '';
-                $category = $headerMap['category'] !== null && isset($row[$headerMap['category']]) ? trim($row[$headerMap['category']]) : 'ATK';
+                $code = $headerMap['code'] !== null && isset($row[$headerMap['code']]) ? trim((string) $row[$headerMap['code']]) : '';
+                $category = $headerMap['category'] !== null && isset($row[$headerMap['category']]) && trim((string) $row[$headerMap['category']]) !== '' ? trim((string) $row[$headerMap['category']]) : 'ATK';
                 $price = $headerMap['price'] !== null && isset($row[$headerMap['price']]) ? $this->cleanNumeric($row[$headerMap['price']]) : 0.0;
                 $costPrice = $headerMap['cost_price'] !== null && isset($row[$headerMap['cost_price']]) ? $this->cleanNumeric($row[$headerMap['cost_price']]) : 0.0;
                 $stock = $headerMap['stock'] !== null && isset($row[$headerMap['stock']]) ? (int) $this->cleanNumeric($row[$headerMap['stock']]) : 0;
-                $unit = $headerMap['unit'] !== null && isset($row[$headerMap['unit']]) && trim($row[$headerMap['unit']]) !== '' ? trim($row[$headerMap['unit']]) : 'Pcs';
-                $description = $headerMap['description'] !== null && isset($row[$headerMap['description']]) ? trim($row[$headerMap['description']]) : null;
+                $unit = $headerMap['unit'] !== null && isset($row[$headerMap['unit']]) && trim((string) $row[$headerMap['unit']]) !== '' ? trim((string) $row[$headerMap['unit']]) : 'Pcs';
+                $description = $headerMap['description'] !== null && isset($row[$headerMap['description']]) ? trim((string) $row[$headerMap['description']]) : null;
 
-                // Generate kode otomatis jika kosong
-                if ($code === '') {
+                // Cari produk yang sudah ada: pertama via code/barcode, kedua via name
+                $existing = null;
+                if ($code !== '') {
+                    $existing = AtkProduct::where('code', $code)->orWhere('barcode', $code)->first();
+                }
+                if (! $existing) {
+                    $existing = AtkProduct::where('name', $name)->first();
+                }
+
+                // Jika produk baru dan kode kosong, generate kode unik
+                if (! $existing && $code === '') {
                     $prefix = 'ATK-' . strtoupper(substr(preg_replace('/[^A-Za-z0-9]/', '', $name), 0, 4));
                     if (strlen($prefix) < 5) {
                         $prefix = 'ATK-ITEM';
                     }
-                    $code = $prefix . '-' . str_pad((string) mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
-                    while (AtkProduct::where('code', $code)->exists()) {
+                    do {
                         $code = $prefix . '-' . str_pad((string) mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
-                    }
+                    } while (AtkProduct::where('code', $code)->orWhere('barcode', $code)->exists());
+                } elseif ($existing && $code === '') {
+                    $code = $existing->code ?: $existing->barcode ?: ('ATK-ITEM-' . str_pad((string) $existing->id, 4, '0', STR_PAD_LEFT));
                 }
 
-                $existing = AtkProduct::where('code', $code)->first();
+                // Cari atau buat kategori di tabel AtkCategory jika ada
+                $categoryId = null;
+                if ($category) {
+                    try {
+                        $catModel = AtkCategory::firstOrCreate(['name' => $category]);
+                        $categoryId = $catModel->id;
+                    } catch (\Throwable $e) {}
+                }
+
+                $payload = [
+                    'name' => $name,
+                    'code' => $code,
+                    'barcode' => $code,
+                    'category' => $category,
+                    'price' => $price,
+                    'selling_price' => $price,
+                    'cost_price' => $costPrice,
+                    'stock' => $stock,
+                    'current_stock' => $stock,
+                    'unit' => $unit,
+                    'description' => $description,
+                ];
+                if ($categoryId) {
+                    $payload['category_id'] = $categoryId;
+                }
 
                 if ($existing) {
-                    $existing->update([
-                        'name' => $name,
-                        'category' => $category ?: ($existing->category ?? 'ATK'),
-                        'price' => $price > 0 ? $price : $existing->price,
-                        'selling_price' => $price > 0 ? $price : $existing->price,
-                        'cost_price' => $costPrice > 0 ? $costPrice : $existing->cost_price,
-                        'stock' => $stock,
-                        'current_stock' => $stock,
-                        'unit' => $unit ?: $existing->unit,
-                        'description' => $description ?: $existing->description,
-                        'barcode' => $code,
-                    ]);
+                    $oldStock = (int) ($existing->stock ?? 0);
+                    // Pertahankan harga/hpp jika di Excel kosong / 0
+                    if ($price <= 0 && $existing->price > 0) {
+                        unset($payload['price'], $payload['selling_price']);
+                    }
+                    if ($costPrice <= 0 && $existing->cost_price > 0) {
+                        unset($payload['cost_price']);
+                    }
+                    if ($stock === 0 && ! isset($headerMap['stock'])) {
+                        unset($payload['stock'], $payload['current_stock']);
+                    }
+
+                    $existing->update($payload);
                     $updatedCount++;
+
+                    // Catat mutasi stok penyesuaian jika stok berubah
+                    if (isset($payload['stock']) && $payload['stock'] != $oldStock) {
+                        $this->recordStockMovement($existing, $payload['stock'] - $oldStock, $oldStock, $payload['stock'], 'Import penyesuaian stok produk');
+                    }
                 } else {
-                    AtkProduct::create([
-                        'code' => $code,
-                        'barcode' => $code,
-                        'name' => $name,
-                        'category' => $category ?: 'ATK',
-                        'price' => $price,
-                        'selling_price' => $price,
-                        'cost_price' => $costPrice,
-                        'stock' => $stock,
-                        'current_stock' => $stock,
-                        'unit' => $unit ?: 'Pcs',
-                        'description' => $description,
-                    ]);
+                    $newProd = AtkProduct::create($payload);
                     $createdCount++;
+
+                    if ($stock > 0) {
+                        $this->recordStockMovement($newProd, $stock, 0, $stock, 'Stok awal import produk baru');
+                    }
                 }
             }
 
@@ -448,7 +443,29 @@ class AtkProductController extends Controller implements HasMiddleware
 
             return redirect()->route('atk.products.index')->with('success', $msg);
         } catch (\Throwable $e) {
+            Log::error('ATK Import Failed: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return back()->withErrors(['file' => 'Import gagal: ' . $e->getMessage()]);
+        }
+    }
+
+    private function recordStockMovement(AtkProduct $product, int $quantity, int $before, int $after, string $notes): void
+    {
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('atk_stock_movements')) {
+                AtkStockMovement::create([
+                    'atk_product_id' => $product->id,
+                    'type' => $quantity >= 0 ? 'in' : 'out',
+                    'quantity' => abs($quantity),
+                    'balance_before' => $before,
+                    'balance_after' => $after,
+                    'reference_type' => 'import',
+                    'reference_id' => null,
+                    'notes' => $notes,
+                    'user_id' => \Illuminate\Support\Facades\Auth::id(),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            // Ignore if movement cannot be recorded
         }
     }
 
@@ -545,6 +562,7 @@ class AtkProductController extends Controller implements HasMiddleware
         $stats = [
             'total_items' => AtkProduct::count(),
             'total_stock' => (int) AtkProduct::sum('stock'),
+            'in_stock' => AtkProduct::where('stock', '>', 5)->count(),
             'low_stock' => AtkProduct::where('stock', '<=', 5)->where('stock', '>', 0)->count(),
             'out_of_stock' => AtkProduct::where('stock', '<=', 0)->count(),
         ];
@@ -572,29 +590,40 @@ class AtkProductController extends Controller implements HasMiddleware
         ]);
 
         if (empty($validated['code'])) {
-            $base = strtoupper(\Illuminate\Support\Str::slug($validated['name'], '_'));
+            $base = strtoupper(Str::slug($validated['name'], '_'));
             $suffix = substr(uniqid('', true), -6);
             $code = $base ? ($base.'_'.$suffix) : ('ITEM_'.$suffix);
             // ensure unique
-            while (\App\Models\AtkProduct::where('code', $code)->exists()) {
+            while (AtkProduct::where('code', $code)->orWhere('barcode', $code)->exists()) {
                 $suffix = substr(uniqid('', true), -6);
                 $code = $base ? ($base.'_'.$suffix) : ('ITEM_'.$suffix);
             }
             $validated['code'] = $code;
         }
-        if (empty($validated['unit'])) {
-            $validated['unit'] = 'pcs';
-        }
+        $validated['barcode'] = $validated['code'];
+        $validated['price'] = (float) ($validated['price'] ?? 0);
+        $validated['selling_price'] = $validated['price'];
+        $validated['cost_price'] = (float) ($validated['cost_price'] ?? 0);
+        $validated['stock'] = (int) ($validated['stock'] ?? 0);
+        $validated['current_stock'] = $validated['stock'];
+        $validated['unit'] = $validated['unit'] ?: 'Pcs';
 
-        $validated['price'] = $validated['price'] ?? 0;
-        $validated['cost_price'] = $validated['cost_price'] ?? 0;
-        $validated['stock'] = $validated['stock'] ?? 0;
+        if (! empty($validated['category'])) {
+            try {
+                $catModel = AtkCategory::firstOrCreate(['name' => $validated['category']]);
+                $validated['category_id'] = $catModel->id;
+            } catch (\Throwable $e) {}
+        }
 
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('atk-products', 'public');
         }
 
-        AtkProduct::create($validated);
+        $product = AtkProduct::create($validated);
+
+        if ($product->stock > 0) {
+            $this->recordStockMovement($product, $product->stock, 0, $product->stock, 'Stok awal produk');
+        }
 
         return redirect()->route('atk.products.index')->with('success', __('Product created successfully.'));
     }
@@ -627,22 +656,37 @@ class AtkProductController extends Controller implements HasMiddleware
             // keep existing code if user cleared it
             $validated['code'] = $product->code;
         }
-        $validated['price'] = $validated['price'] ?? $product->price ?? 0;
-        $validated['cost_price'] = $validated['cost_price'] ?? $product->cost_price ?? 0;
-        $validated['stock'] = $validated['stock'] ?? $product->stock ?? 0;
-        if (empty($validated['unit'])) {
-            $validated['unit'] = 'pcs';
+        $validated['barcode'] = $validated['code'] ?? $product->code;
+        $validated['price'] = array_key_exists('price', $validated) ? (float) $validated['price'] : ($product->price ?? 0);
+        $validated['selling_price'] = $validated['price'];
+        $validated['cost_price'] = array_key_exists('cost_price', $validated) ? (float) $validated['cost_price'] : ($product->cost_price ?? 0);
+
+        $oldStock = (int) ($product->stock ?? 0);
+        $newStock = array_key_exists('stock', $validated) ? (int) $validated['stock'] : $oldStock;
+        $validated['stock'] = $newStock;
+        $validated['current_stock'] = $newStock;
+        $validated['unit'] = $validated['unit'] ?? ($product->unit ?: 'Pcs');
+
+        if (! empty($validated['category'])) {
+            try {
+                $catModel = AtkCategory::firstOrCreate(['name' => $validated['category']]);
+                $validated['category_id'] = $catModel->id;
+            } catch (\Throwable $e) {}
         }
 
         if ($request->hasFile('image')) {
             // Delete old image if exists
             if ($product->image) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($product->image);
+                Storage::disk('public')->delete($product->image);
             }
             $validated['image'] = $request->file('image')->store('atk-products', 'public');
         }
 
         $product->update($validated);
+
+        if ($newStock != $oldStock) {
+            $this->recordStockMovement($product, $newStock - $oldStock, $oldStock, $newStock, 'Penyesuaian stok produk');
+        }
 
         return redirect()->route('atk.products.index')->with('success', __('Product updated successfully.'));
     }

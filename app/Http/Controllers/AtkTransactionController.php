@@ -26,8 +26,7 @@ use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use OpenSpout\Common\Entity\Row;
-use OpenSpout\Writer\XLSX\Writer;
+use App\Services\Atk\AtkSpreadsheetService;
 
 class AtkTransactionController extends Controller implements HasMiddleware
 {
@@ -214,9 +213,12 @@ class AtkTransactionController extends Controller implements HasMiddleware
 
     public function pos()
     {
-        $products = AtkProduct::where('category', 'ATK')->where('stock', '>', 0)->get();
-        $services = AtkProduct::where('category', 'JASA POTOCOPY')->get();
-        $bankServices = AtkProduct::where('category', 'JASA TRANSFER BANK')->get();
+        $products = AtkProduct::where(function ($q) {
+            $q->whereNull('category')
+              ->orWhereNotIn('category', ['JASA POTOCOPY', 'JASA TRANSFER BANK']);
+        })->where('stock', '>', 0)->orderBy('name')->get();
+        $services = AtkProduct::where('category', 'JASA POTOCOPY')->orderBy('name')->get();
+        $bankServices = AtkProduct::where('category', 'JASA TRANSFER BANK')->orderBy('name')->get();
         $customers = Customer::orderBy('name')->get(['id', 'name', 'phone']);
         $coordinators = Coordinator::orderBy('name')->get(['id', 'name']);
         $investors = Investor::orderBy('name')->get(['id', 'name', 'coordinator_id']);
@@ -634,6 +636,9 @@ class AtkTransactionController extends Controller implements HasMiddleware
 
                 if (! $isService && ! $isBank) {
                     $product->decrement('stock', $itemData['quantity']);
+                    if (Schema::hasColumn('atk_products', 'current_stock')) {
+                        $product->decrement('current_stock', $itemData['quantity']);
+                    }
                     if (! $isBank) {
                         $hpp += ((float) $product->cost_price) * (int) $itemData['quantity'];
                     }
@@ -990,6 +995,9 @@ class AtkTransactionController extends Controller implements HasMiddleware
 
                 if (! $isService && ! $isBank && $product) {
                     $product->increment('stock', $item->quantity);
+                    if (Schema::hasColumn('atk_products', 'current_stock')) {
+                        $product->increment('current_stock', $item->quantity);
+                    }
                 }
             }
 
@@ -1097,6 +1105,9 @@ class AtkTransactionController extends Controller implements HasMiddleware
 
                     if (! $isService && ! $isBank && $product) {
                         $product->increment('stock', $item->quantity);
+                        if (Schema::hasColumn('atk_products', 'current_stock')) {
+                            $product->increment('current_stock', $item->quantity);
+                        }
                     }
                 }
 
@@ -1157,7 +1168,7 @@ class AtkTransactionController extends Controller implements HasMiddleware
 
     public function exportPdf(Request $request)
     {
-        $query = AtkTransaction::with('user', 'items');
+        $query = AtkTransaction::with(['user', 'atkCustomer', 'items.product']);
 
         if ($request->start_date && $request->end_date) {
             $query->whereBetween('created_at', [
@@ -1167,8 +1178,25 @@ class AtkTransactionController extends Controller implements HasMiddleware
         }
 
         if ($request->filled('category')) {
-            $query->whereHas('items.product', function ($q) use ($request) {
-                $q->where('category', $request->get('category'));
+            $cat = $request->get('category');
+            $query->whereHas('items', function ($q) use ($cat) {
+                $q->whereHas('product', function ($qp) use ($cat) {
+                    $qp->where('category', $cat);
+                })->orWhere('item_type', $cat);
+            });
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('transaction_number', 'like', "%{$search}%")
+                  ->orWhere('customer_name', 'like', "%{$search}%")
+                  ->orWhereHas('items', function ($qi) use ($search) {
+                      $qi->where('product_name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('user', function ($qi) use ($search) {
+                      $qi->where('name', 'like', "%{$search}%");
+                  });
             });
         }
 
@@ -1178,9 +1206,9 @@ class AtkTransactionController extends Controller implements HasMiddleware
         return $pdf->download('atk_transactions.pdf');
     }
 
-    public function exportExcel(Request $request)
+    public function exportExcel(Request $request, AtkSpreadsheetService $spreadsheet)
     {
-        $query = AtkTransaction::with('user', 'items');
+        $query = AtkTransaction::with(['user', 'atkCustomer', 'items.product']);
 
         if ($request->start_date && $request->end_date) {
             $query->whereBetween('created_at', [
@@ -1190,36 +1218,57 @@ class AtkTransactionController extends Controller implements HasMiddleware
         }
 
         if ($request->filled('category')) {
-            $query->whereHas('items.product', function ($q) use ($request) {
-                $q->where('category', $request->get('category'));
+            $cat = $request->get('category');
+            $query->whereHas('items', function ($q) use ($cat) {
+                $q->whereHas('product', function ($qp) use ($cat) {
+                    $qp->where('category', $cat);
+                })->orWhere('item_type', $cat);
+            });
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('transaction_number', 'like', "%{$search}%")
+                  ->orWhere('customer_name', 'like', "%{$search}%")
+                  ->orWhereHas('items', function ($qi) use ($search) {
+                      $qi->where('product_name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('user', function ($qi) use ($search) {
+                      $qi->where('name', 'like', "%{$search}%");
+                  });
             });
         }
 
         $transactions = $query->latest()->get();
+        $format = $request->get('format', 'xlsx');
 
-        return response()->streamDownload(function () use ($transactions) {
-            $writer = new Writer;
-            $writer->openToFile('php://output');
+        $headers = ['Tanggal', 'No. Transaksi', 'Pelanggan', 'Kasir', 'Item Produk', 'Metode Pembayaran', 'Status', 'Total'];
+        $rows = [];
 
-            $writer->addRow(Row::fromValues(['Date', 'Transaction Number', 'Customer', 'Item Produk', 'Total Amount', 'Payment Method']));
+        foreach ($transactions as $trx) {
+            $items = $trx->items->map(function ($item) {
+                return $item->product_name.' ('.$item->quantity.')';
+            })->implode(', ');
 
-            foreach ($transactions as $trx) {
-                $items = $trx->items->map(function ($item) {
-                    return $item->product_name.' ('.$item->quantity.')';
-                })->implode(', ');
+            $customer = $trx->customer_name ?: ($trx->atkCustomer?->name ?? 'Pelanggan Umum');
+            $cashier = $trx->user?->name ?? '-';
+            $status = $trx->status === 'reversed' || $trx->reversed_at ? 'Dibatalkan (Reversed)' : 'Selesai (Completed)';
 
-                $writer->addRow(Row::fromValues([
-                    $trx->created_at->format('Y-m-d H:i'),
-                    $trx->transaction_number,
-                    $trx->user->name ?? 'Guest',
-                    $items,
-                    $trx->total_amount,
-                    $trx->payment_method,
-                ]));
-            }
+            $rows[] = [
+                $trx->created_at->format('Y-m-d H:i'),
+                $trx->transaction_number,
+                $customer,
+                $cashier,
+                $items,
+                strtoupper((string) $trx->payment_method),
+                $status,
+                (float) $trx->total_amount,
+            ];
+        }
 
-            $writer->close();
-        }, 'atk_transactions.xlsx');
+        $filename = 'transaksi_atk_' . now()->format('Ymd_His');
+        return $spreadsheet->download($filename, $headers, $rows, $format);
     }
 
     public function whatsappReceipt(Request $request, AtkTransaction $transaction)

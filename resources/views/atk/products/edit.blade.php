@@ -50,7 +50,9 @@
                                 <select name="category" class="form-select @error('category') is-invalid @enderror">
                                     <option value="">{{ __('Pilih Kategori (opsional)') }}</option>
                                     @php
-                                        $opts = ['ATK', 'JASA POTOCOPY', 'JASA TRANSFER BANK'];
+                                        $dbCats = \App\Models\AtkProduct::whereNotNull('category')->where('category', '!=', '')->distinct()->pluck('category')->toArray();
+                                        $opts = array_values(array_unique(array_filter(array_merge(['ATK', 'JASA POTOCOPY', 'JASA TRANSFER BANK'], $dbCats))));
+                                        sort($opts);
                                     @endphp
                                     @foreach($opts as $opt)
                                         <option value="{{ $opt }}" {{ old('category', $product->category) === $opt ? 'selected' : '' }}>{{ $opt }}</option>

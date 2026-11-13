@@ -97,12 +97,14 @@ class AtkFloatAccountController extends Controller implements HasMiddleware
             // Lock the account to prevent race conditions!
             $account = AtkFloatAccount::lockForUpdate()->findOrFail($account->id);
             
-            $balanceBefore = $account->current_balance;
-            $balanceAfter = $data['transaction_type'] === 'withdrawal' 
-                ? $balanceBefore - $data['amount'] 
-                : $balanceBefore + $data['amount'];
+            $balanceBefore = (float) $account->current_balance;
+            $amount = (float) $data['amount'];
+            $isOutgoing = in_array($data['transaction_type'], ['withdrawal', 'transfer', 'topup', 'ppob']);
+            $balanceAfter = $isOutgoing 
+                ? $balanceBefore - $amount 
+                : $balanceBefore + $amount;
 
-            if ($data['transaction_type'] === 'withdrawal' && $balanceAfter < 0) {
+            if ($isOutgoing && $balanceAfter < 0) {
                 throw new \Exception('Saldo tidak mencukupi.');
             }
 

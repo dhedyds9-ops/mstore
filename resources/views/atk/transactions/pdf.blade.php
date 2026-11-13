@@ -61,7 +61,7 @@
                 <tr>
                     <td>{{ $trx->created_at->format('d/m/Y H:i') }}</td>
                     <td>{{ $trx->transaction_number }}</td>
-                    <td>{{ $trx->user->name ?? 'Guest' }}</td>
+                    <td>{{ $trx->customer_name ?: ($trx->atkCustomer?->name ?? 'Pelanggan Umum') }}</td>
                     <td>
                         @foreach($trx->items as $item)
                             <div>- {{ $item->product_name }} ({{ $item->quantity }})</div>

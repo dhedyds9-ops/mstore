@@ -136,6 +136,26 @@ class AtkExpenseController extends Controller implements HasMiddleware
 
         DB::beginTransaction();
         try {
+            $oldAmount = (float) $expense->amount;
+            $newAmount = (float) $data['amount'];
+            $diff = $newAmount - $oldAmount;
+
+            if ($diff != 0) {
+                $cash = Cash::firstOrCreate(['name' => 'Kas Utama'], ['balance' => 0]);
+                $cash->decrement('balance', $diff);
+
+                $movement = AtkCashMovement::where('reference_type', 'transaction')
+                    ->where('reference_id', $expense->id)
+                    ->first();
+                if ($movement) {
+                    $movement->update([
+                        'amount' => $newAmount,
+                        'balance_after' => $movement->balance_before - $newAmount,
+                        'description' => 'Pengeluaran ATK - ' . $data['description'],
+                    ]);
+                }
+            }
+
             $expense->update($data);
             
             DB::commit();
@@ -155,6 +175,15 @@ class AtkExpenseController extends Controller implements HasMiddleware
 
         DB::beginTransaction();
         try {
+            // Refund Kas Utama
+            $cash = Cash::firstOrCreate(['name' => 'Kas Utama'], ['balance' => 0]);
+            $cash->increment('balance', (float) $expense->amount);
+
+            // Hapus mutasi kas terkait
+            AtkCashMovement::where('reference_type', 'transaction')
+                ->where('reference_id', $expense->id)
+                ->delete();
+
             $expense->delete();
             
             DB::commit();

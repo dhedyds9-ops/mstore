@@ -31,13 +31,23 @@
                     </li>
                     <li>
                         <a class="dropdown-item py-2" href="{{ route('atk.products.template') }}">
-                            <i class="fa-solid fa-download text-success me-2"></i>{{ __('Unduh Template Excel') }}
+                            <i class="fa-solid fa-download text-success me-2"></i>{{ __('Unduh Template Excel (.xlsx)') }}
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item py-2" href="{{ route('atk.products.template', ['format' => 'csv']) }}">
+                            <i class="fa-solid fa-file-csv text-info me-2"></i>{{ __('Unduh Template CSV (.csv)') }}
                         </a>
                     </li>
                     <li><hr class="dropdown-divider"></li>
                     <li>
                         <a class="dropdown-item py-2" href="{{ route('atk.products.export') }}">
                             <i class="fa-solid fa-file-export text-secondary me-2"></i>{{ __('Ekspor Semua Data (.xlsx)') }}
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item py-2" href="{{ route('atk.products.export', ['format' => 'csv']) }}">
+                            <i class="fa-solid fa-file-csv text-secondary me-2"></i>{{ __('Ekspor Semua Data (.csv)') }}
                         </a>
                     </li>
                 </ul>
@@ -102,7 +112,7 @@
                         </div>
                         <div>
                             <div class="text-muted small fw-medium">{{ __('Stok Aman (> 5)') }}</div>
-                            <div class="fs-5 fw-bold text-success">{{ number_format($stats['total_stock'] ?? 0, 0, ',', '.') }} <span class="small fw-normal text-muted">unit</span></div>
+                            <div class="fs-5 fw-bold text-success">{{ number_format($stats['in_stock'] ?? 0, 0, ',', '.') }} <span class="small fw-normal text-muted">produk</span></div>
                         </div>
                     </div>
                 </div>
@@ -461,7 +471,10 @@
                         </ul>
                         <div class="d-flex flex-wrap gap-2 mt-3">
                             <a href="{{ route('atk.products.template') }}" class="btn btn-primary btn-sm">
-                                <i class="fa-solid fa-download me-1"></i> {{ __('Unduh Template Resmi (.xlsx)') }}
+                                <i class="fa-solid fa-download me-1"></i> {{ __('Unduh Template (.xlsx)') }}
+                            </a>
+                            <a href="{{ route('atk.products.template', ['format' => 'csv']) }}" class="btn btn-outline-primary btn-sm">
+                                <i class="fa-solid fa-file-csv me-1"></i> {{ __('Unduh Template (.csv)') }}
                             </a>
                             <a href="{{ route('atk.products.export') }}" class="btn btn-outline-secondary btn-sm">
                                 <i class="fa-solid fa-file-export me-1"></i> {{ __('Export Data Saat Ini') }}
