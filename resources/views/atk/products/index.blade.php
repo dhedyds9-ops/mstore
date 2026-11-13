@@ -191,30 +191,31 @@
         {{-- Filter Bar --}}
         <div class="card-header bg-white border-bottom py-3 px-3 px-md-4">
             <form method="GET" action="{{ route('atk.products.index') }}" id="filterForm">
-                <div class="row g-2 align-items-center">
-                    {{-- Pencarian --}}
-                    <div class="col-12 col-md-4 col-lg-3">
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0 text-muted">
-                                <i class="fa-solid fa-magnifying-glass"></i>
-                            </span>
-                            <input type="text" name="search" id="productSearch" class="form-control bg-light border-start-0 border-end-0" placeholder="{{ __('Cari nama, kode, barcode...') }}" value="{{ request('search') }}">
+                <div class="row g-2 align-items-center atk-filter-bar">
+                    {{-- 1. Pencarian Mandiri + Scan Barcode & Tombol Cari --}}
+                    <div class="col-12 col-md-5 col-lg-4">
+                        <div class="atk-search-box">
+                            <span class="search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
+                            <input type="text" name="search" id="productSearch" class="form-control" placeholder="{{ __('Cari nama, kode, barcode...') }}" value="{{ request('search') }}">
                             @if(request('search'))
-                                <a href="{{ route('atk.products.index', array_merge(request()->except(['search', 'page']))) }}" class="btn btn-light border-top border-bottom border-0 text-muted" title="{{ __('Hapus Pencarian') }}">
+                                <a href="{{ route('atk.products.index', array_merge(request()->except(['search', 'page']))) }}" class="btn-clear" title="{{ __('Hapus Pencarian') }}">
                                     <i class="fa-solid fa-xmark"></i>
                                 </a>
                             @endif
-                            <button type="button" class="btn btn-light border border-start-0 text-primary" id="openAtkBarcodeScan" title="{{ __('Scan Barcode via Kamera') }}">
+                            <button type="button" class="btn-scan" id="openAtkBarcodeScan" title="{{ __('Scan Barcode via Kamera') }}">
                                 <i class="fa-solid fa-barcode"></i>
+                            </button>
+                            <button type="submit" class="btn btn-primary btn-search" title="{{ __('Cari Produk') }}">
+                                <i class="fa-solid fa-magnifying-glass me-1"></i><span class="d-none d-sm-inline">{{ __('Cari') }}</span>
                             </button>
                         </div>
                     </div>
 
-                    {{-- Kategori --}}
-                    <div class="col-6 col-md-3 col-lg-2">
-                        <div class="input-group">
-                            <span class="input-group-text bg-light text-muted small"><i class="fa-solid fa-layer-group"></i></span>
-                            <select name="category" class="form-select bg-light" onchange="this.form.submit()">
+                    {{-- 2. Kategori --}}
+                    <div class="col-6 col-sm-4 col-md-2 col-lg-2">
+                        <div class="atk-select-wrap">
+                            <i class="fa-solid fa-layer-group select-icon"></i>
+                            <select name="category" class="form-select" onchange="this.form.submit()">
                                 <option value="">{{ __('Semua Kategori') }}</option>
                                 @foreach($categories as $opt)
                                     <option value="{{ $opt }}" {{ request('category') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
@@ -223,11 +224,11 @@
                         </div>
                     </div>
 
-                    {{-- Status Stok --}}
-                    <div class="col-6 col-md-3 col-lg-2">
-                        <div class="input-group">
-                            <span class="input-group-text bg-light text-muted small"><i class="fa-solid fa-boxes-stacked"></i></span>
-                            <select name="stock_status" class="form-select bg-light" onchange="this.form.submit()">
+                    {{-- 3. Status Stok --}}
+                    <div class="col-6 col-sm-4 col-md-2 col-lg-2">
+                        <div class="atk-select-wrap">
+                            <i class="fa-solid fa-boxes-stacked select-icon"></i>
+                            <select name="stock_status" class="form-select" onchange="this.form.submit()">
                                 <option value="">{{ __('Semua Status Stok') }}</option>
                                 <option value="in" {{ request('stock_status') === 'in' ? 'selected' : '' }}>{{ __('Stok Aman (> Min)') }}</option>
                                 <option value="low" {{ request('stock_status') === 'low' ? 'selected' : '' }}>{{ __('Stok Menipis (<= Min)') }}</option>
@@ -236,12 +237,12 @@
                         </div>
                     </div>
 
-                    {{-- Urutkan / Sort --}}
-                    <div class="col-6 col-md-3 col-lg-2">
-                        <div class="input-group">
-                            <span class="input-group-text bg-light text-muted small"><i class="fa-solid fa-arrow-down-short-wide"></i></span>
-                            <select name="sort" class="form-select bg-light" onchange="this.form.submit()">
-                                <option value="latest" {{ request('sort', 'latest') === 'latest' ? 'selected' : '' }}>{{ __('Terbaru') }}</option>
+                    {{-- 4. Urutkan / Sort --}}
+                    <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+                        <div class="atk-select-wrap">
+                            <i class="fa-solid fa-arrow-down-short-wide select-icon"></i>
+                            <select name="sort" class="form-select" onchange="this.form.submit()">
+                                <option value="latest" {{ request('sort', 'latest') === 'latest' ? 'selected' : '' }}>{{ __('Urutan: Terbaru') }}</option>
                                 <option value="name_asc" {{ request('sort') === 'name_asc' ? 'selected' : '' }}>{{ __('Nama (A - Z)') }}</option>
                                 <option value="name_desc" {{ request('sort') === 'name_desc' ? 'selected' : '' }}>{{ __('Nama (Z - A)') }}</option>
                                 <option value="price_asc" {{ request('sort') === 'price_asc' ? 'selected' : '' }}>{{ __('Harga Terendah') }}</option>
@@ -252,26 +253,24 @@
                         </div>
                     </div>
 
-                    {{-- Per Page --}}
-                    <div class="col-6 col-md-2 col-lg-1">
-                        <select name="per_page" id="per_page" class="form-select bg-light" onchange="this.form.submit()" title="{{ __('Jumlah per halaman') }}">
-                            @php $pp = request('per_page', '10'); @endphp
-                            <option value="10" {{ $pp == '10' ? 'selected' : '' }}>10 / hal</option>
-                            <option value="25" {{ $pp == '25' ? 'selected' : '' }}>25 / hal</option>
-                            <option value="50" {{ $pp == '50' ? 'selected' : '' }}>50 / hal</option>
-                            <option value="100" {{ $pp == '100' ? 'selected' : '' }}>100 / hal</option>
-                            <option value="all" {{ $pp == 'all' ? 'selected' : '' }}>Semua</option>
-                        </select>
-                    </div>
+                    {{-- 5. Per Page & Reset Filter --}}
+                    <div class="col-6 col-sm-12 col-md-auto col-lg-2 ms-lg-auto d-flex align-items-center gap-2 justify-content-end">
+                        <div class="atk-select-wrap flex-grow-1">
+                            <i class="fa-solid fa-list-ol select-icon"></i>
+                            <select name="per_page" id="per_page" class="form-select" onchange="this.form.submit()" title="{{ __('Jumlah per halaman') }}">
+                                @php $pp = request('per_page', '10'); @endphp
+                                <option value="10" {{ $pp == '10' ? 'selected' : '' }}>10 / hal</option>
+                                <option value="25" {{ $pp == '25' ? 'selected' : '' }}>25 / hal</option>
+                                <option value="50" {{ $pp == '50' ? 'selected' : '' }}>50 / hal</option>
+                                <option value="100" {{ $pp == '100' ? 'selected' : '' }}>100 / hal</option>
+                                <option value="all" {{ $pp == 'all' ? 'selected' : '' }}>Semua</option>
+                            </select>
+                        </div>
 
-                    {{-- Tombol Filter & Reset --}}
-                    <div class="col-12 col-md-3 col-lg-2 d-flex gap-2 justify-content-md-end">
-                        <button type="submit" class="btn btn-primary btn-sm flex-fill flex-md-grow-0 px-3" title="{{ __('Terapkan Filter') }}">
-                            <i class="fa-solid fa-filter me-1"></i>{{ __('Filter') }}
-                        </button>
                         @if(request('search') || request('category') || request('stock_status') || (request('sort') && request('sort') !== 'latest') || (request('per_page') && request('per_page') != '10'))
-                            <a href="{{ route('atk.products.index') }}" class="btn btn-outline-secondary btn-sm px-2" title="{{ __('Reset Semua Filter') }}">
+                            <a href="{{ route('atk.products.index') }}" class="btn btn-outline-danger d-inline-flex align-items-center gap-1 px-2.5 flex-shrink-0" style="height: 38px;" title="{{ __('Reset Semua Filter') }}">
                                 <i class="fa-solid fa-rotate-left"></i>
+                                <span class="d-none d-xl-inline fw-semibold small">{{ __('Reset') }}</span>
                             </a>
                         @endif
                     </div>
@@ -574,6 +573,105 @@
         height: auto !important;
         object-fit: cover;
         border-radius: 0.5rem;
+    }
+
+    /* Filter Bar Polish */
+    .atk-filter-bar .form-control,
+    .atk-filter-bar .form-select,
+    .atk-filter-bar .btn {
+        height: 38px;
+        font-size: 0.875rem;
+        border-radius: 0.5rem;
+    }
+
+    .atk-search-box {
+        position: relative;
+        display: flex;
+        align-items: stretch;
+        border: 1px solid #dee2e6;
+        border-radius: 0.5rem;
+        background-color: #ffffff;
+        transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+        height: 38px;
+        overflow: hidden;
+    }
+    .atk-search-box:focus-within {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    .atk-search-box .search-icon {
+        display: flex;
+        align-items: center;
+        padding-left: 0.85rem;
+        padding-right: 0.25rem;
+        color: #6c757d;
+        pointer-events: none;
+    }
+    .atk-search-box .form-control {
+        border: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        padding-left: 0.5rem;
+        height: 100%;
+    }
+    .atk-search-box .btn-scan {
+        border: none;
+        background: transparent;
+        color: #0d6efd;
+        padding: 0 0.65rem;
+        display: flex;
+        align-items: center;
+        transition: background .15s ease, color .15s ease;
+    }
+    .atk-search-box .btn-scan:hover {
+        color: #0a58ca;
+        background: rgba(13, 110, 253, 0.08);
+    }
+    .atk-search-box .btn-clear {
+        border: none;
+        background: transparent;
+        color: #adb5bd;
+        padding: 0 0.5rem;
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+    }
+    .atk-search-box .btn-clear:hover {
+        color: #dc3545;
+    }
+    .atk-search-box .btn-search {
+        border-radius: 0 !important;
+        margin: -1px -1px -1px 0;
+        padding: 0 1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+    }
+
+    .atk-select-wrap {
+        position: relative;
+    }
+    .atk-select-wrap .select-icon {
+        position: absolute;
+        left: 0.85rem;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+        color: #6c757d;
+        font-size: 0.85rem;
+        z-index: 2;
+    }
+    .atk-select-wrap .form-select {
+        padding-left: 2.25rem;
+        border: 1px solid #dee2e6;
+        background-color: #ffffff;
+        font-weight: 500;
+        color: #374151;
+        transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+    }
+    .atk-select-wrap .form-select:focus {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
     }
 </style>
 <script>
