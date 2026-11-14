@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AtkProduct extends Model
 {
@@ -21,5 +22,10 @@ class AtkProduct extends Model
     public function supplier(): BelongsTo
     {
         return $this->belongsTo(AtkSupplier::class, 'supplier_id');
+    }
+
+    public function stockMovements(): HasMany
+    {
+        return $this->hasMany(AtkStockMovement::class, 'atk_product_id');
     }
 }

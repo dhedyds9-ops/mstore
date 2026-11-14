@@ -22,6 +22,7 @@ use App\Services\AttendanceExportService;
 use App\Services\AttendanceNotificationService;
 use App\Services\AttendancePayrollService;
 use App\Services\AttendanceService;
+use App\Services\DsBillingAttendancePullService;
 use App\Traits\HasAttendanceFilters;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -162,7 +163,7 @@ class TechnicianAttendanceController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('permission:attendance.view', only: ['index', 'daily', 'exportExcel', 'payslip']),
-            new Middleware('permission:attendance.create', only: ['kiosk', 'kioskScan']),
+            new Middleware('permission:attendance.create', only: ['kiosk', 'kioskScan', 'pullDsBilling']),
             new Middleware('permission:attendance.edit', only: ['edit']),
             new Middleware('permission:attendance.delete', only: ['destroy', 'bulkDestroy']),
         ];
@@ -598,6 +599,29 @@ class TechnicianAttendanceController extends Controller implements HasMiddleware
 
         $channelList = implode(' & ', $result['channels']);
         return back()->with('success', __('Notification sent via :channels.', ['channels' => $channelList]));
+    }
+
+    /**
+     * Tarik data absensi teknisi dari dsBilling (mstore.mstore.id) secara manual.
+     */
+    public function pullDsBilling(Request $request, DsBillingAttendancePullService $pullService)
+    {
+        $user = Auth::user();
+        if (! $this->attendanceService->isAdminOrHrdManager($user)) {
+            abort(403, 'Unauthorized');
+        }
+
+        $date = $request->input('date');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        $result = $pullService->pullFromDsBilling($date, $startDate, $endDate);
+
+        if ($result['success']) {
+            return back()->with('success', $result['message']);
+        }
+
+        return back()->with('error', $result['message']);
     }
 
     public function storeManual(StoreManualAttendanceRequest $request)

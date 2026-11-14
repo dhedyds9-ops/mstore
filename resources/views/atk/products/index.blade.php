@@ -58,6 +58,11 @@
                 <span class="d-none d-sm-inline">{{ __('Cetak Barcode') }}</span>
             </a>
 
+            <a href="{{ route('atk.stock-movements.index') }}" class="btn btn-sm btn-outline-success" title="{{ __('Riwayat Barang Masuk & Mutasi Stok') }}">
+                <i class="fa-solid fa-boxes-packing me-1"></i>
+                <span class="d-none d-sm-inline">{{ __('Barang Masuk') }}</span>
+            </a>
+
             <a href="{{ route('atk.products.create') }}" class="btn btn-sm btn-primary shadow-sm" title="{{ __('Tambah Produk Baru') }}">
                 <i class="fa-solid fa-plus me-1"></i>
                 <span>{{ __('Tambah Produk') }}</span>
@@ -434,6 +439,15 @@
                         </td>
                         <td class="text-center">
                             <div class="btn-group btn-group-sm" role="group">
+                                <button type="button" class="btn btn-outline-success btn-quick-stock" 
+                                    data-id="{{ $product->id }}" 
+                                    data-name="{{ $product->name }}" 
+                                    data-stock="{{ $product->stock }}" 
+                                    data-unit="{{ $product->unit ?: 'Pcs' }}" 
+                                    data-cost="{{ $product->cost_price ?: 0 }}" 
+                                    title="{{ __('Tambah Barang Masuk (+Stok)') }}">
+                                    <i class="fa-solid fa-plus text-success"></i>
+                                </button>
                                 <a href="{{ route('atk.products.edit', $product) }}" class="btn btn-outline-secondary" title="{{ __('Ubah Produk') }}">
                                     <i class="fa-solid fa-pen-to-square text-primary"></i>
                                 </a>
@@ -561,6 +575,104 @@
             <div class="modal-footer bg-light border-top">
                 <button type="button" class="btn btn-outline-danger" id="stopAtkBarcodeScan">{{ __('Hentikan Scan') }}</button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stock-In Modal -->
+<div class="modal fade" id="quickStockInModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header bg-success text-white py-3 px-4">
+                <h5 class="modal-title fw-bold fs-6 d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-boxes-packing"></i>
+                    <span>{{ __('Catat Barang Masuk (+Stok)') }}</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ route('atk.stock-movements.store') }}" method="POST" id="quickStockForm">
+                @csrf
+                <input type="hidden" name="atk_product_id" id="modalProductId">
+                <input type="hidden" name="redirect_to" value="products">
+
+                <div class="modal-body p-4">
+                    {{-- Info Produk --}}
+                    <div class="p-3 bg-light rounded-3 border mb-3">
+                        <div class="fw-bold text-dark fs-6" id="modalProductName">-</div>
+                        <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top small">
+                            <span class="text-muted">{{ __('Stok Saat Ini:') }} <strong class="text-dark" id="modalCurrentStock">0 Pcs</strong></span>
+                            <span class="text-success fw-bold" id="modalPreviewNewStock">{{ __('Stok Baru: ') }}<strong>0 Pcs</strong></span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        {{-- Jumlah Masuk --}}
+                        <div class="col-6">
+                            <label class="form-label fw-bold small text-muted">{{ __('Jumlah Masuk (+Qty)') }} <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="number" name="quantity" id="modalInputQty" class="form-control fw-bold text-success fs-5" min="1" value="1" required>
+                                <span class="input-group-text bg-light fw-semibold" id="modalUnitLabel">Pcs</span>
+                            </div>
+                        </div>
+
+                        {{-- Harga Beli Satuan (HPP Baru) --}}
+                        <div class="col-6">
+                            <label class="form-label fw-bold small text-muted">{{ __('Harga Beli Satuan (HPP)') }}</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">Rp</span>
+                                <input type="number" name="unit_price" id="modalInputCost" class="form-control fw-bold" min="0" placeholder="0">
+                            </div>
+                        </div>
+
+                        {{-- Total Belanja --}}
+                        <div class="col-12">
+                            <div class="p-2 px-3 bg-success-subtle rounded-3 text-success-emphasis border border-success-subtle d-flex justify-content-between align-items-center">
+                                <small class="fw-semibold">{{ __('Total Nilai Pembelian:') }}</small>
+                                <strong class="fs-6" id="modalTxtTotalCost">Rp 0</strong>
+                            </div>
+                        </div>
+
+                        {{-- Supplier / Toko --}}
+                        <div class="col-12">
+                            <label class="form-label fw-bold small text-muted">{{ __('Supplier / Toko Pembelian') }}</label>
+                            <input type="text" name="supplier_name" class="form-control" placeholder="Contoh: Toko Grosir ATK Jaya / CV Sumber Makmur">
+                        </div>
+
+                        {{-- No Faktur & Tanggal --}}
+                        <div class="col-6">
+                            <label class="form-label fw-bold small text-muted">{{ __('No. Nota / Faktur') }}</label>
+                            <input type="text" name="invoice_number" class="form-control font-monospace form-control-sm" placeholder="Opsional">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-bold small text-muted">{{ __('Tanggal Penerimaan') }}</label>
+                            <input type="date" name="movement_date" class="form-control form-control-sm" value="{{ date('Y-m-d') }}" required>
+                        </div>
+
+                        {{-- Checkbox Bayar Kas --}}
+                        <div class="col-12">
+                            <div class="form-check form-switch p-2 ps-4 border rounded-3 bg-light">
+                                <input class="form-check-input ms-0 me-2" type="checkbox" role="switch" id="modalPayFromCash" name="pay_from_cash" value="1">
+                                <label class="form-check-label fw-semibold text-dark small" for="modalPayFromCash">
+                                    {{ __('Bayar Tunai dari Kas Toko (Kas Utama)') }}
+                                </label>
+                                <div class="text-muted" style="font-size: 0.72rem;">{{ __('Otomatis mencatat pengeluaran kas toko sebesar total belanja.') }}</div>
+                            </div>
+                        </div>
+
+                        {{-- Catatan --}}
+                        <div class="col-12">
+                            <label class="form-label fw-bold small text-muted">{{ __('Catatan') }}</label>
+                            <input type="text" name="notes" class="form-control form-control-sm" placeholder="Catatan opsional...">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light py-2 px-4 border-top">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">{{ __('Batal') }}</button>
+                    <button type="submit" class="btn btn-sm btn-success px-3 shadow-xs">
+                        <i class="fa-solid fa-check me-1"></i>{{ __('Simpan Stok Masuk') }}
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -849,6 +961,69 @@ document.addEventListener('DOMContentLoaded', function() {
             if (modalInstance) modalInstance.hide();
         });
     }
+
+    // Quick Stock-In Modal Logic
+    const quickStockModalEl = document.getElementById('quickStockInModal');
+    const modalProductId = document.getElementById('modalProductId');
+    const modalProductName = document.getElementById('modalProductName');
+    const modalCurrentStock = document.getElementById('modalCurrentStock');
+    const modalPreviewNewStock = document.getElementById('modalPreviewNewStock');
+    const modalInputQty = document.getElementById('modalInputQty');
+    const modalUnitLabel = document.getElementById('modalUnitLabel');
+    const modalInputCost = document.getElementById('modalInputCost');
+    const modalTxtTotalCost = document.getElementById('modalTxtTotalCost');
+
+    let currentBaseStock = 0;
+    let currentUnit = 'Pcs';
+
+    function recalculateQuickStock() {
+        const qty = parseInt(modalInputQty?.value || 0, 10);
+        const cost = parseFloat(modalInputCost?.value || 0);
+        const newStock = currentBaseStock + qty;
+
+        if (modalPreviewNewStock) {
+            modalPreviewNewStock.innerHTML = `Stok Baru: <strong>${newStock} ${currentUnit}</strong>`;
+        }
+
+        const totalCost = qty * cost;
+        if (modalTxtTotalCost) {
+            modalTxtTotalCost.textContent = 'Rp ' + new Intl.NumberFormat('id-ID').format(totalCost > 0 ? totalCost : 0);
+        }
+    }
+
+    if (modalInputQty) {
+        modalInputQty.addEventListener('input', recalculateQuickStock);
+    }
+    if (modalInputCost) {
+        modalInputCost.addEventListener('input', recalculateQuickStock);
+    }
+
+    document.querySelectorAll('.btn-quick-stock').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = this.dataset.id;
+            const name = this.dataset.name;
+            const stock = parseInt(this.dataset.stock || 0, 10);
+            const unit = this.dataset.unit || 'Pcs';
+            const cost = parseFloat(this.dataset.cost || 0);
+
+            currentBaseStock = stock;
+            currentUnit = unit;
+
+            if (modalProductId) modalProductId.value = id;
+            if (modalProductName) modalProductName.textContent = name;
+            if (modalCurrentStock) modalCurrentStock.textContent = `${stock} ${unit}`;
+            if (modalUnitLabel) modalUnitLabel.textContent = unit;
+            if (modalInputQty) modalInputQty.value = 1;
+            if (modalInputCost) modalInputCost.value = cost > 0 ? cost : '';
+
+            recalculateQuickStock();
+
+            if (quickStockModalEl && window.bootstrap) {
+                const modal = bootstrap.Modal.getOrCreateInstance(quickStockModalEl);
+                modal.show();
+            }
+        });
+    });
 });
 </script>
 @endpush

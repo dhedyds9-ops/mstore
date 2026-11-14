@@ -750,7 +750,29 @@ class AtkTransactionController extends Controller implements HasMiddleware
             $transaction = AtkTransaction::create($payload);
 
             foreach ($items as $item) {
-                $transaction->items()->create($item);
+                $createdItem = $transaction->items()->create($item);
+                if (($item['item_type'] ?? 'product') === 'product' && ! empty($item['product_id'])) {
+                    try {
+                        $prod = AtkProduct::find($item['product_id']);
+                        if ($prod) {
+                            $balanceAfter = (int) ($prod->stock ?? 0);
+                            $balanceBefore = $balanceAfter + (int) $item['quantity'];
+                            \App\Models\AtkStockMovement::create([
+                                'atk_product_id' => $prod->id,
+                                'type' => 'out',
+                                'quantity' => (int) $item['quantity'],
+                                'unit_price' => (float) ($prod->cost_price ?? 0),
+                                'total_cost' => (float) (($prod->cost_price ?? 0) * (int) $item['quantity']),
+                                'balance_before' => $balanceBefore,
+                                'balance_after' => $balanceAfter,
+                                'reference_type' => 'atk_transaction',
+                                'reference_id' => $transaction->id,
+                                'notes' => 'Penjualan Kasir POS #' . $transaction->transaction_number,
+                                'user_id' => Auth::id(),
+                            ]);
+                        }
+                    } catch (\Throwable $e) {}
+                }
             }
             
             // Log fees
@@ -1052,10 +1074,26 @@ class AtkTransactionController extends Controller implements HasMiddleware
                 $isBank = $category === 'JASA TRANSFER BANK';
 
                 if (! $isService && ! $isBank && $product) {
+                    $beforeRestock = (int) ($product->stock ?? 0);
                     $product->increment('stock', $item->quantity);
                     if (Schema::hasColumn('atk_products', 'current_stock')) {
                         $product->increment('current_stock', $item->quantity);
                     }
+                    try {
+                        \App\Models\AtkStockMovement::create([
+                            'atk_product_id' => $product->id,
+                            'type' => 'in',
+                            'quantity' => (int) $item->quantity,
+                            'unit_price' => (float) ($product->cost_price ?? 0),
+                            'total_cost' => (float) (($product->cost_price ?? 0) * (int) $item->quantity),
+                            'balance_before' => $beforeRestock,
+                            'balance_after' => $beforeRestock + (int) $item->quantity,
+                            'reference_type' => 'atk_transaction_cancel',
+                            'reference_id' => $transaction->id,
+                            'notes' => 'Pengembalian stok (Batal Transaksi #' . $transaction->transaction_number . ')',
+                            'user_id' => Auth::id(),
+                        ]);
+                    } catch (\Throwable $e) {}
                 }
             }
 
@@ -1162,10 +1200,26 @@ class AtkTransactionController extends Controller implements HasMiddleware
                     $isBank = $category === 'JASA TRANSFER BANK';
 
                     if (! $isService && ! $isBank && $product) {
+                        $beforeRestock = (int) ($product->stock ?? 0);
                         $product->increment('stock', $item->quantity);
                         if (Schema::hasColumn('atk_products', 'current_stock')) {
                             $product->increment('current_stock', $item->quantity);
                         }
+                        try {
+                            \App\Models\AtkStockMovement::create([
+                                'atk_product_id' => $product->id,
+                                'type' => 'in',
+                                'quantity' => (int) $item->quantity,
+                                'unit_price' => (float) ($product->cost_price ?? 0),
+                                'total_cost' => (float) (($product->cost_price ?? 0) * (int) $item->quantity),
+                                'balance_before' => $beforeRestock,
+                                'balance_after' => $beforeRestock + (int) $item->quantity,
+                                'reference_type' => 'atk_transaction_cancel',
+                                'reference_id' => $transaction->id,
+                                'notes' => 'Pengembalian stok (Batal Transaksi Massal #' . $transaction->transaction_number . ')',
+                                'user_id' => Auth::id(),
+                            ]);
+                        } catch (\Throwable $e) {}
                     }
                 }
 

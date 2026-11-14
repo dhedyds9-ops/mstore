@@ -40,6 +40,9 @@
 
             {{-- Tombol Utama Admin --}}
             @if($isAdmin)
+                <button type="button" class="btn btn-sm btn-outline-primary shadow-sm text-nowrap" onclick="confirmPullDsBillingAttendance()" title="{{ __('Tarik absensi teknisi dari dsBilling') }}">
+                    <i class="fa-solid fa-cloud-arrow-down me-1"></i>{{ __('Tarik dsBilling') }}
+                </button>
                 <button type="button" class="btn btn-sm btn-primary shadow-sm text-nowrap" data-bs-toggle="modal" data-bs-target="#manualAttendanceModal">
                     <i class="fa-solid fa-user-plus me-1"></i>{{ __('Tambah Absen') }}
                 </button>
@@ -63,6 +66,11 @@
                     </li>
                     @if($isAdmin)
                         <li><hr class="dropdown-divider my-1"></li>
+                        <li>
+                            <a class="dropdown-item py-2 small text-primary fw-semibold" href="javascript:void(0)" onclick="confirmPullDsBillingAttendance()">
+                                <i class="fa-solid fa-cloud-arrow-down me-2 text-primary"></i>{{ __('Tarik Presensi dsBilling') }}
+                            </a>
+                        </li>
                         <li>
                             <a class="dropdown-item py-2 small" href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#salaryAdjustmentModal">
                                 <i class="fa-solid fa-money-bill-transfer me-2 text-info"></i>{{ __('Input Bonus / Kasbon') }}
@@ -522,6 +530,11 @@
 </div>
 
 {{-- Hidden Form Actions --}}
+<form id="form-pull-dsbilling" action="{{ route('attendance.pull_dsbilling') }}" method="POST" style="display: none;">
+    @csrf
+    <input type="hidden" name="date" value="{{ now()->toDateString() }}">
+</form>
+
 <form id="form-recap-finance" action="{{ route('attendance.recap_finance') }}" method="POST" style="display: none;">
     @csrf
     <input type="hidden" name="user_id" value="{{ request('user_id') }}">
@@ -629,6 +642,64 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 // 5. Catat Pengeluaran Gaji ke Keuangan
+function confirmPullDsBillingAttendance(defaultDate = '') {
+    const today = defaultDate || new Date().toISOString().slice(0, 10);
+    
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: '{{ __('Tarik Presensi dsBilling') }}',
+            html: `
+                <p class="text-muted small mb-3">Tarik data absensi teknisi lapangan dari server dsBilling (<code>mstore.mstore.id</code>).</p>
+                <div class="text-start">
+                    <label class="form-label small fw-bold text-muted">Pilih Tanggal Presensi:</label>
+                    <input type="date" id="swal_pull_date" class="form-control" value="${today}">
+                </div>
+            `,
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonText: '<i class="fa-solid fa-cloud-arrow-down me-1"></i> {{ __('Tarik Sekarang') }}',
+            cancelButtonText: '{{ __('Batal') }}',
+            confirmButtonColor: '#0d6efd',
+            preConfirm: () => {
+                const dateVal = document.getElementById('swal_pull_date').value;
+                if (!dateVal) {
+                    Swal.showValidationMessage('Tanggal wajib dipilih.');
+                    return false;
+                }
+                return dateVal;
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const dateVal = result.value;
+                const form = document.getElementById('form-pull-dsbilling');
+                if (form) {
+                    form.querySelector('input[name="date"]').value = dateVal;
+                    Swal.fire({
+                        title: 'Menarik Data...',
+                        text: 'Sedang menghubungkan ke server dsBilling, mohon tunggu...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            if (typeof Swal.showLoading === 'function') {
+                                Swal.showLoading();
+                            }
+                        }
+                    });
+                    form.submit();
+                }
+            }
+        });
+    } else {
+        const inputDate = prompt('Masukkan tanggal absensi yang ingin ditarik (YYYY-MM-DD):', today);
+        if (inputDate) {
+            const form = document.getElementById('form-pull-dsbilling');
+            if (form) {
+                form.querySelector('input[name="date"]').value = inputDate;
+                form.submit();
+            }
+        }
+    }
+}
+
 function confirmRecapFinance() {
     if (typeof Swal !== 'undefined') {
         Swal.fire({

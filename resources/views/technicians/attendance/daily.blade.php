@@ -20,7 +20,12 @@
             </div>
         </div>
         <div class="d-flex flex-wrap align-items-center gap-2">
-            <a href="{{ route('attendance.index') }}" class="btn btn-outline-primary btn-sm">
+            @if($isAdminOrHrd)
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="confirmPullDsBillingAttendance('{{ $startDate }}')">
+                    <i class="fa-solid fa-cloud-arrow-down me-1"></i>{{ __('Tarik dsBilling') }}
+                </button>
+            @endif
+            <a href="{{ route('attendance.index') }}" class="btn btn-outline-secondary btn-sm">
                 <i class="fa-solid fa-list-check me-1"></i>{{ __('Kembali ke Rekap') }}
             </a>
             <a href="{{ route('attendance.excel', array_merge(request()->query(), ['scope' => 'daily'])) }}" target="_blank" class="btn btn-outline-success btn-sm">

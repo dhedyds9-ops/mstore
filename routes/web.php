@@ -445,6 +445,7 @@ Route::get('/webhooks/payment/return', [\App\Http\Controllers\PaymentController:
     Route::get('attendance/payslip', [TechnicianAttendanceController::class, 'payslip'])->name('attendance.payslip');
     Route::get('attendance/excel', [TechnicianAttendanceController::class, 'exportExcel'])->name('attendance.excel');
     Route::post('attendance/recap-finance', [TechnicianAttendanceController::class, 'recapToFinance'])->name('attendance.recap_finance');
+    Route::post('attendance/pull-dsbilling', [TechnicianAttendanceController::class, 'pullDsBilling'])->name('attendance.pull_dsbilling');
     Route::post('attendance/manual', [TechnicianAttendanceController::class, 'storeManual'])->name('attendance.storeManual')->middleware('throttle:5,1');
     Route::put('attendance/manual/{attendance}', [TechnicianAttendanceController::class, 'updateManual'])->name('attendance.updateManual')->middleware('throttle:5,1');
     Route::delete('attendance/bulk-destroy', [TechnicianAttendanceController::class, 'bulkDestroy'])->name('attendance.bulkDestroy');
@@ -958,6 +959,10 @@ Route::get('/webhooks/payment/return', [\App\Http\Controllers\PaymentController:
         Route::delete('products/bulk-destroy', [\App\Http\Controllers\AtkProductController::class, 'bulkDestroy'])->name('products.bulk_destroy');
         Route::resource('products', \App\Http\Controllers\AtkProductController::class);
         Route::resource('transactions', \App\Http\Controllers\AtkTransactionController::class)->only(['index', 'show', 'destroy']);
+        
+        // Stock Movements / Barang Masuk Routes
+        Route::get('stock-movements/export', [\App\Http\Controllers\AtkStockMovementController::class, 'export'])->name('stock-movements.export');
+        Route::resource('stock-movements', \App\Http\Controllers\AtkStockMovementController::class)->only(['index', 'create', 'store']);
         
         // Cash Register Routes
         Route::get('/cash-registers', [\App\Http\Controllers\AtkCashRegisterController::class, 'index'])->name('cash-registers.index')->middleware('permission:atk.manage');

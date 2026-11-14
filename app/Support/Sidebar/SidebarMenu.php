@@ -29,6 +29,7 @@ class SidebarMenu
                         self::link('atk-transactions', 'Transaksi', 'atk.transactions.index', permissions: ['atk.report']),
                         self::link('atk-cash-registers', 'Shift Kasir', 'atk.cash-registers.index', permissions: ['atk.manage']),
                         self::link('atk-manage', 'Produk & Barcode', 'atk.products.index', permissions: ['atk.manage']),
+                        self::link('atk-stock-movements', 'Barang Masuk & Mutasi', 'atk.stock-movements.index', permissions: ['atk.manage']),
                         self::link('atk-expenses', 'Pengeluaran', 'atk.expenses.index', permissions: ['atk.report']),
                         self::link('atk-cash-movements', 'Mutasi Kas', 'atk.cash-movements.index', permissions: ['atk.manage']),
                         self::link('atk-owner-funds', 'Dana Talangan', 'atk.owner-funds.index', permissions: ['atk.manage']),
