@@ -266,7 +266,7 @@ class UserController extends Controller implements HasMiddleware
         $departmentOptions = ['HR' => 'HRD', 'Finance' => 'Keuangan', 'Operations' => 'Operasional', 'Support' => 'Support'];
 
         return view('users.create', compact(
-            'roles', 'companies', 'branches', 'buOptions', 'buLevelOptions', 'departmentOptions'
+            'roles', 'companies', 'branches', 'buOptions', 'buLevelOptions', 'departmentOptions', 'defaultCompanyId'
         ));
     }
 
@@ -368,6 +368,9 @@ class UserController extends Controller implements HasMiddleware
             'bank_account_number' => $validated['bank_account_number'] ?? null,
             'bank_account_name' => $validated['bank_account_name'] ?? null,
         ];
+        if ($request->has('is_attendance_required')) {
+            $employeeUpdate['is_attendance_required'] = $request->boolean('is_attendance_required');
+        }
         if ($this->hasAttendanceCardColumn()) {
             $employeeUpdate['attendance_card_code'] = trim((string) ($validated['attendance_card_code'] ?? '')) ?: \App\Models\User::generateUniqueAttendanceCardCode(\App\Models\User::defaultAttendanceCardCodeById((int) $createdUser->id), (int) $createdUser->id);
         }
@@ -509,6 +512,9 @@ class UserController extends Controller implements HasMiddleware
             'bank_account_number' => $validated['bank_account_number'] ?? null,
             'bank_account_name' => $validated['bank_account_name'] ?? null,
         ];
+        if ($request->has('is_attendance_required')) {
+            $employeeUpdate['is_attendance_required'] = $request->boolean('is_attendance_required');
+        }
         if ($this->hasAttendanceCardColumn()) {
             $employeeUpdate['attendance_card_code'] = trim((string) ($validated['attendance_card_code'] ?? '')) ?: \App\Models\User::generateUniqueAttendanceCardCode(\App\Models\User::defaultAttendanceCardCodeById((int) $user->id), (int) $user->id);
         }

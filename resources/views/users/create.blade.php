@@ -114,7 +114,7 @@
                                 <select name="company_id" id="company_id" class="form-select form-select-sm @error('company_id') is-invalid @enderror" required>
                                     <option value="">{{ __('-- Pilih Perusahaan --') }}</option>
                                     @foreach($companies as $company)
-                                        <option value="{{ $company->id }}" {{ old('company_id') == $company->id ? 'selected' : '' }}>{{ $company->name }}</option>
+                                        <option value="{{ $company->id }}" {{ old('company_id', $defaultCompanyId ?? '') == $company->id ? 'selected' : '' }}>{{ $company->name }}</option>
                                     @endforeach
                                 </select>
                                 @error('company_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -182,11 +182,21 @@
                     <div class="card-body p-3 p-md-4 border-top">
                         <div class="row g-3">
                             @if(\App\Support\ModuleGate::isEnabled('hr'))
-                            <div class="col-12 mb-2">
+                            <div class="col-12 col-md-6 mb-2">
                                 <label for="attendance_card_code" class="form-label small fw-semibold text-body-secondary">{{ __('Kode Kartu Absensi (ID Card)') }}</label>
                                 <input type="text" name="attendance_card_code" id="attendance_card_code" value="{{ old('attendance_card_code') }}" class="form-control form-control-sm font-monospace @error('attendance_card_code') is-invalid @enderror" placeholder="Contoh: EMP001">
                                 <div class="form-text small">{{ __('Digunakan sebagai rujukan barcode / QR Code mesin absensi kios.') }}</div>
                                 @error('attendance_card_code') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-12 col-md-6 mb-2 d-flex align-items-center">
+                                <div class="form-check form-switch pt-md-3">
+                                    <input type="hidden" name="is_attendance_required" value="0">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="is_attendance_required" name="is_attendance_required" value="1" {{ old('is_attendance_required', '1') ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-semibold small" for="is_attendance_required">
+                                        {{ __('Wajib Absensi Harian') }}
+                                    </label>
+                                    <div class="form-text small">{{ __('Pegawai wajib melakukan clock-in/out setiap hari kerja.') }}</div>
+                                </div>
                             </div>
                             @endif
 

@@ -181,6 +181,8 @@ class EmployeeSyncService
         
 
 
+        $isExemptRole = in_array(strtolower((string) ($user->role?->name ?? '')), ['super-admin', 'admin', 'direktur', 'manager'], true);
+
         if (! $employee->exists) {
             $employee->date_of_birth = now()->subYears(20)->format('Y-m-d');
             $employee->gender = 'Laki-laki';
@@ -188,6 +190,7 @@ class EmployeeSyncService
             $employee->nik = 'AUTO-'.$user->id;
             $employee->join_date = optional($user->created_at)->format('Y-m-d') ?: now()->format('Y-m-d');
             $employee->employment_status = 'Tetap';
+            $employee->is_attendance_required = ! $isExemptRole;
         } else {
             $employee->date_of_birth = $employee->date_of_birth ?: now()->subYears(20)->format('Y-m-d');
             $employee->gender = $employee->gender ?: 'Laki-laki';
@@ -195,6 +198,9 @@ class EmployeeSyncService
             $employee->nik = $employee->nik ?: 'AUTO-'.$user->id;
             $employee->join_date = $employee->join_date ?: (optional($user->created_at)->format('Y-m-d') ?: now()->format('Y-m-d'));
             $employee->employment_status = $employee->employment_status ?: 'Tetap';
+            if ($employee->is_attendance_required === null) {
+                $employee->is_attendance_required = ! $isExemptRole;
+            }
         }
 
         $employee->save();
