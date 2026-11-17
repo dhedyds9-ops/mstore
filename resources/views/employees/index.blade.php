@@ -36,6 +36,31 @@
         <input type="hidden" name="status" value="{{ $status }}">
     </form>
 
+    @if(session('new_employee_credentials'))
+        @php $cred = session('new_employee_credentials'); @endphp
+        <div class="alert alert-success border-0 shadow-sm rounded-4 p-3 mb-4 bg-success bg-opacity-10 border border-success border-opacity-25">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+                <div>
+                    <h6 class="fw-bold text-success mb-1">
+                        <i class="fa-solid fa-circle-check me-2"></i>{{ __('Karyawan Baru Berhasil Didaftarkan: ') }} {{ $cred['name'] }}
+                    </h6>
+                    <div class="small text-muted d-flex flex-wrap gap-3 mt-1">
+                        <span>Username: <code class="fw-bold text-dark bg-white px-2 py-0.5 rounded border">{{ $cred['username'] }}</code></span>
+                        <span>Password: <code class="fw-bold text-primary bg-white px-2 py-0.5 rounded border">{{ $cred['password'] }}</code></span>
+                        <span>Peran: <span class="badge bg-primary">{{ $cred['role_label'] }}</span></span>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    @if(!empty($cred['clean_phone']))
+                        <a href="https://wa.me/{{ $cred['clean_phone'] }}?text={{ $cred['wa_text'] }}" target="_blank" class="btn btn-sm btn-success px-3 shadow-sm text-nowrap">
+                            <i class="fa-brands fa-whatsapp me-1"></i> {{ __('Kirim Akses via WhatsApp') }}
+                        </a>
+                    @endif
+                </div>
+            </div>
+        </div>
+    @endif
+
     <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
         <div class="card-header bg-white py-3 border-bottom-0">
             <x-table-toolbar 

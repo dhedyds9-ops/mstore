@@ -2,10 +2,11 @@
     <!-- SECTION 1: DATA PERSONAL & KONTAK -->
     <div class="col-12">
         <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
-            <div class="card-header bg-white py-3 border-0">
+            <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
                 <h6 class="m-0 fw-bold text-dark">
                     <i class="fa-solid fa-user text-primary me-2"></i>{{ __('Data Personal & Kontak Karyawan') }}
                 </h6>
+                <span class="badge bg-light text-secondary border small fw-normal">Biodata Utama</span>
             </div>
             <div class="card-body p-3 p-md-4 border-top">
                 <div class="row g-3">
@@ -14,37 +15,57 @@
                         <input type="text" name="full_name" id="full_name" class="form-control form-control-sm @error('full_name') is-invalid @enderror" value="{{ old('full_name', $employee->full_name ?? '') }}" placeholder="Contoh: Budi Santoso" required>
                         @error('full_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
+
                     <div class="col-12 col-md-6">
-                        <label for="nik" class="form-label small fw-semibold text-body-secondary">{{ __('Nomor Induk Kependudukan (NIK)') }} <span class="text-danger">*</span></label>
-                        <input type="text" name="nik" id="nik" class="form-control form-control-sm font-monospace @error('nik') is-invalid @enderror" value="{{ old('nik', $employee->nik ?? '') }}" placeholder="16 digit NIK KTP" required>
+                        <label for="nik" class="form-label small fw-semibold text-body-secondary d-flex justify-content-between">
+                            <span>{{ __('Nomor Induk Kependudukan (NIK)') }}</span>
+                            <a href="javascript:void(0)" id="btnGenerateNik" class="text-decoration-none small text-primary fw-normal">
+                                <i class="fa-solid fa-wand-magic-sparkles me-1"></i>{{ __('Gunakan NIK Sementara') }}
+                            </a>
+                        </label>
+                        <input type="text" name="nik" id="nik" class="form-control form-control-sm font-monospace @error('nik') is-invalid @enderror" value="{{ old('nik', $employee->nik ?? '') }}" placeholder="16 digit NIK KTP (kosongkan jika belum ada)">
+                        <div class="form-text small">{{ __('Opsional jika KTP belum diserahkan. Sistem akan membuat NIK sementara secara otomatis.') }}</div>
                         @error('nik') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
-                    <div class="col-12 col-md-6">
-                        <label for="email" class="form-label small fw-semibold text-body-secondary">{{ __('Alamat Email') }} <span class="text-danger">*</span></label>
-                        <input type="email" name="email" id="email" class="form-control form-control-sm @error('email') is-invalid @enderror" value="{{ old('email', $employee->email ?? '') }}" placeholder="karyawan@perusahaan.com" required>
-                        @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
+
                     <div class="col-12 col-md-6">
                         <label for="phone" class="form-label small fw-semibold text-body-secondary">{{ __('Nomor HP / WhatsApp') }} <span class="text-danger">*</span></label>
                         <input type="text" name="phone" id="phone" class="form-control form-control-sm @error('phone') is-invalid @enderror" value="{{ old('phone', $employee->phone ?? '') }}" placeholder="08xxxxxxxxxx" required>
+                        <div class="form-text small">{{ __('Wajib aktif untuk pengiriman kredensial akun dan koordinasi harian.') }}</div>
                         @error('phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
+
                     <div class="col-12 col-md-6">
-                        <label for="date_of_birth" class="form-label small fw-semibold text-body-secondary">{{ __('Tanggal Lahir') }} <span class="text-danger">*</span></label>
-                        <input type="date" name="date_of_birth" id="date_of_birth" class="form-control form-control-sm @error('date_of_birth') is-invalid @enderror" value="{{ old('date_of_birth', isset($employee?->date_of_birth) ? $employee?->date_of_birth->format('Y-m-d') : '') }}" required>
-                        @error('date_of_birth') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <label for="email" class="form-label small fw-semibold text-body-secondary">{{ __('Alamat Email') }}</label>
+                        <input type="email" name="email" id="email" class="form-control form-control-sm @error('email') is-invalid @enderror" value="{{ old('email', $employee->email ?? '') }}" placeholder="karyawan@mstore.id (opsional)">
+                        <div class="form-text small">{{ __('Opsional. Jika dikosongkan, email lokal otomatis dibuat dari nama karyawan.') }}</div>
+                        @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
-                    <div class="col-12 col-md-6">
-                        <label for="gender" class="form-label small fw-semibold text-body-secondary">{{ __('Jenis Kelamin') }} <span class="text-danger">*</span></label>
-                        <select name="gender" id="gender" class="form-select form-select-sm @error('gender') is-invalid @enderror" required>
-                            <option value="Laki-laki" {{ old('gender', $employee->gender ?? '') === 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
+
+                    <div class="col-12 col-md-4">
+                        <label for="gender" class="form-label small fw-semibold text-body-secondary">{{ __('Jenis Kelamin') }}</label>
+                        <select name="gender" id="gender" class="form-select form-select-sm @error('gender') is-invalid @enderror">
+                            <option value="Laki-laki" {{ old('gender', $employee->gender ?? 'Laki-laki') === 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
                             <option value="Perempuan" {{ old('gender', $employee->gender ?? '') === 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
                         </select>
                         @error('gender') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
+
+                    <div class="col-12 col-md-4">
+                        <label for="date_of_birth" class="form-label small fw-semibold text-body-secondary">{{ __('Tanggal Lahir') }}</label>
+                        <input type="date" name="date_of_birth" id="date_of_birth" class="form-control form-control-sm @error('date_of_birth') is-invalid @enderror" value="{{ old('date_of_birth', isset($employee?->date_of_birth) ? $employee?->date_of_birth->format('Y-m-d') : '') }}">
+                        @error('date_of_birth') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <label for="join_date" class="form-label small fw-semibold text-body-secondary">{{ __('Tanggal Masuk Kerja') }} <span class="text-danger">*</span></label>
+                        <input type="date" name="join_date" id="join_date" class="form-control form-control-sm @error('join_date') is-invalid @enderror" value="{{ old('join_date', isset($employee?->join_date) ? $employee?->join_date->format('Y-m-d') : date('Y-m-d')) }}" required>
+                        @error('join_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
                     <div class="col-12">
-                        <label for="address" class="form-label small fw-semibold text-body-secondary">{{ __('Alamat Lengkap Domisili') }} <span class="text-danger">*</span></label>
-                        <textarea name="address" id="address" rows="3" class="form-control form-control-sm @error('address') is-invalid @enderror" placeholder="Alamat lengkap domisili saat ini" required>{{ old('address', $employee->address ?? '') }}</textarea>
+                        <label for="address" class="form-label small fw-semibold text-body-secondary">{{ __('Alamat Lengkap Domisili') }}</label>
+                        <textarea name="address" id="address" rows="2" class="form-control form-control-sm @error('address') is-invalid @enderror" placeholder="Alamat domisili tempat tinggal saat ini (opsional)">{{ old('address', $employee->address ?? '') }}</textarea>
                         @error('address') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                 </div>
@@ -55,10 +76,11 @@
     <!-- SECTION 2: INFORMASI PEKERJAAN & PENEMPATAN -->
     <div class="col-12">
         <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
-            <div class="card-header bg-white py-3 border-0">
+            <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
                 <h6 class="m-0 fw-bold text-dark">
                     <i class="fa-solid fa-briefcase text-primary me-2"></i>{{ __('Informasi Pekerjaan, Jabatan & Cuti') }}
                 </h6>
+                <span class="badge bg-light text-secondary border small fw-normal">Penempatan</span>
             </div>
             <div class="card-body p-3 p-md-4 border-top">
                 @php
@@ -85,12 +107,13 @@
                                 <option value="{{ $pos }}" selected>{{ $pos }}</option>
                             @endif
                         </select>
+                        <div class="form-text small">{{ __('Departemen dan Peran Sistem otomatis menyesuaikan.') }}</div>
                         @error('position') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="col-12 col-md-6 col-lg-3">
-                        <label for="department" class="form-label small fw-semibold text-body-secondary">{{ __('Departemen / Divisi') }} <span class="text-danger">*</span></label>
-                        <select name="department" id="department" class="form-select form-select-sm @error('department') is-invalid @enderror" required>
+                        <label for="department" class="form-label small fw-semibold text-body-secondary">{{ __('Departemen / Divisi') }}</label>
+                        <select name="department" id="department" class="form-select form-select-sm @error('department') is-invalid @enderror">
                             @php $dep = old('department', $employee->department ?? ''); @endphp
                             <option value="">{{ __('-- Pilih Departemen --') }}</option>
                             @foreach($deptOptions as $d)
@@ -100,50 +123,43 @@
                                 <option value="{{ $dep }}" selected>{{ $dep }}</option>
                             @endif
                         </select>
+                        <div class="form-text small">{{ __('Sinkron otomatis sesuai jabatan.') }}</div>
                         @error('department') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="col-12 col-md-6 col-lg-3">
-                        <label for="join_date" class="form-label small fw-semibold text-body-secondary">{{ __('Tanggal Masuk Kerja') }} <span class="text-danger">*</span></label>
-                        <input type="date" name="join_date" id="join_date" class="form-control form-control-sm @error('join_date') is-invalid @enderror" value="{{ old('join_date', isset($employee?->join_date) ? $employee?->join_date->format('Y-m-d') : '') }}" required>
-                        @error('join_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="col-12 col-md-6 col-lg-3">
                         <label for="employment_status" class="form-label small fw-semibold text-body-secondary">{{ __('Status Karyawan') }} <span class="text-danger">*</span></label>
                         <select name="employment_status" id="employment_status" class="form-select form-select-sm @error('employment_status') is-invalid @enderror" required>
-                            @foreach(['Tetap','Training'] as $s)
-                                <option value="{{ $s }}" {{ old('employment_status', $employee->employment_status ?? '') === $s ? 'selected' : '' }}>{{ $s }}</option>
+                            @foreach(['Tetap', 'Training', 'Kontrak'] as $s)
+                                <option value="{{ $s }}" {{ old('employment_status', $employee->employment_status ?? 'Tetap') === $s ? 'selected' : '' }}>{{ $s }}</option>
                             @endforeach
                         </select>
                         @error('employment_status') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    <div class="col-12 col-md-6">
+                    <div class="col-12 col-md-6 col-lg-3">
                         <label for="annual_leave_quota" class="form-label small fw-semibold text-body-secondary">{{ __('Jatah Cuti Tahunan (Hari)') }}</label>
                         <input type="number" name="annual_leave_quota" id="annual_leave_quota" value="{{ old('annual_leave_quota', $employee->annual_leave_quota ?? 12) }}" class="form-control form-control-sm font-monospace @error('annual_leave_quota') is-invalid @enderror" min="0">
-                        <div class="form-text small">{{ __('Total jatah hak cuti tahunan karyawan.') }}</div>
                         @error('annual_leave_quota') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    <div class="col-12 col-md-6">
+                    <div class="col-12 col-md-6 col-lg-3">
                         <label for="sick_leave_quota" class="form-label small fw-semibold text-body-secondary">{{ __('Jatah Izin Sakit (Hari)') }}</label>
                         <input type="number" name="sick_leave_quota" id="sick_leave_quota" value="{{ old('sick_leave_quota', $employee->sick_leave_quota ?? 14) }}" class="form-control form-control-sm font-monospace @error('sick_leave_quota') is-invalid @enderror" min="0">
-                        <div class="form-text small">{{ __('Batas toleransi izin sakit dalam 1 tahun buku.') }}</div>
                         @error('sick_leave_quota') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    <div class="col-12">
+                    <div class="col-12 col-md-6 col-lg-9">
                         <label for="wash_employee_id" class="form-label small fw-semibold text-body-secondary">{{ __('Integrasi Operator Cuci (Wash Operator)') }}</label>
                         <select name="wash_employee_id" id="wash_employee_id" class="form-select form-select-sm @error('wash_employee_id') is-invalid @enderror">
-                            <option value="">{{ __('-- Tidak Terkait Unit Cuci Kendaraan --') }}</option>
+                            <option value="">{{ __('-- Tidak Terkait Unit Cuci Kendaraan (Bukan Operator Cuci) --') }}</option>
                             @foreach(($washEmployees ?? []) as $we)
                                 <option value="{{ $we->id }}" {{ (string) old('wash_employee_id', $employee->wash_employee_id ?? '') === (string) $we->id ? 'selected' : '' }}>
                                     {{ $we->name }}
                                 </option>
                             @endforeach
                         </select>
-                        <div class="form-text small">{{ __('Pilih jika karyawan ini juga bertugas sebagai staf cuci di unit usaha car/motor wash.') }}</div>
+                        <div class="form-text small">{{ __('Pilih data operator cuci jika karyawan ini bertugas di unit bisnis Car/Motor Wash.') }}</div>
                         @error('wash_employee_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                 </div>
@@ -154,10 +170,11 @@
     <!-- SECTION 3: DATA PAYROLL & REKENING BANK -->
     <div class="col-12">
         <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
-            <div class="card-header bg-white py-3 border-0">
+            <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
                 <h6 class="m-0 fw-bold text-dark">
-                    <i class="fa-solid fa-wallet text-primary me-2"></i>{{ __('Data Payroll & Rekening Bank') }}
+                    <i class="fa-solid fa-wallet text-primary me-2"></i>{{ __('Data Payroll, Presensi & Rekening Bank') }}
                 </h6>
+                <span class="badge bg-light text-secondary border small fw-normal">Kompensasi & Absen</span>
             </div>
             <div class="card-body p-3 p-md-4 border-top">
                 <div class="row g-3">
@@ -177,44 +194,54 @@
                             <span class="input-group-text bg-light">Rp</span>
                             <input type="number" name="daily_salary" id="daily_salary" value="{{ old('daily_salary', $employee->daily_salary ?? 0) }}" class="form-control form-control-sm font-monospace @error('daily_salary') is-invalid @enderror" min="0" placeholder="0">
                         </div>
-                        <div class="form-text small">{{ __('Otomatis terhitung dari gaji bulanan atau nilai manual.') }}</div>
+                        <div class="form-text small">{{ __('Otomatis terhitung dari gaji bulanan (dibagi 26 hari).') }}</div>
                         @error('daily_salary') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="col-12 col-md-4">
-                        <label for="attendance_card_code" class="form-label small fw-semibold text-body-secondary">{{ __('Kode Kartu Absensi (ID Card)') }}</label>
-                        <input type="text" name="attendance_card_code" id="attendance_card_code" value="{{ old('attendance_card_code', $employee->attendance_card_code ?? '') }}" class="form-control form-control-sm font-monospace @error('attendance_card_code') is-invalid @enderror" placeholder="Contoh: EMP001">
-                        <div class="form-text small">{{ __('Rujukan barcode / QR Code mesin kios absensi.') }}</div>
+                        <label for="attendance_card_code" class="form-label small fw-semibold text-body-secondary d-flex justify-content-between">
+                            <span>{{ __('Kode Kartu Absensi (ID Card)') }}</span>
+                            <a href="javascript:void(0)" id="btnGenerateCardCode" class="text-decoration-none small text-primary fw-normal">
+                                <i class="fa-solid fa-wand-magic-sparkles me-1"></i>{{ __('Generate Kode') }}
+                            </a>
+                        </label>
+                        <input type="text" name="attendance_card_code" id="attendance_card_code" value="{{ old('attendance_card_code', $employee->attendance_card_code ?? '') }}" class="form-control form-control-sm font-monospace @error('attendance_card_code') is-invalid @enderror" placeholder="Contoh: EMP014">
+                        <div class="form-text small">{{ __('Barcode / QR Code mesin kios absensi (otomatis dibuat jika kosong).') }}</div>
                         @error('attendance_card_code') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    <div class="col-12 col-md-4 d-flex align-items-center">
-                        <div class="form-check form-switch pt-md-3">
-                            <input type="hidden" name="is_attendance_required" value="0">
-                            <input class="form-check-input" type="checkbox" role="switch" id="is_attendance_required" name="is_attendance_required" value="1" {{ old('is_attendance_required', $employee->is_attendance_required ?? true) ? 'checked' : '' }}>
-                            <label class="form-check-label fw-semibold small" for="is_attendance_required">
-                                {{ __('Wajib Absensi Harian') }}
-                            </label>
-                            <div class="form-text small">{{ __('Aktifkan jika pegawai wajib melakukan presensi harian.') }}</div>
+                    <div class="col-12 col-md-4">
+                        <div class="p-3 bg-light rounded-3 border h-100 d-flex flex-column justify-content-center">
+                            <div class="form-check form-switch m-0">
+                                <input type="hidden" name="is_attendance_required" value="0">
+                                <input class="form-check-input" type="checkbox" role="switch" id="is_attendance_required" name="is_attendance_required" value="1" {{ old('is_attendance_required', $employee->is_attendance_required ?? true) ? 'checked' : '' }}>
+                                <label class="form-check-label fw-semibold small text-dark" for="is_attendance_required">
+                                    {{ __('Wajib Absensi Harian') }}
+                                </label>
+                            </div>
+                            <div class="text-muted small mt-1">
+                                {{ __('Karyawan wajib melakukan presensi setiap hari kerja.') }}
+                            </div>
                         </div>
                     </div>
 
-                    <div class="col-12 col-md-4 mt-3">
-                        <label for="bank_name" class="form-label small fw-semibold text-body-secondary">{{ __('Nama Bank') }}</label>
-                        <input type="text" name="bank_name" id="bank_name" value="{{ old('bank_name', $employee->bank_name ?? '') }}" class="form-control form-control-sm @error('bank_name') is-invalid @enderror" placeholder="BCA, Mandiri, BRI, dll.">
-                        @error('bank_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="col-12 col-md-4 mt-3">
-                        <label for="bank_account_number" class="form-label small fw-semibold text-body-secondary">{{ __('Nomor Rekening') }}</label>
-                        <input type="text" name="bank_account_number" id="bank_account_number" value="{{ old('bank_account_number', $employee->bank_account_number ?? '') }}" class="form-control form-control-sm font-monospace @error('bank_account_number') is-invalid @enderror" placeholder="1234567890">
-                        @error('bank_account_number') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="col-12 col-md-4 mt-3">
-                        <label for="bank_account_name" class="form-label small fw-semibold text-body-secondary">{{ __('Atas Nama Rekening') }}</label>
-                        <input type="text" name="bank_account_name" id="bank_account_name" value="{{ old('bank_account_name', $employee->bank_account_name ?? '') }}" class="form-control form-control-sm @error('bank_account_name') is-invalid @enderror" placeholder="Nama Pemilik Rekening">
-                        @error('bank_account_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <div class="col-12 col-md-8">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <div class="row g-2">
+                                <div class="col-12 col-md-4">
+                                    <label for="bank_name" class="form-label small fw-semibold text-body-secondary">{{ __('Nama Bank') }}</label>
+                                    <input type="text" name="bank_name" id="bank_name" value="{{ old('bank_name', $employee->bank_name ?? '') }}" class="form-control form-control-sm @error('bank_name') is-invalid @enderror" placeholder="BCA / Mandiri / BRI">
+                                </div>
+                                <div class="col-12 col-md-4">
+                                    <label for="bank_account_number" class="form-label small fw-semibold text-body-secondary">{{ __('Nomor Rekening') }}</label>
+                                    <input type="text" name="bank_account_number" id="bank_account_number" value="{{ old('bank_account_number', $employee->bank_account_number ?? '') }}" class="form-control form-control-sm font-monospace @error('bank_account_number') is-invalid @enderror" placeholder="Nomor rekening">
+                                </div>
+                                <div class="col-12 col-md-4">
+                                    <label for="bank_account_name" class="form-label small fw-semibold text-body-secondary">{{ __('Atas Nama') }}</label>
+                                    <input type="text" name="bank_account_name" id="bank_account_name" value="{{ old('bank_account_name', $employee->bank_account_name ?? '') }}" class="form-control form-control-sm @error('bank_account_name') is-invalid @enderror" placeholder="Nama pemilik rekening">
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -233,8 +260,8 @@
                         <i class="fa-solid fa-circle-check me-1"></i> Terhubung Akun User
                     </span>
                 @else
-                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill px-3 py-1 small">
-                        Belum Ada Akun User
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-1 small">
+                        <i class="fa-solid fa-bolt me-1"></i> Otomatis Aktif
                     </span>
                 @endif
             </div>
@@ -274,80 +301,91 @@
                             </div>
                         </div>
                     </div>
-                @else
-                    <div class="p-3 bg-light rounded-3 mb-3 border d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
-                        <div>
-                            <div class="fw-semibold text-dark small mb-1">
-                                <i class="fa-solid fa-circle-exclamation text-warning me-1"></i> Karyawan ini belum terhubung dengan akun login sistem.
-                            </div>
-                            <div class="text-muted small">
-                                Anda dapat membuat akun login secara instan (Username otomatis & Password default: <code>Password123!</code>) langsung dari tombol di bawah.
-                            </div>
-                        </div>
-                        @if(!empty($employee?->id))
-                            <button type="submit" form="formCreateUserAccount" class="btn btn-sm btn-primary text-nowrap">
-                                <i class="fa-solid fa-user-plus me-1"></i> + Buat Akun Login Langsung
-                            </button>
-                        @endif
-                    </div>
                 @endif
+
+                @php
+                    $isCreateMode = empty($employee?->id);
+                    $defaultCreateUser = old('create_user_account', $isCreateMode ? '1' : ($employee?->user_id ? '1' : '0'));
+                @endphp
 
                 <div class="p-3 bg-light rounded-3 mb-3 border">
                     <div class="form-check form-switch m-0">
-                        <input class="form-check-input" type="checkbox" role="switch" name="create_user_account" id="create_user_account" value="1" {{ old('create_user_account', $employee?->user_id ? '1' : '') ? 'checked' : '' }}>
+                        <input class="form-check-input" type="checkbox" role="switch" name="create_user_account" id="create_user_account" value="1" {{ $defaultCreateUser ? 'checked' : '' }}>
                         <label class="form-check-label fw-semibold text-dark small" for="create_user_account">
-                            {{ $employee?->user_id ? __('Atur / Perbarui Detail Akun Login Manual') : __('Atur Username & Password Manual Saat Simpan') }}
+                            {{ $isCreateMode ? __('Buat Akun Login Sistem Secara Otomatis (Direkomendasikan)') : __('Atur / Perbarui Detail Akun Login Karyawan') }}
                         </label>
+                    </div>
+                    <div class="text-muted small mt-1 ps-4">
+                        {{ $isCreateMode ? __('Karyawan akan otomatis dibuatkan akun pengguna agar dapat login ke aplikasi MStore dan melakukan presensi kehadiran.') : __('Centang untuk mengubah username, password, atau menghubungkan dengan akun pengguna lain.') }}
                     </div>
                 </div>
 
-                <div id="user_account_fields" style="display: {{ old('create_user_account', $employee?->user_id ? '1' : '') ? 'block' : 'none' }};">
+                <div id="user_account_fields" style="display: {{ $defaultCreateUser ? 'block' : 'none' }};">
                     <div class="row g-3">
                         <div class="col-12 col-md-4">
-                            <label for="username" class="form-label small fw-semibold text-body-secondary">{{ __('Username Login') }} <span class="text-danger">*</span></label>
-                            <input type="text" name="username" id="username" class="form-control form-control-sm @error('username') is-invalid @enderror" value="{{ old('username', $employee->user?->username ?? '') }}" placeholder="username_karyawan">
+                            <label for="username" class="form-label small fw-semibold text-body-secondary">{{ __('Username Login') }}</label>
+                            <input type="text" name="username" id="username" class="form-control form-control-sm font-monospace @error('username') is-invalid @enderror" value="{{ old('username', $employee->user?->username ?? '') }}" placeholder="otomatis_dari_nama">
+                            <div class="form-text small">{{ __('Otomatis diisi dari nama. Bisa diubah jika perlu.') }}</div>
                             @error('username') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
                         <div class="col-12 col-md-4">
-                            <label for="password" class="form-label small fw-semibold text-body-secondary">{{ __('Password') }} {{ $employee?->user_id ? __('(Kosongkan jika tidak diubah)') : '*' }}</label>
-                            <input type="password" name="password" id="password" class="form-control form-control-sm @error('password') is-invalid @enderror" placeholder="{{ $employee?->user_id ? '••••••••' : 'Minimal 8 karakter' }}">
+                            <label for="password" class="form-label small fw-semibold text-body-secondary">{{ __('Password') }}</label>
+                            <input type="password" name="password" id="password" class="form-control form-control-sm @error('password') is-invalid @enderror" placeholder="{{ $isCreateMode ? 'Default: Password123!' : 'Kosongkan jika tidak diubah' }}">
+                            <div class="form-text small">{{ $isCreateMode ? __('Kosongkan untuk memakai password default: Password123!') : __('Kosongkan jika tidak ingin mengganti password.') }}</div>
                             @error('password') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
                         <div class="col-12 col-md-4">
-                            <label for="role_id" class="form-label small fw-semibold text-body-secondary">{{ __('Peran Sistem (Role)') }} <span class="text-danger">*</span></label>
+                            <label for="role_id" class="form-label small fw-semibold text-body-secondary d-flex justify-content-between">
+                                <span>{{ __('Peran Sistem (Role)') }}</span>
+                                <span id="role_sync_indicator" class="text-primary small fw-normal">
+                                    <i class="fa-solid fa-arrows-rotate me-1"></i>Otomatis
+                                </span>
+                            </label>
                             <select name="role_id" id="role_id" class="form-select form-select-sm @error('role_id') is-invalid @enderror">
-                                <option value="">{{ __('-- Pilih Peran --') }}</option>
+                                <option value="">{{ __('-- Otomatis Mengikuti Jabatan --') }}</option>
                                 @foreach($roles as $role)
                                     <option value="{{ $role->id }}" data-label="{{ $role->label }}" data-name="{{ $role->name }}" {{ (string) old('role_id', $employee->user?->role_id ?? '') === (string) $role->id ? 'selected' : '' }}>
                                         {{ $role->label }}
                                     </option>
                                 @endforeach
                             </select>
+                            <div class="form-text small">{{ __('Otomatis ditentukan dari jabatan di atas. Bisa dipilih manual.') }}</div>
                             @error('role_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
-                        <div class="col-12 mt-3 pt-3 border-top">
-                            <label for="user_id" class="form-label small fw-semibold text-body-secondary mb-1">
-                                <i class="fa-solid fa-link me-1"></i> {{ __('Atau Hubungkan dengan User Sistem yang Sudah Ada') }}
-                            </label>
-                            <select name="user_id" id="user_id" class="form-select form-select-sm">
-                                <option value="">{{ __('-- Cari Akun User Terdaftar --') }}</option>
-                                @foreach(($users ?? []) as $u)
-                                    <option value="{{ $u->id }}" data-role-label="{{ $u->role?->label ?? $u->role?->name }}" data-role-name="{{ $u->role?->name }}" {{ (string) old('user_id', $employee?->user_id ?? '') === (string) $u->id ? 'selected' : '' }}>
-                                        {{ $u->name }} ({{ $u->username }}) &bull; {{ $u->role?->label ?? '-' }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <div class="form-text small">{{ __('Gunakan opsi ini jika akun user login telah dibuat sebelumnya melalui modul Manajemen Pengguna.') }}</div>
+                        <div class="col-12 mt-2">
+                            <div class="accordion accordion-flush" id="accordionExistingUser">
+                                <div class="accordion-item bg-transparent border-0">
+                                    <h2 class="accordion-header" id="headingExistingUser">
+                                        <button class="accordion-button collapsed p-0 bg-transparent text-secondary small shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExistingUser" aria-expanded="false" aria-controls="collapseExistingUser">
+                                            <i class="fa-solid fa-link me-2 text-primary"></i>
+                                            <span>{{ __('Opsi Lanjutan: Hubungkan ke Akun Pengguna yang Sudah Ada') }}</span>
+                                        </button>
+                                    </h2>
+                                    <div id="collapseExistingUser" class="accordion-collapse collapse {{ old('user_id') ? 'show' : '' }}" aria-labelledby="headingExistingUser">
+                                        <div class="accordion-body px-0 pt-2 pb-0">
+                                            <select name="user_id" id="user_id" class="form-select form-select-sm">
+                                                <option value="">{{ __('-- Cari Akun User Terdaftar yang Belum Tertaut --') }}</option>
+                                                @foreach(($users ?? []) as $u)
+                                                    <option value="{{ $u->id }}" data-role-label="{{ $u->role?->label ?? $u->role?->name }}" data-role-name="{{ $u->role?->name }}" {{ (string) old('user_id', $employee?->user_id ?? '') === (string) $u->id ? 'selected' : '' }}>
+                                                        {{ $u->name }} ({{ $u->username }}) &bull; {{ $u->role?->label ?? '-' }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            <div class="form-text small">{{ __('Pilih jika user login sudah pernah didaftarkan melalui menu Pengguna sebelumnya.') }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div id="no_account_msg" class="text-center py-4 text-body-secondary small" style="display: {{ old('create_user_account', $employee?->user_id ? '1' : '') ? 'none' : 'block' }};">
+                <div id="no_account_msg" class="text-center py-4 text-body-secondary small" style="display: {{ $defaultCreateUser ? 'none' : 'block' }};">
                     <i class="fa-solid fa-user-lock fa-2x mb-2 d-block opacity-25"></i>
-                    {{ __('Karyawan ini tidak memiliki akun login ke sistem.') }}
+                    {{ __('Mode Catatan Arsip Saja: Karyawan ini tidak memiliki hak akses login ke sistem.') }}
                 </div>
             </div>
         </div>
@@ -356,10 +394,11 @@
     <!-- SECTION 5: BERKAS & PAS FOTO ID CARD -->
     <div class="col-12">
         <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
-            <div class="card-header bg-white py-3 border-0">
+            <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
                 <h6 class="m-0 fw-bold text-dark">
                     <i class="fa-solid fa-file-invoice text-primary me-2"></i>{{ __('Berkas, Pas Foto & Dokumen Kontrak') }}
                 </h6>
+                <span class="badge bg-light text-secondary border small fw-normal">Lampiran</span>
             </div>
             <div class="card-body p-3 p-md-4 border-top">
                 <div class="row g-4">
@@ -446,6 +485,9 @@
         ->mapWithKeys(fn ($item) => [$item['position'] => $item['department']])
         ->unique()
         ->all();
+    $posRoleMap = collect(\App\Services\EmployeeSyncService::positionRoleDepartmentMap())
+        ->mapWithKeys(fn ($item) => [$item['position'] => $item['role']])
+        ->all();
 @endphp
 
 <script>
@@ -459,15 +501,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const userSelect = document.getElementById('user_id');
     const posSelect = document.getElementById('position');
     const depSelect = document.getElementById('department');
+    const nikInput = document.getElementById('nik');
+    const btnGenerateNik = document.getElementById('btnGenerateNik');
+    const cardCodeInput = document.getElementById('attendance_card_code');
+    const btnGenerateCardCode = document.getElementById('btnGenerateCardCode');
     const monthlySalaryInput = document.getElementById('monthly_salary');
     const dailySalaryInput = document.getElementById('daily_salary');
     const workingDays = {{ \App\Models\Setting::getValue('attendance_working_days', 26) }};
 
     const ROLE_TO_POS_DEPT = @json($rolePosMap);
     const POS_TO_DEPT = @json($posDeptMap);
+    const POS_TO_ROLE = @json($posRoleMap);
 
     function setSelectValue(selectEl, value) {
-        if (!selectEl || !value) return;
+        if (!selectEl || !value) return false;
         for (let i = 0; i < selectEl.options.length; i++) {
             if (selectEl.options[i].value === value) {
                 selectEl.selectedIndex = i;
@@ -486,28 +533,74 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    function setRoleByPosition(position) {
+        if (!roleSelect || !position) return;
+        const targetRole = (POS_TO_ROLE[position] || '').toLowerCase();
+        if (!targetRole) return;
+        for (let i = 0; i < roleSelect.options.length; i++) {
+            const optRole = (roleSelect.options[i].getAttribute('data-name') || '').toLowerCase();
+            if (optRole === targetRole) {
+                roleSelect.selectedIndex = i;
+                break;
+            }
+        }
+    }
+
+    function generateUsername(name) {
+        if (!name) return '';
+        return name.toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9]/g, '_')
+            .replace(/_+/g, '_')
+            .replace(/^_|_$/g, '')
+            .substring(0, 25);
+    }
+
     if (createUserCheck) {
         createUserCheck.addEventListener('change', function() {
             if (userFields) userFields.style.display = this.checked ? 'block' : 'none';
             if (noAccountMsg) noAccountMsg.style.display = this.checked ? 'none' : 'block';
             
             if (this.checked && usernameInput && !usernameInput.value && fullNameInput && fullNameInput.value) {
-                usernameInput.value = fullNameInput.value.toLowerCase().replace(/[^a-z0-9]/g, '_').substring(0, 20);
+                usernameInput.value = generateUsername(fullNameInput.value);
             }
         });
     }
 
     if (fullNameInput) {
-        fullNameInput.addEventListener('blur', function() {
-            if (createUserCheck && createUserCheck.checked && usernameInput && !usernameInput.value) {
-                usernameInput.value = this.value.toLowerCase().replace(/[^a-z0-9]/g, '_').substring(0, 20);
+        fullNameInput.addEventListener('input', function() {
+            if (usernameInput && (!usernameInput.value || usernameInput.dataset.autoFilled === 'true')) {
+                usernameInput.value = generateUsername(this.value);
+                usernameInput.dataset.autoFilled = 'true';
             }
+        });
+
+        usernameInput?.addEventListener('input', function() {
+            this.dataset.autoFilled = 'false';
+        });
+    }
+
+    if (btnGenerateNik && nikInput) {
+        btnGenerateNik.addEventListener('click', function() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const rand = Math.floor(1000 + Math.random() * 9000);
+            nikInput.value = `EMP-${year}${month}-${rand}`;
+        });
+    }
+
+    if (btnGenerateCardCode && cardCodeInput) {
+        btnGenerateCardCode.addEventListener('click', function() {
+            const rand = Math.floor(1000 + Math.random() * 9000);
+            cardCodeInput.value = `EMP${rand}`;
         });
     }
 
     if (posSelect) {
         posSelect.addEventListener('change', function() {
             setDepartmentByPosition(this.value);
+            setRoleByPosition(this.value);
         });
     }
 

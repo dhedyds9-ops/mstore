@@ -127,6 +127,36 @@ class EmployeeController extends Controller implements HasMiddleware
     public function store(Request $request)
     {
         $validated = $this->validateEmployee($request);
+
+        // Auto-fill sensible defaults for optional personal fields
+        if (empty($validated['join_date'])) {
+            $validated['join_date'] = now()->format('Y-m-d');
+        }
+        if (empty($validated['date_of_birth'])) {
+            $validated['date_of_birth'] = now()->subYears(20)->format('Y-m-d');
+        }
+        if (empty($validated['gender'])) {
+            $validated['gender'] = 'Laki-laki';
+        }
+        if (empty($validated['address'])) {
+            $validated['address'] = '-';
+        }
+        if (empty($validated['department']) && !empty($validated['position'])) {
+            $validated['department'] = $this->employeeSyncService->departmentFromPosition($validated['position']);
+        }
+        if (empty($validated['nik'])) {
+            $nextId = (Employee::max('id') ?? 0) + 1;
+            $validated['nik'] = 'EMP-' . date('Ym') . '-' . str_pad((string) $nextId, 4, '0', STR_PAD_LEFT);
+        }
+        if (empty($validated['email'])) {
+            $baseUname = \Illuminate\Support\Str::slug($validated['full_name'], '_');
+            $validated['email'] = ($baseUname ?: 'employee') . '-' . uniqid() . '@mstore.local';
+        }
+        if (empty($validated['attendance_card_code'])) {
+            $nextId = (Employee::max('id') ?? 0) + 1;
+            $validated['attendance_card_code'] = 'EMP' . str_pad((string) $nextId, 4, '0', STR_PAD_LEFT);
+        }
+
         $validated['document_path'] = $this->storeDocument($request);
         if ($this->hasIdCardPhotoColumn()) {
             $validated['id_card_photo_path'] = $this->storeIdCardPhoto($request);
@@ -136,8 +166,16 @@ class EmployeeController extends Controller implements HasMiddleware
         }
         $validated['is_attendance_required'] = $request->has('is_attendance_required') ? $request->boolean('is_attendance_required') : true;
 
-        // Handle User Account Creation / Linking (single source of truth in users table)
-        if ($request->boolean('create_user_account')) {
+        // Handle User Account Creation / Linking (Default true on create)
+        $shouldCreateUser = $request->has('create_user_account') ? $request->boolean('create_user_account') : true;
+        if ($shouldCreateUser) {
+            if (empty($validated['role_id']) && !empty($validated['position'])) {
+                $mappedRole = $this->employeeSyncService->roleNameFromPosition($validated['position']);
+                if ($mappedRole) {
+                    $validated['role_id'] = Role::where('name', $mappedRole)->value('id');
+                }
+            }
+
             $user = $this->resolveUserForEmployeeData($validated);
             $this->syncUserFromEmployeeData($user, $validated, true);
             $validated['user_id'] = $user->id;
@@ -162,10 +200,29 @@ class EmployeeController extends Controller implements HasMiddleware
 
                 // Then sync to ensure other fields are correct
                 $this->employeeSyncService->syncFromUser($user->load('role'));
+
+                $rawPassword = $request->input('password') ?: 'Password123!';
+                $cleanPhone = preg_replace('/[^0-9]/', '', (string) ($employee->phone ?? ''));
+                if (str_starts_with($cleanPhone, '08')) {
+                    $cleanPhone = '628' . substr($cleanPhone, 2);
+                } elseif (str_starts_with($cleanPhone, '8')) {
+                    $cleanPhone = '628' . substr($cleanPhone, 1);
+                }
+                $waText = rawurlencode("Halo *{$employee->full_name}*,\n\nBerikut informasi akun login sistem Anda:\n━━━━━━━━━━━━━━━━━━━━\n🏢 *Aplikasi:* MStore\n👤 *Nama:* {$employee->full_name}\n💼 *Jabatan:* " . ($employee->position ?: 'Staff') . "\n🌐 *Link Login:* " . route('login') . "\n\n🔐 *Kredensial Login:*\n• Username: *{$user->username}*\n• Password: *{$rawPassword}*\n━━━━━━━━━━━━━━━━━━━━\nSilakan gunakan informasi di atas untuk masuk ke sistem. Demi keamanan, segera ganti password Anda setelah login pertama kali.\n\nTerima kasih.");
+
+                session()->flash('new_employee_credentials', [
+                    'name' => $employee->full_name,
+                    'username' => $user->username,
+                    'password' => $rawPassword,
+                    'role_label' => $user->role?->label ?? $user->role?->name ?? 'Staff',
+                    'phone' => $employee->phone,
+                    'clean_phone' => $cleanPhone,
+                    'wa_text' => $waText,
+                ]);
             }
         }
 
-        return redirect()->route('employees.index')->with('success', 'Data karyawan berhasil ditambahkan.');
+        return redirect()->route('employees.index')->with('success', 'Data karyawan ' . $employee->full_name . ' berhasil ditambahkan.');
     }
 
     public function edit(Employee $employee)
@@ -699,15 +756,15 @@ class EmployeeController extends Controller implements HasMiddleware
             'full_name' => ['required', 'string', 'max:255', Rule::unique('employees', 'full_name')->ignore($id)],
             'user_id' => ['nullable', 'exists:users,id', Rule::unique('employees', 'user_id')->ignore($id)],
             'wash_employee_id' => ['nullable', 'exists:wash_employees,id'],
-            'date_of_birth' => ['required', 'date'],
-            'gender' => ['required', Rule::in(['Laki-laki', 'Perempuan'])],
-            'address' => ['required', 'string'],
+            'date_of_birth' => ['nullable', 'date'],
+            'gender' => ['nullable', Rule::in(['Laki-laki', 'Perempuan'])],
+            'address' => ['nullable', 'string'],
             'phone' => ['required', 'string', 'max:30'],
-            'email' => ['required', 'email', 'max:255'],
-            'nik' => ['required', 'string', 'max:32', Rule::unique('employees', 'nik')->ignore($id)],
+            'email' => ['nullable', 'email', 'max:255'],
+            'nik' => ['nullable', 'string', 'max:32', Rule::unique('employees', 'nik')->ignore($id)],
             'position' => ['required', 'string', 'max:255'],
-            'department' => ['required', 'string', 'max:255'],
-            'join_date' => ['required', 'date'],
+            'department' => ['nullable', 'string', 'max:255'],
+            'join_date' => ['nullable', 'date'],
             'employment_status' => ['required', Rule::in(['Tetap', 'Training', 'Pendaftar', 'Kontrak'])],
             'is_attendance_required' => ['nullable', 'boolean'],
             'monthly_salary' => ['nullable', 'numeric', 'min:0'],
@@ -889,6 +946,14 @@ class EmployeeController extends Controller implements HasMiddleware
 
         if (! empty($validated['role_id'])) {
             $data['role_id'] = $validated['role_id'];
+        } elseif (! empty($validated['position'])) {
+            $mappedRole = $this->employeeSyncService->roleNameFromPosition($validated['position']);
+            if ($mappedRole) {
+                $roleId = Role::where('name', $mappedRole)->value('id');
+                if ($roleId) {
+                    $data['role_id'] = $roleId;
+                }
+            }
         }
         if (! empty($validated['id_card_photo_path'])) {
             $data['avatar'] = $validated['id_card_photo_path'];
