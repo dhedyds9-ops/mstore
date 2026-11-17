@@ -277,13 +277,21 @@ class UserController extends Controller implements HasMiddleware
         $buLevelOptions = array_keys((array) config('roles.bu_level_permissions', []));
         $departmentOptions = ['HR', 'Finance', 'Operations', 'Support'];
 
+        // Auto fallback company_id jika tidak dipilih manual
+        if (! $request->filled('company_id')) {
+            $defaultCompany = Company::where('is_active', true)->first() ?? Company::first();
+            if ($defaultCompany) {
+                $request->merge(['company_id' => $defaultCompany->id]);
+            }
+        }
+
         $rules = [
             'name' => ['required', 'string', 'max:255'],
             'job_title' => ['nullable', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:255', 'unique:users,username'],
             'email' => ['nullable', 'string', 'email', 'max:255', 'unique:users,email'],
             'role_id' => ['required', 'exists:roles,id', Rule::notIn($hiddenRoleIds)],
-            'company_id' => ['required', 'exists:companies,id'],
+            'company_id' => ['nullable', 'exists:companies,id'],
             'company_branch_id' => ['nullable', 'exists:company_branches,id'],
             'phone' => ['nullable', 'string', 'max:20'],
             'daily_salary' => ['nullable', 'numeric', 'min:0'],
@@ -291,7 +299,7 @@ class UserController extends Controller implements HasMiddleware
             'bank_name' => ['nullable', 'string', 'max:255'],
             'bank_account_number' => ['nullable', 'string', 'max:255'],
             'bank_account_name' => ['nullable', 'string', 'max:255'],
-            'is_active' => ['boolean'],
+            'is_active' => ['nullable', 'boolean'],
             'bu' => ['nullable', 'array'],
             'bu.*' => ['required', 'string', Rule::in($buOptions)],
             'bu_level' => ['nullable', 'string', Rule::in($buLevelOptions)],
@@ -302,11 +310,21 @@ class UserController extends Controller implements HasMiddleware
         }
         $validated = $request->validate($rules);
 
+        $selectedRole = Role::find($validated['role_id']);
+        $roleName = strtolower((string) ($selectedRole?->name ?? ''));
+
+        // Auto-derive job_title jika tidak diisi manual
+        $jobTitle = trim((string) ($validated['job_title'] ?? ''));
+        if ($jobTitle === '' && $selectedRole) {
+            $jobTitle = $selectedRole->label;
+        }
+
+        $companyId = $validated['company_id'] ?? (Company::where('is_active', true)->value('id') ?? Company::value('id'));
         $companyBranchId = $validated['company_branch_id'] ?? null;
-        if ($companyBranchId !== null) {
+        if ($companyBranchId !== null && $companyId !== null) {
             $belongsToCompany = CompanyBranch::query()
                 ->where('id', $companyBranchId)
-                ->where('company_id', $validated['company_id'])
+                ->where('company_id', $companyId)
                 ->exists();
             if (! $belongsToCompany) {
                 $companyBranchId = null;
@@ -316,12 +334,44 @@ class UserController extends Controller implements HasMiddleware
         $scopeConfig = [];
         if (! empty($validated['bu'])) {
             $scopeConfig['bu'] = array_values(array_map('strtoupper', $validated['bu']));
+        } else {
+            // Otomatis menentukan scope unit bisnis berdasarkan role
+            $scopeConfig['bu'] = match ($roleName) {
+                'atk-cashier' => ['ATK'],
+                'wash-cashier', 'wash-operator', 'karyawan-wash', 'kasir-wash' => ['WASH'],
+                'wedding-organizer' => ['WEDDING'],
+                'warehouse-staff' => ['ATK', 'WASH'],
+                'finance' => ['ALL'],
+                'supervisor', 'manager', 'super-admin' => ['ALL'],
+                default => ['ALL'],
+            };
         }
+
         if (! empty($validated['bu_level'])) {
             $scopeConfig['bu_level'] = $validated['bu_level'];
+        } else {
+            // Otomatis menentukan tingkat operasional berdasarkan role
+            $scopeConfig['bu_level'] = match ($roleName) {
+                'atk-cashier', 'wash-cashier', 'kasir-wash' => 'cashier',
+                'wash-operator', 'karyawan-wash' => 'operator',
+                'warehouse-staff' => 'staff',
+                'finance' => 'staff',
+                'supervisor' => 'supervisor',
+                'manager' => 'manager',
+                'super-admin' => 'admin',
+                default => null,
+            };
         }
+
         if (! empty($validated['department'])) {
             $scopeConfig['department'] = $validated['department'];
+        } else {
+            // Otomatis menentukan departemen berdasarkan role
+            $scopeConfig['department'] = match ($roleName) {
+                'finance' => 'Finance',
+                'super-admin' => 'Support',
+                default => 'Operations',
+            };
         }
 
         // Prevent duplicates by checking name too
@@ -343,19 +393,19 @@ class UserController extends Controller implements HasMiddleware
 
         $createData = [
             'name' => $validated['name'],
-            'job_title' => $validated['job_title'] ?? null,
+            'job_title' => $jobTitle ?: null,
             'email' => $validated['email'] ?? null,
             'username' => $username,
             'radius_username' => $validated['radius_username'] ?? null,
             'password' => \Illuminate\Support\Facades\Hash::make('Password123!'),
             'role_id' => $validated['role_id'],
-            'company_id' => $validated['company_id'],
+            'company_id' => $companyId,
             'company_branch_id' => $companyBranchId,
             'scope_config' => $scopeConfig !== [] ? $scopeConfig : null,
             'phone' => $validated['phone'] ?? null,
-            'is_active' => $request->boolean('is_active'),
+            'is_active' => $request->has('is_active') ? $request->boolean('is_active') : true,
         ];
-        
+
         $createdUser = User::create($createData);
 
         // Sync to employee
