@@ -134,6 +134,7 @@ class EmployeeController extends Controller implements HasMiddleware
         if (! $this->hasIdCardExpiresColumn()) {
             unset($validated['id_card_expires_at']);
         }
+        $validated['is_attendance_required'] = $request->has('is_attendance_required') ? $request->boolean('is_attendance_required') : true;
 
         // Handle User Account Creation / Linking (single source of truth in users table)
         if ($request->boolean('create_user_account')) {
@@ -189,6 +190,7 @@ class EmployeeController extends Controller implements HasMiddleware
         if (! $this->hasIdCardExpiresColumn()) {
             unset($validated['id_card_expires_at']);
         }
+        $validated['is_attendance_required'] = $request->has('is_attendance_required') ? $request->boolean('is_attendance_required') : true;
         $newDocPath = $this->storeDocument($request);
         if ($newDocPath) {
             if ($employee->document_path) {
@@ -707,6 +709,7 @@ class EmployeeController extends Controller implements HasMiddleware
             'department' => ['required', 'string', 'max:255'],
             'join_date' => ['required', 'date'],
             'employment_status' => ['required', Rule::in(['Tetap', 'Training', 'Pendaftar', 'Kontrak'])],
+            'is_attendance_required' => ['nullable', 'boolean'],
             'monthly_salary' => ['nullable', 'numeric', 'min:0'],
             'daily_salary' => ['nullable', 'numeric', 'min:0'],
             'annual_leave_quota' => ['nullable', 'integer', 'min:0'],

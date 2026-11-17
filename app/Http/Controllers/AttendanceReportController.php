@@ -97,10 +97,22 @@ class AttendanceReportController extends Controller
 
     private function getEligibleUsers()
     {
-        $query = \App\Models\User::whereHas('role', function ($q) {
-            $q->whereNotIn('name', ['customer', 'partner', 'super-admin', 'manager', 'field-leader']);
-        })->where('is_active', true)
-          ->with('role');
+        $query = \App\Models\User::where('is_active', true)
+            ->whereHas('role', function ($q) {
+                $q->whereNotIn('name', ['customer', 'pelanggan', 'partner', 'mitra', 'reseller']);
+            })
+            ->where(function ($q) {
+                $q->whereHas('employee', function ($eq) {
+                    $eq->where('is_attendance_required', true)
+                       ->whereNotIn('employment_status', ['Pendaftar', 'Keluar', 'Resign']);
+                })->orWhere(function ($fallback) {
+                    $fallback->doesntHave('employee')
+                        ->whereHas('role', function ($rq) {
+                            $rq->whereNotIn('name', ['customer', 'partner', 'super-admin', 'manager', 'field-leader']);
+                        });
+                });
+            })
+            ->with(['role', 'employee']);
 
         if (! $this->canViewAllAttendanceData()) {
             $query->where('id', Auth::id());

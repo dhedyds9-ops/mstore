@@ -48,6 +48,21 @@ class AttendanceService
             return false;
         }
 
+        // Customer & partner eksternal tidak wajib absen
+        if ($user->hasAnyRole(['customer', 'pelanggan', 'partner', 'mitra', 'reseller'])) {
+            return false;
+        }
+
+        // Cek data kepegawaian (Employee) sebagai single source of truth
+        $employee = $user->relationLoaded('employee') ? $user->employee : $user->employee()->first();
+        if ($employee) {
+            if (in_array($employee->employment_status, ['Pendaftar', 'Keluar', 'Resign'], true)) {
+                return false;
+            }
+
+            return (bool) $employee->is_attendance_required;
+        }
+
         if ($this->isUserCoordinator($user)) {
             return false;
         }

@@ -163,6 +163,11 @@
                                                 <i class="fa-solid fa-spray-can-sparkles me-1"></i>Layanan
                                             </span>
                                         @endif
+                                        @if($employee->is_attendance_required)
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle" title="{{ __('Wajib Absensi') }}">
+                                                <i class="fa-solid fa-clock me-1"></i>Absen
+                                            </span>
+                                        @endif
                                         @if(!$employee->user_id && !$employee->wash_employee_id)
                                             <span class="badge bg-light text-muted border">Manual</span>
                                         @endif

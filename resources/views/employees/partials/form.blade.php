@@ -188,6 +188,17 @@
                         @error('attendance_card_code') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
+                    <div class="col-12 col-md-4 d-flex align-items-center">
+                        <div class="form-check form-switch pt-md-3">
+                            <input type="hidden" name="is_attendance_required" value="0">
+                            <input class="form-check-input" type="checkbox" role="switch" id="is_attendance_required" name="is_attendance_required" value="1" {{ old('is_attendance_required', $employee->is_attendance_required ?? true) ? 'checked' : '' }}>
+                            <label class="form-check-label fw-semibold small" for="is_attendance_required">
+                                {{ __('Wajib Absensi Harian') }}
+                            </label>
+                            <div class="form-text small">{{ __('Aktifkan jika pegawai wajib melakukan presensi harian.') }}</div>
+                        </div>
+                    </div>
+
                     <div class="col-12 col-md-4 mt-3">
                         <label for="bank_name" class="form-label small fw-semibold text-body-secondary">{{ __('Nama Bank') }}</label>
                         <input type="text" name="bank_name" id="bank_name" value="{{ old('bank_name', $employee->bank_name ?? '') }}" class="form-control form-control-sm @error('bank_name') is-invalid @enderror" placeholder="BCA, Mandiri, BRI, dll.">

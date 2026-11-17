@@ -71,8 +71,8 @@ class TechnicianAttendanceController extends Controller implements HasMiddleware
     }
 
     /**
-     * Query dasar untuk mengambil akun staf operasional (Teknisi Lapangan, Operator Wash, Kasir Wash, Kasir ATK).
-     * Mengecualikan Koordinator Wilayah (Andi, Bulloh, dll), Mitra, Reseller, Pelanggan, dan Manajemen Kantor.
+     * Query dasar untuk mengambil akun staf/karyawan yang wajib absen.
+     * Menggunakan master data Employee (is_attendance_required = true) sebagai single source of truth.
      */
     protected function getTechniciansBaseQuery(?string $category = null)
     {
@@ -81,55 +81,26 @@ class TechnicianAttendanceController extends Controller implements HasMiddleware
             ->whereHas('role', function ($q) {
                 $q->whereNotIn('name', [
                     'customer', 'pelanggan', 'partner', 'mitra', 'reseller',
-                    'super-admin', 'manager', 'direktur', 'finance',
-                    'field-leader', 'leader', 'coordinator',
-                    'noc-operator', 'noc-legacy', 'noc',
                 ]);
             })
             ->where(function ($query) {
-                // Role staf operasional yang diizinkan
-                $query->whereHas('role', function ($q) {
-                    $q->whereIn('name', [
-                        'field-technician', 'technician',
-                        'wash-operator', 'karyawan-wash',
-                        'wash-cashier', 'kasir-wash',
-                        'atk-cashier', 'kasir-atk',
-                        'staff-gudang', 'staff',
-                    ]);
+                // Karyawan aktif yang ditandai wajib absensi
+                $query->whereHas('employee', function ($eq) {
+                    $eq->where('is_attendance_required', true)
+                       ->whereNotIn('employment_status', ['Pendaftar', 'Keluar', 'Resign']);
                 })
-                // Atau job_title operasional pada tabel users
-                ->orWhere(function ($q) {
-                    $q->where(function ($sub) {
-                        $sub->where('job_title', 'like', '%Teknisi%')
-                            ->orWhere('job_title', 'like', '%Cuci%')
-                            ->orWhere('job_title', 'like', '%Operator%')
-                            ->orWhere('job_title', 'like', '%Kasir%')
-                            ->orWhere('job_title', 'like', '%Wash%')
-                            ->orWhere('job_title', 'like', '%ATK%')
-                            ->orWhere('job_title', 'like', '%Gudang%');
-                    })
-                    ->where('job_title', 'not like', '%Koordinator%')
-                    ->where('job_title', 'not like', '%Leader%')
-                    ->where('job_title', 'not like', '%Direktur%')
-                    ->where('job_title', 'not like', '%Manager%')
-                    ->where('job_title', 'not like', '%Finance%');
-                })
-                // Atau jabatan/departemen operasional pada tabel employees
-                ->orWhereHas('employee', function ($q) {
-                    $q->where(function ($sub) {
-                        $sub->where('position', 'like', '%Teknisi%')
-                            ->orWhere('position', 'like', '%Cuci%')
-                            ->orWhere('position', 'like', '%Operator%')
-                            ->orWhere('position', 'like', '%Kasir%')
-                            ->orWhere('position', 'like', '%Wash%')
-                            ->orWhere('position', 'like', '%ATK%')
-                            ->orWhere('department', 'like', '%Teknis%')
-                            ->orWhere('department', 'like', '%Wash%')
-                            ->orWhere('department', 'like', '%Cuci%')
-                            ->orWhere('department', 'like', '%ATK%');
-                    })
-                    ->where('position', 'not like', '%Koordinator%')
-                    ->where('position', 'not like', '%Leader%');
+                // Fallback untuk akun tanpa record employee
+                ->orWhere(function ($fallback) {
+                    $fallback->doesntHave('employee')
+                        ->whereHas('role', function ($q) {
+                            $q->whereIn('name', [
+                                'field-technician', 'technician',
+                                'wash-operator', 'karyawan-wash',
+                                'wash-cashier', 'kasir-wash',
+                                'atk-cashier', 'kasir-atk',
+                                'warehouse-staff', 'staff-gudang', 'staff',
+                            ]);
+                        });
                 });
             })
             ->with(['role', 'employee'])
@@ -139,7 +110,7 @@ class TechnicianAttendanceController extends Controller implements HasMiddleware
             $query->where(function ($q) {
                 $q->whereHas('role', fn ($rq) => $rq->whereIn('name', ['field-technician', 'technician']))
                     ->orWhere('job_title', 'like', '%Teknisi%')
-                    ->orWhereHas('employee', fn ($eq) => $eq->where('position', 'like', '%Teknisi%'));
+                    ->orWhereHas('employee', fn ($eq) => $eq->where('position', 'like', '%Teknisi%')->orWhere('department', 'like', '%Teknis%'));
             });
         } elseif ($category === 'wash') {
             $query->where(function ($q) {
