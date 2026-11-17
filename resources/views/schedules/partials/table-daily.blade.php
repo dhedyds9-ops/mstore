@@ -14,41 +14,17 @@
     $canManage = Auth::user()->hasAnyRole(['super-admin', 'manager', 'finance']) || Auth::user()->hasPermission('schedule.manage');
 @endphp
 
-{{-- Date Range Filter Bar --}}
-<div class="date-range-filter">
-    <form action="{{ route('schedules.index') }}" method="GET" 
-          class="d-flex align-items-center gap-3 flex-wrap">
-        <input type="hidden" name="mode" value="daily">
-        <input type="hidden" name="month" value="{{ $month }}">
-        <input type="hidden" name="year" value="{{ $year }}">
-        <input type="hidden" name="group" value="{{ $selectedGroup }}">
-        <input type="hidden" name="shift" value="{{ $selectedShift }}">
-        
-        <div class="d-flex align-items-center gap-2">
-            <i class="fa-regular fa-calendar text-muted"></i>
-            <span class="text-muted small fw-semibold">Periode:</span>
-        </div>
-        
-        <div class="input-group input-group-sm" style="max-width: 180px;">
-            <input type="date" name="start_date" class="form-control" 
-                   value="{{ $rangeStart->format('Y-m-d') }}">
-        </div>
-        
-        <span class="text-muted">—</span>
-        
-        <div class="input-group input-group-sm" style="max-width: 180px;">
-            <input type="date" name="end_date" class="form-control" 
-                   value="{{ $rangeEnd->format('Y-m-d') }}">
-        </div>
-        
-        <button class="btn btn-primary btn-sm" type="submit">
-            <i class="fa-solid fa-check me-1"></i>Terapkan
-        </button>
-        
-        <div class="ms-auto text-muted small d-none d-md-block">
-            <i class="fa-solid fa-arrows-left-right me-1"></i>Scroll horizontal untuk melihat tanggal lainnya
-        </div>
-    </form>
+{{-- Active Date Range & Horizontal Scroll Info Bar --}}
+<div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between px-3 py-2 bg-light bg-opacity-75 border-bottom text-muted small gap-2">
+    <div>
+        <i class="fa-regular fa-calendar-days text-primary me-1"></i>
+        <span>{{ __('Rentang Tanggal Aktif:') }}</span>
+        <strong class="text-dark font-monospace">{{ $rangeStart->translatedFormat('d M Y') }} — {{ $rangeEnd->translatedFormat('d M Y') }}</strong>
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-2">{{ count($days) }} {{ __('Hari') }}</span>
+    </div>
+    <div class="d-none d-md-block">
+        <i class="fa-solid fa-arrows-left-right text-muted me-1"></i>{{ __('Geser / scroll horizontal untuk melihat seluruh tanggal') }}
+    </div>
 </div>
 
 {{-- Bulk Selection / Multi-Set Bar --}}

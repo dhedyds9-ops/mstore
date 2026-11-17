@@ -1759,9 +1759,9 @@ class TechnicianScheduleController extends Controller implements HasMiddleware
             $group = 'lainnya';
             $deptLower = strtolower($department);
             $roleLower = strtolower((string) ($user->role?->name ?? ''));
-            if ($deptLower === 'wash' || in_array($roleLower, ['wash-cashier', 'wash-operator'], true)) {
+            if ($deptLower === 'wash' || str_contains($deptLower, 'cuci') || in_array($roleLower, ['wash-cashier', 'wash-operator', 'karyawan-wash', 'kasir-wash'], true)) {
                 $group = 'wash';
-            } elseif ($deptLower === 'teknis' || in_array($roleLower, ['technician', 'noc-operator', 'network-operations-center'], true)) {
+            } elseif (str_contains($deptLower, 'teknis') || str_contains($deptLower, 'jaringan') || in_array($roleLower, ['field-technician', 'technician', 'noc-operator', 'network-operations-center', 'field-leader'], true)) {
                 $group = 'teknisi';
             }
 
