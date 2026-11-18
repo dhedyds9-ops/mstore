@@ -5,28 +5,30 @@
 @section('content')
 <div class="atk-pos-page">
     <div class="atk-pos-shell">
-        <header class="atk-pos-header d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <header class="atk-pos-header bg-white border rounded-4 shadow-sm p-2.5 p-md-3 d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
             <div class="d-flex align-items-center flex-wrap gap-2">
-                <span id="current-time" class="atk-current-time"></span>
+                <span id="current-time" class="atk-current-time badge bg-light text-dark border px-3 py-2 fw-semibold rounded-pill">
+                    <i class="fa-regular fa-clock me-1 text-primary"></i> <span class="time-text"></span>
+                </span>
                 @php
                     $posActiveRegister = \App\Models\AtkCashRegister::where('user_id', Auth::id())->where('status', 'open')->latest()->first();
                 @endphp
                 @if($posActiveRegister)
-                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1.5 small rounded-pill fw-semibold">
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 small rounded-pill fw-semibold">
                         <i class="fa-solid fa-cash-register me-1"></i>Shift: {{ $posActiveRegister->name }}
                     </span>
                 @else
-                    <a href="{{ route('atk.cash-registers.create') }}" class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2.5 py-1.5 small rounded-pill text-decoration-none fw-semibold">
+                    <a href="{{ route('atk.cash-registers.create') }}" class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-2 small rounded-pill text-decoration-none fw-semibold">
                         <i class="fa-solid fa-triangle-exclamation me-1"></i>Shift Belum Dibuka &bull; <u>Buka Shift</u>
                     </a>
                 @endif
-                <span class="badge bg-light text-muted border px-2 py-1 small d-none d-md-inline-block">
-                    <kbd>F2</kbd> Cari &bull; <kbd>F4</kbd> Bayar &bull; <kbd>F9</kbd> Selesai &bull; <kbd>Esc</kbd> Reset
+                <span class="badge bg-light text-muted border px-2.5 py-2 small d-none d-xl-inline-block rounded-pill">
+                    <kbd class="bg-dark text-white px-1.5 py-0.5 rounded">F2</kbd> Cari &bull; <kbd class="bg-dark text-white px-1.5 py-0.5 rounded">F4</kbd> Bayar &bull; <kbd class="bg-dark text-white px-1.5 py-0.5 rounded">F9</kbd> Selesai &bull; <kbd class="bg-dark text-white px-1.5 py-0.5 rounded">Esc</kbd> Reset
                 </span>
             </div>
             <div class="d-flex align-items-center gap-3">
                 <div class="text-end">
-                    <small class="text-muted">Kas Utama</small>
+                    <div class="small text-muted fw-semibold">Kas Utama</div>
                     <div id="main-cash-balance" class="fw-bold fs-5 text-success">
                         <i class="fa-solid fa-wallet me-1"></i>
                         Rp {{ number_format($cash->balance ?? 0, 0, ',', '.') }}
@@ -35,92 +37,96 @@
             </div>
         </header>
 
-        <div class="card mb-4 border-info">
-            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
-                <h6 class="mb-0"><i class="fa-solid fa-circle-info me-2"></i>Petunjuk Penggunaan POS</h6>
-                <button class="btn btn-sm btn-light" type="button" data-bs-toggle="collapse" data-bs-target="#posHelpBoxContent" aria-expanded="false" aria-controls="posHelpBoxContent">
-                    <i class="fa-solid fa-chevron-down"></i>
-                </button>
+        <!-- Compact Hint Bar -->
+        <div class="alert alert-light border border-info-subtle shadow-sm rounded-3 py-2 px-3 mb-3 d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-2 small text-secondary">
+                <i class="fa-solid fa-circle-info text-info fs-5"></i>
+                <span><strong>Panduan Cepat:</strong> Klik kartu produk untuk tambah &bull; Tentukan pembayaran &bull; Tekan tombol <strong>Proses Pembayaran (F4)</strong>.</span>
             </div>
-            <div class="collapse" id="posHelpBoxContent">
-                <div class="card-body">
-                    <p><strong>Selamat datang di Kasir Toko & Retail!</strong> Berikut langkah-langkah transaksi:</p>
-                    <ol class="mb-0">
-                        <li><strong>Pilih Tab:</strong> Klik tab di atas untuk memilih jenis transaksi (Produk, Jasa, Bank, dll).</li>
-                        <li><strong>Tambah Item:</strong>
-                            <ul>
-                                <li>Klik kartu produk untuk menambah ke keranjang.</li>
-                                <li>Atau gunakan kolom pencarian untuk mencari produk cepat.</li>
-                                <li>Atau klik tombol barcode untuk scan barcode produk!</li>
-                            </ul>
-                        </li>
-                        <li><strong>Checkout:</strong>
-                            <ul>
-                                <li>Pilih metode pembayaran di bagian kanan.</li>
-                                <li>Jika tunai, masukkan jumlah uang diterima (kembalian otomatis dihitung!)</li>
-                                <li>Opsional: Isi nomor WA dan centang untuk kirim struk via WhatsApp.</li>
-                            </ul>
-                        </li>
-                        <li><strong>Selesai:</strong> Klik "Proses Pembayaran"! Struk akan otomatis ditampilkan.</li>
-                    </ol>
+            <button class="btn btn-sm btn-link text-decoration-none p-0 text-muted" type="button" data-bs-toggle="collapse" data-bs-target="#posHelpBoxContent" aria-expanded="false" title="Buka Detail Panduan">
+                <i class="fa-solid fa-circle-question fs-5 text-primary"></i>
+            </button>
+        </div>
+        <div class="collapse mb-3" id="posHelpBoxContent">
+            <div class="card card-body border-0 shadow-sm bg-white rounded-3 p-3">
+                <h6 class="fw-bold mb-2"><i class="fa-solid fa-book-open text-primary me-2"></i>Panduan Lengkap Kasir Toko & Retail:</h6>
+                <div class="row g-3 small text-muted">
+                    <div class="col-md-3">
+                        <strong class="text-dark">1. Pilih Tab</strong>
+                        <p class="mb-0">Pilih jenis transaksi: Produk fisik, Jasa Potocopy, Top Up, Tarik Tunai, atau Pembayaran.</p>
+                    </div>
+                    <div class="col-md-3">
+                        <strong class="text-dark">2. Tambah Item</strong>
+                        <p class="mb-0">Klik kartu produk atau gunakan pencarian cepat / scan barcode untuk memasukkan item.</p>
+                    </div>
+                    <div class="col-md-3">
+                        <strong class="text-dark">3. Pembayaran</strong>
+                        <p class="mb-0">Pilih metode Tunai, Transfer, atau QRIS. Masukkan nominal uang diterima jika tunai.</p>
+                    </div>
+                    <div class="col-md-3">
+                        <strong class="text-dark">4. Struk WhatsApp</strong>
+                        <p class="mb-0">Isi nomor WhatsApp pembeli untuk langsung kirim nota digital setelah transaksi disimpan.</p>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="row g-4">
+        <div class="row g-3 g-lg-4">
             <div class="col-12 col-lg-8 order-2 order-lg-1">
-                <div class="atk-card">
-                    <div class="atk-card-header">
-                        <h2 class="atk-card-title"><i class="fas fa-th-large"></i> Pilih Produk</h2>
-                        <div class="atk-filter-group">
-                            <button class="filter-btn active" data-tab="products" type="button">Produk</button>
-                            <button class="filter-btn" data-tab="services" type="button">Jasa</button>
-                            <button class="filter-btn" data-tab="manual" type="button">Manual</button>
-                            <button class="filter-btn" data-tab="bank" type="button">Bank</button>
-                            <button class="filter-btn" data-tab="cash-out" type="button">Tarik Tunai</button>
-                            <button class="filter-btn" data-tab="top-up" type="button">Top Up</button>
-                            <button class="filter-btn" data-tab="ppob" type="button">PPOB</button>
-                            <button class="filter-btn" data-tab="customer-payments" type="button">Pembayaran</button>
+                <div class="atk-card shadow-sm border rounded-4 bg-white overflow-hidden">
+                    <div class="atk-card-header bg-white border-bottom p-3">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                            <h2 class="atk-card-title m-0 fw-bold fs-6 text-dark">
+                                <i class="fas fa-th-large text-primary me-1"></i> Pilih Produk & Layanan
+                            </h2>
+                            <div class="atk-filter-group p-1 bg-light rounded-pill border d-inline-flex gap-1">
+                                <button class="filter-btn active rounded-pill px-3 py-1 small fw-semibold" data-tab="products" type="button">Produk</button>
+                                <button class="filter-btn rounded-pill px-3 py-1 small fw-semibold" data-tab="services" type="button">Jasa</button>
+                                <button class="filter-btn rounded-pill px-3 py-1 small fw-semibold" data-tab="manual" type="button">Manual</button>
+                                <button class="filter-btn rounded-pill px-3 py-1 small fw-semibold" data-tab="bank" type="button">Bank</button>
+                                <button class="filter-btn rounded-pill px-3 py-1 small fw-semibold" data-tab="cash-out" type="button">Tarik Tunai</button>
+                                <button class="filter-btn rounded-pill px-3 py-1 small fw-semibold" data-tab="top-up" type="button">Top Up</button>
+                                <button class="filter-btn rounded-pill px-3 py-1 small fw-semibold" data-tab="ppob" type="button">PPOB</button>
+                                <button class="filter-btn rounded-pill px-3 py-1 small fw-semibold" data-tab="customer-payments" type="button">Pembayaran</button>
+                            </div>
                         </div>
                         <div class="mt-2">
-                            <div class="input-group">
-                                <span class="input-group-text atk-input-group-text"><i class="fas fa-search text-body-secondary"></i></span>
-                                <input type="text" id="productSearch" class="form-control form-control-sm atk-input" placeholder="Cari produk cepat...">
-                                <button type="button" class="btn atk-secondary-btn" id="openAtkBarcodeScan" title="Scan barcode via kamera">
-                                    <i class="fa-solid fa-barcode"></i>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-body-secondary"></i></span>
+                                <input type="text" id="productSearch" class="form-control form-control-sm border-start-0 border-end-0 ps-0" placeholder="Ketik nama atau scan barcode produk...">
+                                <button type="button" class="btn btn-outline-secondary border-start-0 px-3" id="openAtkBarcodeScan" title="Scan barcode via kamera">
+                                    <i class="fa-solid fa-barcode me-1"></i> Scan
                                 </button>
                             </div>
                         </div>
                     </div>
-                    <div class="atk-card-body">
+                    <div class="atk-card-body p-3">
                         <!-- Products Tab -->
-                        <div id="productList" class="row g-3">
+                        <div id="productList" class="row g-2 g-md-3">
                             @foreach($products as $product)
-                            <div class="col-6 col-md-4 product-item" data-name="{{ strtolower($product->name) }}" data-code="{{ strtolower($product->code) }}">
+                            <div class="col-6 col-md-4 col-xl-3 product-item" data-name="{{ strtolower($product->name) }}" data-code="{{ strtolower($product->code) }}">
                                 <div class="product-card product-card-product" data-fasttap data-id="{{ $product->id }}" data-name="{{ $product->name }}" data-price="{{ $product->price }}" data-type="product" data-stock="{{ $product->stock }}">
                                     <div class="product-image-wrap">
                                         @if($product->image)
                                             <img src="{{ Storage::url($product->image) }}" class="img-fluid product-image" alt="{{ $product->name }}">
                                         @else
-                                            <i class="fas fa-box product-fallback-icon"></i>
+                                            <i class="fas fa-box-open product-fallback-icon"></i>
                                         @endif
                                     </div>
-                                    <h5 class="product-title">{{ $product->name }}</h5>
-                                    <div class="product-description-chips">
+                                    <h5 class="product-title" title="{{ $product->name }}">{{ $product->name }}</h5>
+                                    <div class="product-meta mt-2 d-flex justify-content-between align-items-center">
                                         @php
                                             $pMin = (int) ($product->minimum_stock ?? 5);
                                             $pAlert = $product->stock_alert !== null ? (bool) $product->stock_alert : true;
                                         @endphp
                                         @if($product->stock <= 0)
-                                            <span class="product-description-chip badge bg-danger text-white">Stok Habis (0)</span>
+                                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 small px-1.5 py-0.5">Habis</span>
                                         @elseif($product->stock <= $pMin && $pAlert)
-                                            <span class="product-description-chip badge bg-warning text-dark fw-bold">Sisa: {{ $product->stock }} (Menipis)</span>
+                                            <span class="badge bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-25 small px-1.5 py-0.5">Sisa: {{ $product->stock }}</span>
                                         @else
-                                            <span class="product-description-chip">Stok: {{ $product->stock }}</span>
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary border small px-1.5 py-0.5">Stok: {{ $product->stock }}</span>
                                         @endif
-                                    </div>
-                                    <div class="product-meta">
-                                        <span class="product-price">Rp {{ number_format($product->price, 0, ',', '.') }}</span>
+                                        <span class="product-price fw-bold text-primary">Rp {{ number_format($product->price, 0, ',', '.') }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -133,9 +139,9 @@
                         </div>
 
                         <!-- Services Tab -->
-                        <div id="serviceList" class="row g-3 d-none">
+                        <div id="serviceList" class="row g-2 g-md-3 d-none">
                             @foreach(($services ?? []) as $service)
-                            <div class="col-6 col-md-4 service-item" data-name="{{ strtolower($service->name) }}" data-code="{{ strtolower($service->code) }}">
+                            <div class="col-6 col-md-4 col-xl-3 service-item" data-name="{{ strtolower($service->name) }}" data-code="{{ strtolower($service->code) }}">
                                 <div class="product-card product-card-service" data-fasttap data-id="{{ $service->id }}" data-name="{{ $service->name }}" data-price="{{ $service->price }}" data-type="service" data-stock="999999">
                                     <div class="product-image-wrap">
                                         @if($service->image)
@@ -144,12 +150,10 @@
                                             <i class="fas fa-print product-fallback-icon"></i>
                                         @endif
                                     </div>
-                                    <h5 class="product-title">{{ $service->name }}</h5>
-                                    <div class="product-description-chips">
-                                        <span class="product-description-chip product-description-chip-empty">Jasa</span>
-                                    </div>
-                                    <div class="product-meta">
-                                        <span class="product-price">Rp {{ number_format($service->price, 0, ',', '.') }}</span>
+                                    <h5 class="product-title" title="{{ $service->name }}">{{ $service->name }}</h5>
+                                    <div class="product-meta mt-2 d-flex justify-content-between align-items-center">
+                                        <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 small px-1.5 py-0.5">Jasa</span>
+                                        <span class="product-price fw-bold text-primary">Rp {{ number_format($service->price, 0, ',', '.') }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -422,76 +426,97 @@
             </div>
 
             <div class="col-12 col-lg-4 order-1 order-lg-2">
-                <div class="atk-card atk-checkout-card">
-                    <div class="atk-card-header">
-                        <h2 class="atk-card-title"><i class="fas fa-shopping-cart"></i> Rincian Transaksi</h2>
+                <div class="atk-card atk-checkout-card shadow-sm">
+                    <div class="atk-card-header bg-white border-bottom py-2.5 px-3 d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="rounded-circle bg-primary bg-opacity-10 text-primary p-2 d-inline-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+                                <i class="fas fa-shopping-cart fa-sm"></i>
+                            </span>
+                            <h6 class="mb-0 fw-bold text-dark">Rincian Transaksi</h6>
+                        </div>
+                        <span class="badge bg-light text-secondary border px-2 py-1 small fw-normal">Kasir Aktif</span>
                     </div>
-                    <div class="atk-card-body">
+                    <div class="atk-card-body p-3">
                         <form id="checkoutForm" class="checkout-form">
-                            <div class="row g-2 mb-2">
-                                <div class="col-12 col-sm-6">
-                                    <label class="atk-field-label">Nama Pelanggan (opsional)</label>
-                                    <input type="text" class="form-control form-control-sm atk-input" id="customerName" placeholder="Umum / Pembeli">
+                            <!-- Customer Info (Compact) -->
+                            <div class="bg-light bg-opacity-50 p-2.5 rounded-3 border mb-3">
+                                <div class="row g-2 mb-2">
+                                    <div class="col-12 col-sm-6">
+                                        <label class="atk-field-label small text-muted mb-1 fw-semibold">Pelanggan</label>
+                                        <input type="text" class="form-control form-control-sm bg-white" id="customerName" placeholder="Umum / Pembeli">
+                                    </div>
+                                    <div class="col-12 col-sm-6">
+                                        <label class="atk-field-label small text-muted mb-1 fw-semibold">No. WhatsApp</label>
+                                        <input type="text" class="form-control form-control-sm bg-white" id="customerPhone" placeholder="08xxxxxxxxxx">
+                                    </div>
                                 </div>
-                                <div class="col-12 col-sm-6">
-                                    <label class="atk-field-label">No. WhatsApp (opsional)</label>
-                                    <input type="text" class="form-control form-control-sm atk-input" id="customerPhone" placeholder="08xxxxxxxxxx">
+                                <div class="form-check form-check-inline m-0">
+                                    <input class="form-check-input" type="checkbox" value="" id="sendWhatsapp">
+                                    <label class="form-check-label small text-muted" for="sendWhatsapp">Kirim nota via WhatsApp</label>
                                 </div>
-                            </div>
-                            <div class="form-check mb-3 atk-inline-check">
-                                <input class="form-check-input" type="checkbox" value="" id="sendWhatsapp">
-                                <label class="form-check-label" for="sendWhatsapp">Kirim nota via WhatsApp</label>
                             </div>
 
+                            <!-- Cart Items -->
+                            <div class="d-flex justify-content-between align-items-center mb-1.5">
+                                <span class="small fw-bold text-uppercase text-secondary" style="font-size: 0.72rem; letter-spacing: 0.05em;">Keranjang Belanja</span>
+                                <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-2" id="cartItemCountBadge">0 item</span>
+                            </div>
                             <div id="cartItems" class="mb-3 custom-scrollbar">
-                                <p class="text-center text-muted py-4 mb-0" id="emptyCartMsg">Keranjang masih kosong</p>
+                                <div class="text-center text-muted py-4" id="emptyCartMsg">
+                                    <i class="fa-solid fa-basket-shopping text-secondary opacity-50 fs-2 d-block mb-1"></i>
+                                    <span class="small">Keranjang masih kosong</span>
+                                </div>
                             </div>
 
-                            <div class="atk-summary-row atk-summary-divider">
-                                <span>Total Item</span>
-                                <span id="totalItems">0</span>
-                            </div>
-                            <div class="atk-summary-row atk-summary-total">
-                                <span>Total Akhir</span>
-                                <span id="totalAmount">Rp 0</span>
+                            <!-- Order Summary Box -->
+                            <div class="bg-primary bg-opacity-10 border border-primary border-opacity-25 rounded-3 p-3 mb-3">
+                                <div class="d-flex justify-content-between align-items-center text-muted small mb-1">
+                                    <span>Total Item</span>
+                                    <span id="totalItems" class="fw-semibold text-dark">0</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center pt-2 border-top border-primary border-opacity-25">
+                                    <span class="fw-bold text-dark">Total Akhir</span>
+                                    <span id="totalAmount" class="fs-4 fw-extrabold text-primary">Rp 0</span>
+                                </div>
                             </div>
 
-                            <div class="row g-2 mt-3">
+                            <!-- Payment Controls -->
+                            <div class="row g-2">
                                 <div class="col-12">
-                                    <label class="atk-field-label">Metode Pembayaran</label>
-                                    <select class="form-select atk-input" id="paymentMethod">
+                                    <label class="atk-field-label small text-muted mb-1 fw-semibold">Metode Pembayaran</label>
+                                    <select class="form-select form-select-sm atk-input" id="paymentMethod">
                                         <option value="cash">💵 Tunai (Cash)</option>
-                                        <option value="transfer">🏦 Transfer</option>
+                                        <option value="transfer">🏦 Transfer Bank</option>
                                         <option value="qris">📱 QRIS</option>
-                                        <option value="hutang">📜 Hutang</option>
+                                        <option value="hutang">📜 Hutang / Kasbon</option>
                                     </select>
                                 </div>
                                 <div class="col-12" id="cashInputDiv">
-                                    <label class="atk-field-label">Uang Diterima</label>
-                                    <div class="input-group mb-1">
+                                    <label class="atk-field-label small text-muted mb-1 fw-semibold">Uang Diterima (Tunai)</label>
+                                    <div class="input-group input-group-sm mb-1.5">
                                         <span class="input-group-text atk-input-group-text">Rp</span>
-                                        <input type="number" class="form-control atk-input" id="cashAmount" placeholder="0">
+                                        <input type="number" class="form-control atk-input fw-bold text-dark" id="cashAmount" placeholder="0">
                                     </div>
-                                    <div class="d-flex flex-wrap gap-1 mt-1" id="quickCashButtons">
-                                        <button type="button" class="btn btn-outline-success btn-sm py-0.5 px-2 quick-cash-btn" data-type="exact">Uang Pas</button>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm py-0.5 px-2 quick-cash-btn" data-value="10000">10rb</button>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm py-0.5 px-2 quick-cash-btn" data-value="20000">20rb</button>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm py-0.5 px-2 quick-cash-btn" data-value="50000">50rb</button>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm py-0.5 px-2 quick-cash-btn" data-value="100000">100rb</button>
+                                    <div class="d-flex flex-wrap gap-1" id="quickCashButtons">
+                                        <button type="button" class="btn btn-outline-success btn-sm py-0.5 px-2 quick-cash-btn rounded-pill fw-semibold" data-type="exact">Uang Pas</button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm py-0.5 px-2 quick-cash-btn rounded-pill" data-value="10000">10rb</button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm py-0.5 px-2 quick-cash-btn rounded-pill" data-value="20000">20rb</button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm py-0.5 px-2 quick-cash-btn rounded-pill" data-value="50000">50rb</button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm py-0.5 px-2 quick-cash-btn rounded-pill" data-value="100000">100rb</button>
                                     </div>
                                 </div>
                             </div>
 
-                            <div id="changeDisplay" class="atk-change-box mt-2">
-                                <span id="changeLabel">Kembalian</span>
-                                <strong id="changeAmount">Rp 0</strong>
+                            <div id="changeDisplay" class="atk-change-box mt-2.5 p-2.5 rounded-3 d-flex justify-content-between align-items-center">
+                                <span id="changeLabel" class="small fw-semibold">Kembalian</span>
+                                <strong id="changeAmount" class="fs-6">Rp 0</strong>
                             </div>
 
                             <div id="pengurusDiv" class="mt-3" style="display: none;">
-                                <div class="card card-body bg-light">
-                                    <h6 class="fw-bold text-primary mb-3"><i class="fas fa-user-tie me-1"></i> Pengurus</h6>
-                                    <label for="coordinatorId" class="atk-field-label">Pilih Pengurus</label>
-                                    <select class="form-select atk-input" id="coordinatorId">
+                                <div class="card card-body bg-light border-0 p-2.5 rounded-3">
+                                    <h6 class="fw-bold text-primary mb-2 small"><i class="fas fa-user-tie me-1"></i> Pengurus</h6>
+                                    <label for="coordinatorId" class="atk-field-label small text-muted mb-1">Pilih Pengurus</label>
+                                    <select class="form-select form-select-sm atk-input" id="coordinatorId">
                                         <option value="">Pilih Pengurus (wajib untuk hutang jasa potocopy)</option>
                                         @foreach(($coordinators ?? []) as $c)
                                             <option value="{{ $c->id }}">{{ $c->name }}</option>
@@ -500,7 +525,10 @@
                                 </div>
                             </div>
 
-                            <button type="button" class="btn atk-primary-btn w-100 mt-3" id="btnCheckout" data-action="process-transaction" disabled>Proses Pembayaran</button>
+                            <button type="button" class="btn atk-primary-btn w-100 py-2.5 mt-3 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2" id="btnCheckout" data-action="process-transaction" disabled>
+                                <i class="fa-solid fa-circle-check fs-5"></i>
+                                <span>Proses Pembayaran (F4)</span>
+                            </button>
                         </form>
                     </div>
                 </div>
@@ -1405,18 +1433,22 @@ function calculateTotal() {
 
 function renderCart() {
     const cartList = document.getElementById('cartItems');
-    const emptyMsg = document.getElementById('emptyCartMsg');
     const btnCheckout = document.getElementById('btnCheckout');
+    const badge = document.getElementById('cartItemCountBadge');
 
-    cartList.innerHTML = '';
     let total = calculateTotal();
     let count = 0;
 
     if (cart.length === 0) {
-        if (emptyMsg) emptyMsg.style.display = 'block';
+        cartList.innerHTML = `
+            <div class="text-center text-muted py-4" id="emptyCartMsg">
+                <i class="fa-solid fa-basket-shopping text-secondary opacity-50 fs-2 d-block mb-1"></i>
+                <span class="small">Keranjang masih kosong</span>
+            </div>
+        `;
         btnCheckout.disabled = true;
     } else {
-        if (emptyMsg) emptyMsg.style.display = 'none';
+        cartList.innerHTML = '';
         btnCheckout.disabled = false;
 
         cart.forEach(item => {
@@ -1453,9 +1485,9 @@ function renderCart() {
             if (!(item.bank || item.customerPayment || item.cashOut || item.topUp || item.ppob)) {
                 quantityButtons = `
                     <div class="btn-group btn-group-sm">
-                        <button class="btn atk-secondary-btn" data-action="update-quantity" data-item-id="${item.id}" data-delta="-1">-</button>
-                        <button class="btn atk-secondary-btn" disabled>${item.quantity}</button>
-                        <button class="btn atk-secondary-btn" data-action="update-quantity" data-item-id="${item.id}" data-delta="1">+</button>
+                        <button class="btn atk-secondary-btn py-0 px-2" data-action="update-quantity" data-item-id="${item.id}" data-delta="-1">-</button>
+                        <button class="btn atk-secondary-btn py-0 px-2" disabled>${item.quantity}</button>
+                        <button class="btn atk-secondary-btn py-0 px-2" data-action="update-quantity" data-item-id="${item.id}" data-delta="1">+</button>
                     </div>
                 `;
             }
@@ -1475,12 +1507,12 @@ function renderCart() {
                     </div>
                 </div>
             `;
-            console.log('Created cart item:', item, 'button data-action:', 'remove-item', 'data-item-id:', item.id);
             cartList.appendChild(li);
         });
     }
 
     document.getElementById('totalItems').textContent = count;
+    if (badge) badge.textContent = `${count} item`;
     document.getElementById('totalAmount').textContent = `Rp ${new Intl.NumberFormat('id-ID').format(total)}`;
     calculateChange();
     updatePengurusVisibility();
@@ -1910,9 +1942,9 @@ function processTransaction() {
 }
 
 .atk-card-header {
-    padding: 1rem 1.1rem;
-    background: linear-gradient(180deg, rgba(58, 126, 232, 0.22) 0%, rgba(231, 236, 255, 0.30) 100%);
-    border-bottom-color: rgba(22, 22, 23, 0.98);
+    padding: 0.85rem 1.1rem;
+    background: #ffffff;
+    border-bottom: 1px solid #f1f5f9;
     display: flex;
     gap: 0.8rem;
     align-items: center;
@@ -1924,7 +1956,7 @@ function processTransaction() {
     margin: 0;
     font-size: 1rem;
     font-weight: 700;
-    color: #334155;
+    color: #1e293b;
     display: inline-flex;
     align-items: center;
     gap: 0.45rem;
@@ -1939,29 +1971,29 @@ function processTransaction() {
 }
 
 .atk-filter-group {
-    background: #e2e8f0;
-    border-radius: 0.8rem;
+    background: #f1f5f9;
+    border-radius: 0.6rem;
     padding: 0.2rem;
     display: inline-flex;
-    gap: 0.25rem;
+    gap: 0.2rem;
     flex-wrap: wrap;
 }
 
 .atk-filter-group .filter-btn {
     border: 0;
     background: transparent;
-    color: #475569;
-    border-radius: 0.6rem;
-    font-size: 0.82rem;
+    color: #64748b;
+    border-radius: 0.5rem;
+    font-size: 0.8rem;
     font-weight: 600;
-    padding: 0.35rem 0.85rem;
-    transition: all 0.2s ease;
+    padding: 0.3rem 0.75rem;
+    transition: all 0.15s ease;
 }
 
 .atk-filter-group .filter-btn.active {
     background: #fff;
     color: #2563eb;
-    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.12);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
 }
 
 .atk-filter-group .filter-btn:focus-visible {
@@ -1972,39 +2004,43 @@ function processTransaction() {
 .product-card {
     height: 100%;
     border: 1px solid #e2e8f0;
-    border-radius: 1rem;
-    padding: 0.8rem;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    border-radius: 0.85rem;
+    padding: 0.65rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     background: #fff;
+    display: flex;
+    flex-direction: column;
 }
 
 .product-card:hover {
-    border-color: #60a5fa;
-    box-shadow: 0 10px 18px rgba(37, 99, 235, 0.14);
+    border-color: #3b82f6;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.12);
 }
 
 .product-card:active {
-    transform: none;
+    transform: scale(0.98);
 }
 
 .product-card-product {
-    border-color: #bfdbfe;
+    border-color: #e2e8f0;
 }
 
 .product-card-service {
-    border-color: #fed7aa;
+    border-color: #e2e8f0;
 }
 
 .product-image-wrap {
-    aspect-ratio: 1 / 1;
-    border-radius: 0.8rem;
-    background: #f1f5f9;
+    height: 95px;
+    border-radius: 0.6rem;
+    background: #f8fafc;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid #f1f5f9;
 }
 
 .product-image {
@@ -2014,25 +2050,32 @@ function processTransaction() {
     transition: transform .25s ease;
 }
 
+.product-card:hover .product-image {
+    transform: scale(1.05);
+}
+
 .product-fallback-icon {
-    width: 52px;
-    height: 52px;
-    border-radius: 999px;
-    background: #e2e8f0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.4rem;
-    color: #64748b;
-    transition: transform .25s ease;
+    font-size: 2rem;
+    color: #cbd5e1;
+    transition: all .25s ease;
+}
+
+.product-card:hover .product-fallback-icon {
+    transform: scale(1.1);
+    color: #3b82f6;
 }
 
 .product-title {
-    font-size: 0.94rem;
-    font-weight: 700;
-    line-height: 1.35;
+    font-size: 0.82rem;
+    font-weight: 600;
+    line-height: 1.3;
     color: #1e293b;
     margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2.6em;
 }
 
 .product-description {
@@ -2053,9 +2096,9 @@ function processTransaction() {
 .product-description-chip {
     display: inline-flex;
     align-items: center;
-    min-height: 26px;
-    padding: 0.24rem 0.52rem;
-    border-radius: 0.65rem;
+    min-height: 24px;
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.5rem;
     background: #eef2ff;
     border: 1px solid #c7d2fe;
     color: #3730a3;
@@ -2072,19 +2115,18 @@ function processTransaction() {
 }
 
 .product-meta {
-    margin-top: 0.6rem;
+    margin-top: auto;
+    padding-top: 0.4rem;
     display: flex;
-    align-items: flex-start;
-    justify-content: flex-start;
-    flex-wrap: wrap;
-    gap: 0.5rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
 }
 
 .product-price {
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     font-weight: 700;
     color: #2563eb;
-    width: 100%;
     line-height: 1.2;
 }
 
@@ -2250,34 +2292,43 @@ function processTransaction() {
 
 .atk-change-box {
     border-radius: 0.75rem;
-    border: 1px solid #bfdbfe;
-    background: #eff6ff;
+    border: 1px solid #bbf7d0;
+    background: #f0fdf4;
     padding: 0.55rem 0.75rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    color: #1e3a8a;
+    color: #166534;
     font-size: 0.84rem;
 }
 
 .atk-primary-btn {
     min-height: 44px;
     border-radius: 0.8rem;
-    background: linear-gradient(135deg, #16a34a, #22c55e);
+    background: #16a34a;
     border: 0;
     color: #fff;
     font-weight: 700;
     letter-spacing: 0.01em;
+    transition: all 0.2s ease;
 }
 
-.atk-primary-btn:hover {
+.atk-primary-btn:hover:not(:disabled) {
+    background: #15803d;
     color: #fff;
-    filter: brightness(1.03);
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
+}
+
+.atk-primary-btn:disabled {
+    background: #94a3b8;
+    color: #f1f5f9;
+    opacity: 0.65;
+    cursor: not-allowed;
 }
 
 .atk-primary-btn:focus-visible {
     outline: 0;
-    box-shadow: 0 0 0 0.24rem rgba(59, 130, 246, 0.3);
+    box-shadow: 0 0 0 0.24rem rgba(22, 163, 74, 0.3);
 }
 
 .atk-scan-reader video {
