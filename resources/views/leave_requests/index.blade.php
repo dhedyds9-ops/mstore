@@ -60,8 +60,8 @@
             <form method="GET" action="{{ route('leave-requests.index') }}" class="row g-2 g-md-3 align-items-center">
                 <div class="col-12 col-lg-5">
                     <div class="input-group">
-                        <span class="input-group-text bg-body-tertiary border-0"><i class="fa-solid fa-magnifying-glass"></i></span>
-                        <input type="text" name="reason_keyword" value="{{ request('reason_keyword') }}" class="form-control border-0 bg-body-tertiary" placeholder="{{ __('Search reason...') }}">
+                        <span class="input-group-text bg-white border-end-0 text-muted ps-3"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <input type="text" name="reason_keyword" value="{{ request('reason_keyword') }}" class="form-control bg-white border-start-0" placeholder="{{ __('Cari alasan izin / cuti...') }}">
                     </div>
                 </div>
                 <div class="col-12 col-lg-7 d-flex flex-wrap gap-2">

@@ -77,7 +77,7 @@
                             <span class="fw-semibold text-muted small"><i class="fa-solid fa-filter me-1"></i>{{ __('Pilih Tanggal Laporan:') }}</span>
                         </div>
                         <div class="col-12 col-md-3">
-                            <input type="date" name="date" value="{{ $date }}" class="form-control form-control-sm bg-light">
+                            <input type="date" name="date" value="{{ $date }}" class="form-control form-control-sm bg-white">
                         </div>
                         <div class="col-12 col-md-auto">
                             <button type="submit" class="btn btn-sm btn-primary px-3">
@@ -295,7 +295,7 @@
                             <span class="fw-semibold text-muted small"><i class="fa-solid fa-filter me-1"></i>{{ __('Pilih Periode Bulan:') }}</span>
                         </div>
                         <div class="col-12 col-md-3">
-                            <input type="month" name="month" value="{{ $month }}" class="form-control form-control-sm bg-light">
+                            <input type="month" name="month" value="{{ $month }}" class="form-control form-control-sm bg-white">
                         </div>
                         <div class="col-12 col-md-auto">
                             <button type="submit" class="btn btn-sm btn-primary px-3">

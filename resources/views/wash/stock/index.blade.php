@@ -143,59 +143,53 @@
                     {{-- Pencarian --}}
                     <div class="col-12 col-md-4 col-lg-3">
                         <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0 text-muted">
+                            <span class="input-group-text bg-white border-end-0 text-muted ps-3">
                                 <i class="fa-solid fa-magnifying-glass"></i>
                             </span>
-                            <input type="text" name="search" id="stockSearch" class="form-control bg-light border-start-0 border-end-0" placeholder="{{ __('Cari nama bahan, kategori...') }}" value="{{ request('search') }}">
+                            <input type="text" name="search" id="stockSearch" class="form-control bg-white border-start-0 border-end-0" placeholder="{{ __('Cari nama bahan, kategori...') }}" value="{{ request('search') }}">
                             @if(request('search'))
-                                <a href="{{ route('wash.stock.index', array_merge(request()->except(['search', 'page']))) }}" class="btn btn-light border-top border-bottom border-0 text-muted" title="{{ __('Hapus Pencarian') }}">
+                                <a href="{{ route('wash.stock.index', array_merge(request()->except(['search', 'page']))) }}" class="btn btn-outline-secondary border-start-0 border-end-0 text-muted px-2" title="{{ __('Hapus Pencarian') }}">
                                     <i class="fa-solid fa-xmark"></i>
                                 </a>
                             @endif
+                            <button type="submit" class="btn btn-primary px-3" title="{{ __('Cari') }}">
+                                <span class="fw-semibold">{{ __('Cari') }}</span>
+                            </button>
                         </div>
                     </div>
 
                     {{-- Kategori --}}
                     <div class="col-6 col-md-3 col-lg-2">
-                        <div class="input-group">
-                            <span class="input-group-text bg-light text-muted small"><i class="fa-solid fa-layer-group"></i></span>
-                            <select name="category" class="form-select bg-light" onchange="this.form.submit()">
-                                <option value="">{{ __('Semua Kategori') }}</option>
-                                @foreach($categories as $opt)
-                                    <option value="{{ $opt }}" {{ request('category') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                        <select name="category" class="form-select bg-white" onchange="this.form.submit()">
+                            <option value="">{{ __('Semua Kategori') }}</option>
+                            @foreach($categories as $opt)
+                                <option value="{{ $opt }}" {{ request('category') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                            @endforeach
+                        </select>
                     </div>
 
                     {{-- Status Stok --}}
                     <div class="col-6 col-md-3 col-lg-2">
-                        <div class="input-group">
-                            <span class="input-group-text bg-light text-muted small"><i class="fa-solid fa-boxes-stacked"></i></span>
-                            <select name="stock_status" class="form-select bg-light" onchange="this.form.submit()">
-                                <option value="">{{ __('Semua Status Stok') }}</option>
-                                <option value="in" {{ request('stock_status') === 'in' ? 'selected' : '' }}>{{ __('Stok Aman (> Min)') }}</option>
-                                <option value="low" {{ request('stock_status') === 'low' ? 'selected' : '' }}>{{ __('Stok Menipis (<= Min)') }}</option>
-                                <option value="out" {{ request('stock_status') === 'out' ? 'selected' : '' }}>{{ __('Stok Habis (0)') }}</option>
-                            </select>
-                        </div>
+                        <select name="stock_status" class="form-select bg-white" onchange="this.form.submit()">
+                            <option value="">{{ __('Semua Status Stok') }}</option>
+                            <option value="in" {{ request('stock_status') === 'in' ? 'selected' : '' }}>{{ __('Stok Aman (> Min)') }}</option>
+                            <option value="low" {{ request('stock_status') === 'low' ? 'selected' : '' }}>{{ __('Stok Menipis (<= Min)') }}</option>
+                            <option value="out" {{ request('stock_status') === 'out' ? 'selected' : '' }}>{{ __('Stok Habis (0)') }}</option>
+                        </select>
                     </div>
 
                     {{-- Status Aktif / Nonaktif --}}
                     <div class="col-6 col-md-2 col-lg-2">
-                        <div class="input-group">
-                            <span class="input-group-text bg-light text-muted small"><i class="fa-solid fa-toggle-on"></i></span>
-                            <select name="status" class="form-select bg-light" onchange="this.form.submit()">
-                                <option value="">{{ __('Semua Status') }}</option>
-                                <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>{{ __('Aktif') }}</option>
-                                <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>{{ __('Nonaktif') }}</option>
-                            </select>
-                        </div>
+                        <select name="status" class="form-select bg-white" onchange="this.form.submit()">
+                            <option value="">{{ __('Semua Status') }}</option>
+                            <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>{{ __('Aktif') }}</option>
+                            <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>{{ __('Nonaktif') }}</option>
+                        </select>
                     </div>
 
                     {{-- Urutkan / Sort --}}
                     <div class="col-6 col-md-2 col-lg-1">
-                        <select name="sort" class="form-select bg-light" onchange="this.form.submit()" title="{{ __('Urutkan data') }}">
+                        <select name="sort" class="form-select bg-white" onchange="this.form.submit()" title="{{ __('Urutkan data') }}">
                             <option value="latest" {{ request('sort', 'latest') === 'latest' ? 'selected' : '' }}>{{ __('Terbaru') }}</option>
                             <option value="name_asc" {{ request('sort') === 'name_asc' ? 'selected' : '' }}>{{ __('Nama A-Z') }}</option>
                             <option value="name_desc" {{ request('sort') === 'name_desc' ? 'selected' : '' }}>{{ __('Nama Z-A') }}</option>
@@ -208,7 +202,7 @@
 
                     {{-- Per Page & Action --}}
                     <div class="col-12 col-md-4 col-lg-2 d-flex gap-2 justify-content-md-end">
-                        <select name="per_page" id="per_page" class="form-select bg-light" onchange="this.form.submit()" title="{{ __('Jumlah per halaman') }}" style="max-width: 90px;">
+                        <select name="per_page" id="per_page" class="form-select bg-white" onchange="this.form.submit()" title="{{ __('Jumlah per halaman') }}" style="max-width: 90px;">
                             @php $pp = request('per_page', '10'); @endphp
                             <option value="10" {{ $pp == '10' ? 'selected' : '' }}>10 / hal</option>
                             <option value="25" {{ $pp == '25' ? 'selected' : '' }}>25 / hal</option>

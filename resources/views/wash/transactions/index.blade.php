@@ -37,26 +37,31 @@
             <form action="{{ route('wash.transactions.index') }}" method="GET" class="row g-2 align-items-center wash-filter-form">
                 <div class="col-12 col-md-3">
                     <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-light text-muted border-end-0">
+                        <span class="input-group-text bg-white text-muted border-end-0">
                             <i class="fa-solid fa-magnifying-glass"></i>
                         </span>
-                        <input type="text" id="search" name="search" class="form-control form-control-sm bg-light border-start-0" placeholder="Cari transaksi / no plat..." value="{{ request('search') }}">
+                        <input type="text" id="search" name="search" class="form-control form-control-sm bg-white border-start-0 border-end-0" placeholder="Cari transaksi / no plat..." value="{{ request('search') }}">
+                        @if(request('search'))
+                            <a href="{{ route('wash.transactions.index', array_merge(request()->except(['search', 'page']))) }}" class="btn btn-outline-secondary border-start-0 text-muted px-2" title="{{ __('Hapus Pencarian') }}">
+                                <i class="fa-solid fa-xmark"></i>
+                            </a>
+                        @endif
                     </div>
                 </div>
                 <div class="col-6 col-md-2">
                     <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-light text-muted small">{{ __('Dari') }}</span>
-                        <input type="date" id="start_date" name="start_date" class="form-control form-control-sm bg-light" value="{{ request('start_date') }}">
+                        <span class="input-group-text bg-white text-muted small border-end-0">{{ __('Dari') }}</span>
+                        <input type="date" id="start_date" name="start_date" class="form-control form-control-sm bg-white" value="{{ request('start_date') }}">
                     </div>
                 </div>
                 <div class="col-6 col-md-2">
                     <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-light text-muted small">{{ __('Sampai') }}</span>
-                        <input type="date" id="end_date" name="end_date" class="form-control form-control-sm bg-light" value="{{ request('end_date') }}">
+                        <span class="input-group-text bg-white text-muted small border-end-0">{{ __('Sampai') }}</span>
+                        <input type="date" id="end_date" name="end_date" class="form-control form-control-sm bg-white" value="{{ request('end_date') }}">
                     </div>
                 </div>
                 <div class="col-6 col-md-2">
-                    <select id="vehicle_plate" name="vehicle_plate" class="form-select form-select-sm bg-light">
+                    <select id="vehicle_plate" name="vehicle_plate" class="form-select form-select-sm bg-white">
                         <option value="">Semua Plat Nomor</option>
                         @foreach(($knownVehiclePlates ?? []) as $plateOption)
                             <option value="{{ $plateOption['plate'] }}" {{ request('vehicle_plate') === $plateOption['plate'] ? 'selected' : '' }}>
@@ -67,7 +72,7 @@
                     </select>
                 </div>
                 <div class="col-6 col-md-1">
-                    <select id="per_page" name="per_page" class="form-select form-select-sm bg-light">
+                    <select id="per_page" name="per_page" class="form-select form-select-sm bg-white">
                         <option value="10" {{ request('per_page', '10') === '10' ? 'selected' : '' }}>10</option>
                         <option value="20" {{ request('per_page') === '20' ? 'selected' : '' }}>20</option>
                         <option value="all" {{ request('per_page') === 'all' ? 'selected' : '' }}>Semua</option>
@@ -77,9 +82,11 @@
                     <button type="submit" class="btn btn-sm btn-primary" title="{{ __('Filter') }}">
                         <i class="fa-solid fa-filter me-1"></i>{{ __('Filter') }}
                     </button>
-                    <a href="{{ route('wash.transactions.index') }}" class="btn btn-sm btn-outline-secondary" title="{{ __('Reset') }}">
-                        <i class="fa-solid fa-rotate-left me-1"></i>{{ __('Reset') }}
-                    </a>
+                    @if(request('search') || request('start_date') || request('end_date') || request('vehicle_plate') || (request('per_page') && request('per_page') != '10'))
+                        <a href="{{ route('wash.transactions.index') }}" class="btn btn-sm btn-outline-secondary" title="{{ __('Reset') }}">
+                            <i class="fa-solid fa-rotate-left me-1"></i>{{ __('Reset') }}
+                        </a>
+                    @endif
                 </div>
             </form>
         </div>

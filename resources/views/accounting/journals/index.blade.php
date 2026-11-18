@@ -39,8 +39,8 @@
                 <div class="col-12 col-md-4">
                     <label class="form-label small fw-semibold text-body-secondary mb-1">Cari No Jurnal / Deskripsi</label>
                     <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-body-tertiary"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
-                        <input type="text" name="search" value="{{ $search }}" class="form-control" placeholder="Contoh: JU-2026 atau Gaji">
+                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <input type="text" name="search" value="{{ $search }}" class="form-control bg-white border-start-0" placeholder="Contoh: JU-2026 atau Gaji">
                     </div>
                 </div>
                 <div class="col-12 col-md-auto">

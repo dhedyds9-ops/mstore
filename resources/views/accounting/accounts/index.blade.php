@@ -31,8 +31,8 @@
                 <div class="col-12 col-md-4">
                     <label class="form-label small fw-semibold text-body-secondary mb-1">Cari Kode atau Nama</label>
                     <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-body-tertiary"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
-                        <input type="text" name="search" value="{{ $search }}" class="form-control" placeholder="Contoh: 1-1000 atau Kas">
+                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <input type="text" name="search" value="{{ $search }}" class="form-control bg-white border-start-0" placeholder="Contoh: 1-1000 atau Kas">
                     </div>
                 </div>
                 <div class="col-12 col-md-3">

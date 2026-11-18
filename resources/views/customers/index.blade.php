@@ -49,17 +49,23 @@
         <div class="card shadow-sm border-0">
             <div class="card-body">
                 <!-- Pencarian dan filter -->
-                <form method="GET" action="{{ route('customers.index') }}" class="row g-2 g-md-3 mb-4">
+                <form method="GET" action="{{ route('customers.index') }}" class="row g-2 g-md-3 mb-4 align-items-center">
                     <div class="col-12 col-md-4 col-lg-3">
                         <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-search text-muted"></i></span>
-                            <input type="text" name="search" value="{{ request('search') }}" class="form-control border-start-0 ps-0" placeholder="{{ __('Cari nama, MAC, SN...') }}">
+                            <span class="input-group-text bg-white border-end-0 text-muted ps-3"><i class="fa-solid fa-magnifying-glass"></i></span>
+                            <input type="text" name="search" value="{{ request('search') }}" class="form-control bg-white border-start-0 border-end-0" placeholder="{{ __('Cari nama, MAC, SN...') }}">
+                            @if(request('search'))
+                                <a href="{{ route('customers.index', array_merge(request()->except(['search', 'page']))) }}" class="btn btn-outline-secondary border-start-0 border-end-0 text-muted px-2" title="{{ __('Hapus Pencarian') }}">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </a>
+                            @endif
+                            <button type="submit" class="btn btn-primary px-3" title="{{ __('Cari') }}"><span class="fw-semibold">{{ __('Cari') }}</span></button>
                         </div>
                     </div>
                     
                     <div class="col-6 col-md-3 col-lg-2">
                         <select name="status" class="form-select" onchange="this.form.submit()">
-                            <option value="">{{ __('Status') }}</option>
+                            <option value="">{{ __('Semua Status') }}</option>
                             <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>{{ __('Aktif') }}</option>
                             <option value="suspend" {{ request('status') == 'suspend' ? 'selected' : '' }}>{{ __('Suspend') }}</option>
                             <option value="terminated" {{ request('status') == 'terminated' ? 'selected' : '' }}>{{ __('Berhenti') }}</option>
@@ -68,7 +74,7 @@
                     
                     <div class="col-6 col-md-3 col-lg-2">
                         <select name="linked" class="form-select" onchange="this.form.submit()">
-                            <option value="">{{ __('Tautan User') }}</option>
+                            <option value="">{{ __('Semua Tautan User') }}</option>
                             <option value="yes" {{ request('linked') === 'yes' ? 'selected' : '' }}>{{ __('Tertaut') }}</option>
                             <option value="no" {{ request('linked') === 'no' ? 'selected' : '' }}>{{ __('Belum Tertaut') }}</option>
                         </select>
@@ -76,26 +82,31 @@
                     
                     <div class="col-6 col-md-3 col-lg-2">
                         <select name="htb_id" class="form-select" onchange="this.form.submit()">
-                            <option value="">{{ __('HTB') }}</option>
+                            <option value="">{{ __('Semua HTB') }}</option>
                             @foreach($htbs as $htb)
                                 <option value="{{ $htb->id }}" {{ request('htb_id') == $htb->id ? 'selected' : '' }}>{{ $htb->name }}</option>
                             @endforeach
                         </select>
                     </div>
                     
-                    <div class="col-6 col-md-2 col-lg-2">
+                    <div class="col-6 col-md-2 col-lg-1">
                         <select name="per_page" class="form-select" onchange="this.form.submit()">
-                            <option value="10" {{ request('per_page') == '10' ? 'selected' : '' }}>10</option>
-                            <option value="50" {{ request('per_page') == '50' ? 'selected' : '' }}>50</option>
-                            <option value="100" {{ request('per_page') == '100' ? 'selected' : '' }}>100</option>
-                            <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>{{ __('Semua') }}</option>
+                            <option value="10" {{ request('per_page') == '10' ? 'selected' : '' }}>10 / hal</option>
+                            <option value="50" {{ request('per_page') == '50' ? 'selected' : '' }}>50 / hal</option>
+                            <option value="100" {{ request('per_page') == '100' ? 'selected' : '' }}>100 / hal</option>
+                            <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>Semua</option>
                         </select>
                     </div>
                     
-                    <div class="col-6 col-md-2 col-lg-3">
-                        <button type="submit" class="btn btn-dark w-100">
-                            <i class="fa-solid fa-filter me-1 d-md-none"></i> {{ __('Terapkan') }}
+                    <div class="col-12 col-md-auto ms-auto d-flex gap-2 justify-content-end">
+                        <button type="submit" class="btn btn-primary px-3">
+                            <i class="fa-solid fa-filter me-1"></i> {{ __('Filter') }}
                         </button>
+                        @if(request('search') || request('status') || request('linked') || request('htb_id') || (request('per_page') && request('per_page') != '10'))
+                            <a href="{{ route('customers.index') }}" class="btn btn-outline-secondary px-2" title="{{ __('Reset Filter') }}">
+                                <i class="fa-solid fa-rotate-left"></i>
+                            </a>
+                        @endif
                     </div>
                 </form>
 

@@ -17,15 +17,20 @@
 
             <div class="card-body">
                 <!-- Pencarian dan Filter -->
-                <form method="GET" action="{{ route('tickets.index') }}" class="row g-3 mb-4">
-                    <div class="col-md-4">
-                        <div class="input-group">
-                            <span class="input-group-text  border-end-0"><i class="fa-solid fa-search text-body-secondary"></i></span>
-                            <input type="text" name="search" value="{{ request('search') }}" class="form-control border-start-0 ps-0" placeholder="{{ __('Cari ID atau subjek...') }}">
+                <form method="GET" action="{{ route('tickets.index') }}" class="row g-2 align-items-center mb-4">
+                    <div class="col-12 col-md-3">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white border-end-0 text-muted ps-3"><i class="fa-solid fa-magnifying-glass"></i></span>
+                            <input type="text" name="search" value="{{ request('search') }}" class="form-control bg-white border-start-0 border-end-0" placeholder="{{ __('Cari ID atau subjek...') }}">
+                            @if(request('search'))
+                                <a href="{{ route('tickets.index', array_merge(request()->except(['search', 'page']))) }}" class="btn btn-outline-secondary border-start-0 border-end-0 text-muted px-2" title="{{ __('Hapus Pencarian') }}">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </a>
+                            @endif
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <select name="status" class="form-select">
+                    <div class="col-6 col-md-2">
+                        <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
                             <option value="">{{ __('Semua Status') }}</option>
                             <option value="open" {{ request('status') == 'open' ? 'selected' : '' }}>{{ __('Buka') }}</option>
                             <option value="assigned" {{ request('status') == 'assigned' ? 'selected' : '' }}>{{ __('Ditugaskan') }}</option>
@@ -35,28 +40,35 @@
                             <option value="closed" {{ request('status') == 'closed' ? 'selected' : '' }}>{{ __('Tutup') }}</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <select name="priority" class="form-select">
+                    <div class="col-6 col-md-2">
+                        <select name="priority" class="form-select form-select-sm" onchange="this.form.submit()">
                             <option value="">{{ __('Semua Prioritas') }}</option>
                             <option value="high" {{ request('priority') == 'high' ? 'selected' : '' }}>{{ __('Tinggi') }}</option>
                             <option value="medium" {{ request('priority') == 'medium' ? 'selected' : '' }}>{{ __('Sedang') }}</option>
                             <option value="low" {{ request('priority') == 'low' ? 'selected' : '' }}>{{ __('Rendah') }}</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-dark w-100">{{ __('Terapkan') }}</button>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="input-group">
-                            <span class="input-group-text border-end-0"><i class="fa-regular fa-calendar text-body-secondary"></i></span>
-                            <input type="date" name="date_from" value="{{ request('date_from') }}" class="form-control border-start-0 ps-0" placeholder="{{ __('Dari Tanggal') }}">
+                    <div class="col-6 col-md-2">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white text-muted small border-end-0">{{ __('Dari') }}</span>
+                            <input type="date" name="date_from" value="{{ request('date_from') }}" class="form-control bg-white" title="{{ __('Dari Tanggal') }}">
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="input-group">
-                            <span class="input-group-text border-end-0"><i class="fa-regular fa-calendar text-body-secondary"></i></span>
-                            <input type="date" name="date_to" value="{{ request('date_to') }}" class="form-control border-start-0 ps-0" placeholder="{{ __('Sampai Tanggal') }}">
+                    <div class="col-6 col-md-2">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white text-muted small border-end-0">{{ __('Sampai') }}</span>
+                            <input type="date" name="date_to" value="{{ request('date_to') }}" class="form-control bg-white" title="{{ __('Sampai Tanggal') }}">
                         </div>
+                    </div>
+                    <div class="col-12 col-md-auto ms-auto d-flex gap-2 justify-content-end">
+                        <button type="submit" class="btn btn-sm btn-primary px-3">
+                            <i class="fa-solid fa-filter me-1"></i> {{ __('Filter') }}
+                        </button>
+                        @if(request('search') || request('status') || request('priority') || request('date_from') || request('date_to'))
+                            <a href="{{ route('tickets.index') }}" class="btn btn-sm btn-outline-secondary px-2" title="{{ __('Reset Filter') }}">
+                                <i class="fa-solid fa-rotate-left"></i>
+                            </a>
+                        @endif
                     </div>
                 </form>
 
