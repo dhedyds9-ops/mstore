@@ -211,57 +211,47 @@
                                 <i class="fa-solid fa-barcode"></i>
                             </button>
                             <button type="submit" class="btn btn-primary btn-search" title="{{ __('Cari Produk') }}">
-                                <i class="fa-solid fa-magnifying-glass me-1"></i><span class="d-none d-sm-inline">{{ __('Cari') }}</span>
+                                <span class="fw-semibold">{{ __('Cari') }}</span>
                             </button>
                         </div>
                     </div>
 
                     {{-- 2. Kategori --}}
                     <div class="col-6 col-sm-4 col-md-2 col-lg-2">
-                        <div class="atk-select-wrap">
-                            <i class="fa-solid fa-layer-group select-icon"></i>
-                            <select name="category" class="form-select" onchange="this.form.submit()">
-                                <option value="">{{ __('Semua Kategori') }}</option>
-                                @foreach($categories as $opt)
-                                    <option value="{{ $opt }}" {{ request('category') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                        <select name="category" class="form-select" onchange="this.form.submit()">
+                            <option value="">{{ __('Semua Kategori') }}</option>
+                            @foreach($categories as $opt)
+                                <option value="{{ $opt }}" {{ request('category') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                            @endforeach
+                        </select>
                     </div>
 
                     {{-- 3. Status Stok --}}
                     <div class="col-6 col-sm-4 col-md-2 col-lg-2">
-                        <div class="atk-select-wrap">
-                            <i class="fa-solid fa-boxes-stacked select-icon"></i>
-                            <select name="stock_status" class="form-select" onchange="this.form.submit()">
-                                <option value="">{{ __('Semua Status Stok') }}</option>
-                                <option value="in" {{ request('stock_status') === 'in' ? 'selected' : '' }}>{{ __('Stok Aman (> Min)') }}</option>
-                                <option value="low" {{ request('stock_status') === 'low' ? 'selected' : '' }}>{{ __('Stok Menipis (<= Min)') }}</option>
-                                <option value="out" {{ request('stock_status') === 'out' ? 'selected' : '' }}>{{ __('Stok Habis (0)') }}</option>
-                            </select>
-                        </div>
+                        <select name="stock_status" class="form-select" onchange="this.form.submit()">
+                            <option value="">{{ __('Semua Status Stok') }}</option>
+                            <option value="in" {{ request('stock_status') === 'in' ? 'selected' : '' }}>{{ __('Stok Aman (> Min)') }}</option>
+                            <option value="low" {{ request('stock_status') === 'low' ? 'selected' : '' }}>{{ __('Stok Menipis (<= Min)') }}</option>
+                            <option value="out" {{ request('stock_status') === 'out' ? 'selected' : '' }}>{{ __('Stok Habis (0)') }}</option>
+                        </select>
                     </div>
 
                     {{-- 4. Urutkan / Sort --}}
                     <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-                        <div class="atk-select-wrap">
-                            <i class="fa-solid fa-arrow-down-short-wide select-icon"></i>
-                            <select name="sort" class="form-select" onchange="this.form.submit()">
-                                <option value="latest" {{ request('sort', 'latest') === 'latest' ? 'selected' : '' }}>{{ __('Urutan: Terbaru') }}</option>
-                                <option value="name_asc" {{ request('sort') === 'name_asc' ? 'selected' : '' }}>{{ __('Nama (A - Z)') }}</option>
-                                <option value="name_desc" {{ request('sort') === 'name_desc' ? 'selected' : '' }}>{{ __('Nama (Z - A)') }}</option>
-                                <option value="price_asc" {{ request('sort') === 'price_asc' ? 'selected' : '' }}>{{ __('Harga Terendah') }}</option>
-                                <option value="price_desc" {{ request('sort') === 'price_desc' ? 'selected' : '' }}>{{ __('Harga Tertinggi') }}</option>
-                                <option value="stock_asc" {{ request('sort') === 'stock_asc' ? 'selected' : '' }}>{{ __('Stok Tersedikit') }}</option>
-                                <option value="stock_desc" {{ request('sort') === 'stock_desc' ? 'selected' : '' }}>{{ __('Stok Terbanyak') }}</option>
-                            </select>
-                        </div>
+                        <select name="sort" class="form-select" onchange="this.form.submit()">
+                            <option value="latest" {{ request('sort', 'latest') === 'latest' ? 'selected' : '' }}>{{ __('Urutan: Terbaru') }}</option>
+                            <option value="name_asc" {{ request('sort') === 'name_asc' ? 'selected' : '' }}>{{ __('Nama (A - Z)') }}</option>
+                            <option value="name_desc" {{ request('sort') === 'name_desc' ? 'selected' : '' }}>{{ __('Nama (Z - A)') }}</option>
+                            <option value="price_asc" {{ request('sort') === 'price_asc' ? 'selected' : '' }}>{{ __('Harga Terendah') }}</option>
+                            <option value="price_desc" {{ request('sort') === 'price_desc' ? 'selected' : '' }}>{{ __('Harga Tertinggi') }}</option>
+                            <option value="stock_asc" {{ request('sort') === 'stock_asc' ? 'selected' : '' }}>{{ __('Stok Tersedikit') }}</option>
+                            <option value="stock_desc" {{ request('sort') === 'stock_desc' ? 'selected' : '' }}>{{ __('Stok Terbanyak') }}</option>
+                        </select>
                     </div>
 
                     {{-- 5. Per Page & Reset Filter --}}
                     <div class="col-6 col-sm-12 col-md-auto col-lg-2 ms-lg-auto d-flex align-items-center gap-2 justify-content-end">
-                        <div class="atk-select-wrap flex-grow-1">
-                            <i class="fa-solid fa-list-ol select-icon"></i>
+                        <div class="flex-grow-1">
                             <select name="per_page" id="per_page" class="form-select" onchange="this.form.submit()" title="{{ __('Jumlah per halaman') }}">
                                 @php $pp = request('per_page', '10'); @endphp
                                 <option value="10" {{ $pp == '10' ? 'selected' : '' }}>10 / hal</option>

@@ -420,6 +420,13 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 8px !important;
 }
 
+.form-select-sm,
+.card-header form .form-select,
+.wash-filter-form .form-select,
+.filter-form .form-select {
+  padding-right: 2rem !important;
+}
+
 .card-header form .input-group-text,
 .wash-filter-form .input-group-text,
 .filter-form .input-group-text {
@@ -427,6 +434,34 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 0.82rem !important;
   padding: 0.35rem 0.65rem !important;
   border-radius: 8px;
+}
+
+/* Ensure seamless connection for input groups inside forms */
+.input-group > .form-control,
+.input-group > .form-select,
+.input-group > .input-group-text,
+.input-group > .btn {
+  border-radius: 0 !important;
+}
+
+.input-group > :first-child,
+.input-group > :first-child.form-control,
+.input-group > :first-child.input-group-text,
+.input-group > :first-child.btn {
+  border-top-left-radius: 8px !important;
+  border-bottom-left-radius: 8px !important;
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
+.input-group > :last-child,
+.input-group > :last-child.form-control,
+.input-group > :last-child.input-group-text,
+.input-group > :last-child.btn {
+  border-top-right-radius: 8px !important;
+  border-bottom-right-radius: 8px !important;
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
 }
 
 .form-control:focus,

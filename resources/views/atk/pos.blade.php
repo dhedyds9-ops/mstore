@@ -90,12 +90,14 @@
                                 <button class="filter-btn rounded-pill px-3 py-1 small fw-semibold" data-tab="customer-payments" type="button">Pembayaran</button>
                             </div>
                         </div>
-                        <div class="mt-2">
-                            <div class="input-group input-group-sm">
-                                <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-body-secondary"></i></span>
-                                <input type="text" id="productSearch" class="form-control form-control-sm border-start-0 border-end-0 ps-0" placeholder="Ketik nama atau scan barcode produk...">
-                                <button type="button" class="btn btn-outline-secondary border-start-0 px-3" id="openAtkBarcodeScan" title="Scan barcode via kamera">
-                                    <i class="fa-solid fa-barcode me-1"></i> Scan
+                        <div class="mt-2.5">
+                            <div class="atk-pos-search-wrap position-relative">
+                                <span class="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" style="pointer-events: none; z-index: 5;">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                </span>
+                                <input type="text" id="productSearch" class="form-control bg-light border ps-5 pe-5 py-2 rounded-3" placeholder="Ketik nama atau scan barcode produk...">
+                                <button type="button" class="btn btn-sm btn-white border bg-white position-absolute top-50 end-0 translate-middle-y me-2 rounded-2 px-2.5 py-1 text-secondary d-inline-flex align-items-center gap-1.5 shadow-sm" id="openAtkBarcodeScan" title="Scan barcode via kamera" style="z-index: 5;">
+                                    <i class="fa-solid fa-barcode text-primary"></i> <span class="small fw-semibold">Scan</span>
                                 </button>
                             </div>
                         </div>
@@ -1964,6 +1966,20 @@ function processTransaction() {
 
 .atk-card-title i {
     color: #3b82f6;
+}
+
+.atk-pos-search-wrap #productSearch {
+    height: 42px !important;
+    font-size: 0.88rem !important;
+    border-color: #e2e8f0 !important;
+    padding-left: 2.75rem !important;
+    padding-right: 5.5rem !important;
+}
+
+.atk-pos-search-wrap #productSearch:focus {
+    background-color: #fff !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.15) !important;
 }
 
 .atk-card-body {

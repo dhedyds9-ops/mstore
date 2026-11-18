@@ -130,24 +130,24 @@
             <form action="{{ route('atk.transactions.index') }}" method="GET" class="row g-2 align-items-center">
                 <div class="col-12 col-md-3">
                     <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-light text-muted border-end-0">
+                        <span class="input-group-text bg-white text-muted border-end-0">
                             <i class="fa-solid fa-magnifying-glass"></i>
                         </span>
-                        <input type="text" name="search" class="form-control bg-light border-start-0" placeholder="{{ __('No. Struk, Produk, Kasir...') }}" value="{{ request('search') }}">
+                        <input type="text" name="search" class="form-control bg-white border-start-0" placeholder="{{ __('No. Struk, Produk, Kasir...') }}" value="{{ request('search') }}">
                     </div>
                 </div>
 
                 <div class="col-6 col-md-2">
                     <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-light text-muted small">{{ __('Dari') }}</span>
-                        <input type="date" name="start_date" class="form-control bg-light" value="{{ request('start_date') }}">
+                        <span class="input-group-text bg-white text-muted small border-end-0">{{ __('Dari') }}</span>
+                        <input type="date" name="start_date" class="form-control bg-white" value="{{ request('start_date') }}">
                     </div>
                 </div>
 
                 <div class="col-6 col-md-2">
                     <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-light text-muted small">{{ __('Sampai') }}</span>
-                        <input type="date" name="end_date" class="form-control bg-light" value="{{ request('end_date') }}">
+                        <span class="input-group-text bg-white text-muted small border-end-0">{{ __('Sampai') }}</span>
+                        <input type="date" name="end_date" class="form-control bg-white" value="{{ request('end_date') }}">
                     </div>
                 </div>
 
@@ -155,7 +155,7 @@
                     @php
                         $opts = isset($categories) ? $categories : ['ATK','JASA POTOCOPY','JASA TRANSFER BANK'];
                     @endphp
-                    <select name="category" class="form-select form-select-sm bg-light">
+                    <select name="category" class="form-select form-select-sm bg-white">
                         <option value="">{{ __('Semua Kategori') }}</option>
                         @foreach($opts as $opt)
                             <option value="{{ $opt }}" {{ request('category')===$opt ? 'selected' : '' }}>{{ $opt }}</option>
@@ -164,7 +164,7 @@
                 </div>
 
                 <div class="col-6 col-md-3 d-flex gap-2 justify-content-end">
-                    <button type="submit" class="btn btn-sm btn-dark px-3 flex-fill flex-md-grow-0" title="{{ __('Terapkan Filter') }}">
+                    <button type="submit" class="btn btn-sm btn-primary px-3 flex-fill flex-md-grow-0" title="{{ __('Terapkan Filter') }}">
                         <i class="fa-solid fa-filter me-1"></i>{{ __('Filter') }}
                     </button>
                     @if(request('search') || request('start_date') || request('end_date') || request('category'))

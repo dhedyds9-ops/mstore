@@ -120,7 +120,7 @@
                                 </a>
                             @endif
                             <button type="submit" class="btn btn-primary px-3" title="{{ __('Cari') }}">
-                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <span class="fw-semibold">{{ __('Cari') }}</span>
                             </button>
                         </div>
                     </div>
