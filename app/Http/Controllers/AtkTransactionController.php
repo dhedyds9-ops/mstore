@@ -726,7 +726,6 @@ class AtkTransactionController extends Controller implements HasMiddleware
 
             $payload = [
                 'user_id' => Auth::id(),
-                'atk_cash_register_id' => $activeRegister?->id,
                 'queue_number' => $queueNumber,
                 'transaction_number' => 'TRX-'.time(),
                 'invoice_number' => 'INV-'.time(), // Added to satisfy legacy constraint
@@ -743,6 +742,9 @@ class AtkTransactionController extends Controller implements HasMiddleware
                 'status' => 'posted', // Set to posted immediately for POS
                 'posted_at' => now(),
             ];
+            if (Schema::hasColumn('atk_transactions', 'atk_cash_register_id')) {
+                $payload['atk_cash_register_id'] = $activeRegister?->id;
+            }
             if (Schema::hasColumn('atk_transactions', 'transaction_category')) {
                 $payload['transaction_category'] = $transactionCategory;
             }

@@ -180,11 +180,21 @@ class AtkCashRegisterController extends Controller
             $q->latest();
         }, 'user']);
 
-        $shiftTransactions = \App\Models\AtkTransaction::where('atk_cash_register_id', $register->id)
-            ->whereNull('reversed_at')
+        $shiftTransactionsQuery = \App\Models\AtkTransaction::whereNull('reversed_at')
             ->where('status', '!=', 'reversed')
-            ->latest()
-            ->get();
+            ->latest();
+
+        if (\Illuminate\Support\Facades\Schema::hasColumn('atk_transactions', 'atk_cash_register_id')) {
+            $shiftTransactionsQuery->where('atk_cash_register_id', $register->id);
+        } else {
+            $shiftTransactionsQuery->where('user_id', $register->user_id)
+                ->where('created_at', '>=', $register->opened_at);
+            if ($register->closed_at) {
+                $shiftTransactionsQuery->where('created_at', '<=', $register->closed_at);
+            }
+        }
+
+        $shiftTransactions = $shiftTransactionsQuery->get();
 
         $totalCashSales = $shiftTransactions->where('payment_method', 'cash')->sum('total_amount');
         $totalNonCashSales = $shiftTransactions->where('payment_method', '!=', 'cash')->sum('total_amount');
