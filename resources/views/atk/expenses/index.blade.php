@@ -95,15 +95,15 @@
                 </span>
             </div>
 
-            <form action="{{ route('atk.expenses.index') }}" method="GET" class="row g-2 align-items-center">
+            <form action="{{ route('atk.expenses.index') }}" method="GET" class="row g-2 align-items-center atk-filter-bar">
                 <div class="col-12 col-md-4">
-                    <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-white text-muted border-end-0">
+                    <div class="atk-search-box">
+                        <span class="search-icon">
                             <i class="fa-solid fa-magnifying-glass"></i>
                         </span>
-                        <input type="text" name="search" class="form-control bg-white border-start-0 border-end-0" placeholder="{{ __('Cari keperluan / no referensi...') }}" value="{{ request('search') }}">
+                        <input type="text" name="search" class="form-control" placeholder="{{ __('Cari keperluan / no referensi...') }}" value="{{ request('search') }}">
                         @if(request('search'))
-                            <a href="{{ route('atk.expenses.index', array_merge(request()->except(['search', 'page']))) }}" class="btn btn-outline-secondary border-start-0 text-muted px-2" title="{{ __('Hapus Pencarian') }}">
+                            <a href="{{ route('atk.expenses.index', array_merge(request()->except(['search', 'page']))) }}" class="btn-clear" title="{{ __('Hapus Pencarian') }}">
                                 <i class="fa-solid fa-xmark"></i>
                             </a>
                         @endif
@@ -111,25 +111,25 @@
                 </div>
 
                 <div class="col-6 col-md-3 col-lg-2">
-                    <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-white text-muted small border-end-0">{{ __('Dari') }}</span>
-                        <input type="date" name="start_date" class="form-control bg-white" value="{{ request('start_date') }}">
+                    <div class="input-group">
+                        <span class="input-group-text text-muted small py-1">{{ __('Dari') }}</span>
+                        <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}">
                     </div>
                 </div>
 
                 <div class="col-6 col-md-3 col-lg-2">
-                    <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-white text-muted small border-end-0">{{ __('Sampai') }}</span>
-                        <input type="date" name="end_date" class="form-control bg-white" value="{{ request('end_date') }}">
+                    <div class="input-group">
+                        <span class="input-group-text text-muted small py-1">{{ __('Sampai') }}</span>
+                        <input type="date" name="end_date" class="form-control" value="{{ request('end_date') }}">
                     </div>
                 </div>
 
                 <div class="col-12 col-md-auto ms-auto d-flex gap-2 justify-content-end">
-                    <button type="submit" class="btn btn-sm btn-primary px-3" title="{{ __('Terapkan Filter') }}">
+                    <button type="submit" class="btn btn-primary px-3" title="{{ __('Terapkan Filter') }}">
                         <i class="fa-solid fa-filter me-1"></i>{{ __('Filter') }}
                     </button>
                     @if(request('search') || request('start_date') || request('end_date'))
-                        <a href="{{ route('atk.expenses.index') }}" class="btn btn-sm btn-outline-secondary px-2" title="{{ __('Reset Filter') }}">
+                        <a href="{{ route('atk.expenses.index') }}" class="btn btn-outline-secondary px-2" title="{{ __('Reset Filter') }}">
                             <i class="fa-solid fa-rotate-left"></i>
                         </a>
                     @endif

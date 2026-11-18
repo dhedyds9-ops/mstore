@@ -47,11 +47,11 @@
     {{-- Filter Card --}}
     <div class="card border-0 shadow-sm rounded-4 mb-4">
         <div class="card-body p-3">
-            <form action="{{ route('atk.reports.cash') }}" method="GET" class="row g-2 align-items-center">
+            <form action="{{ route('atk.reports.cash') }}" method="GET" class="row g-2 align-items-center atk-filter-bar">
                 <div class="col-12 col-md-3">
-                    <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-white text-muted small border-end-0">{{ __('Periode') }}</span>
-                        <select name="period" class="form-select bg-white">
+                    <div class="input-group">
+                        <span class="input-group-text text-muted small py-1">{{ __('Periode') }}</span>
+                        <select name="period" class="form-select">
                             <option value="custom" {{ $period === 'custom' ? 'selected' : '' }}>Custom Range</option>
                             <option value="daily" {{ $period === 'daily' ? 'selected' : '' }}>Harian</option>
                             <option value="weekly" {{ $period === 'weekly' ? 'selected' : '' }}>Mingguan</option>
@@ -61,25 +61,25 @@
                 </div>
 
                 <div class="col-6 col-md-3">
-                    <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-white text-muted small border-end-0">{{ __('Dari') }}</span>
-                        <input type="date" name="start_date" class="form-control bg-white" value="{{ is_object($start) ? $start->format('Y-m-d') : $start }}">
+                    <div class="input-group">
+                        <span class="input-group-text text-muted small py-1">{{ __('Dari') }}</span>
+                        <input type="date" name="start_date" class="form-control" value="{{ is_object($start) ? $start->format('Y-m-d') : $start }}">
                     </div>
                 </div>
 
                 <div class="col-6 col-md-3">
-                    <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-white text-muted small border-end-0">{{ __('Sampai') }}</span>
-                        <input type="date" name="end_date" class="form-control bg-white" value="{{ is_object($end) ? $end->format('Y-m-d') : $end }}">
+                    <div class="input-group">
+                        <span class="input-group-text text-muted small py-1">{{ __('Sampai') }}</span>
+                        <input type="date" name="end_date" class="form-control" value="{{ is_object($end) ? $end->format('Y-m-d') : $end }}">
                     </div>
                 </div>
 
                 <div class="col-12 col-md-3 d-flex gap-2 justify-content-end">
-                    <button type="submit" class="btn btn-sm btn-primary px-3 flex-fill flex-md-grow-0">
+                    <button type="submit" class="btn btn-primary px-3 flex-fill flex-md-grow-0">
                         <i class="fa-solid fa-filter me-1"></i>{{ __('Filter Data') }}
                     </button>
                     @if(request('start_date') || request('end_date') || (request('period') && request('period') !== 'custom'))
-                        <a href="{{ route('atk.reports.cash') }}" class="btn btn-sm btn-outline-secondary px-2" title="{{ __('Reset Filter') }}">
+                        <a href="{{ route('atk.reports.cash') }}" class="btn btn-outline-secondary px-2" title="{{ __('Reset Filter') }}">
                             <i class="fa-solid fa-rotate-left"></i>
                         </a>
                     @endif

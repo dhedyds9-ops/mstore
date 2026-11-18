@@ -412,56 +412,182 @@ h1, h2, h3, h4, h5, h6 {
 .wash-filter-form .form-control,
 .wash-filter-form .form-select,
 .filter-form .form-control,
-.filter-form .form-select {
-  height: 34px !important;
-  min-height: 34px !important;
+.filter-form .form-select,
+.atk-filter-bar .form-control,
+.atk-filter-bar .form-select {
+  height: 36px !important;
+  min-height: 36px !important;
   font-size: 0.835rem !important;
   padding: 0.35rem 0.65rem !important;
-  border-radius: 8px !important;
+  border-radius: 8px;
 }
 
 .form-select-sm,
 .card-header form .form-select,
 .wash-filter-form .form-select,
-.filter-form .form-select {
+.filter-form .form-select,
+.atk-filter-bar .form-select {
   padding-right: 2rem !important;
 }
 
 .card-header form .input-group-text,
+.card-body form .input-group-text,
 .wash-filter-form .input-group-text,
-.filter-form .input-group-text {
-  height: 34px !important;
+.filter-form .input-group-text,
+.atk-filter-bar .input-group-text,
+.input-group-text {
+  height: 36px !important;
+  min-height: 36px !important;
   font-size: 0.82rem !important;
   padding: 0.35rem 0.65rem !important;
-  border-radius: 8px;
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+  color: #64748b;
+  font-weight: 500;
 }
 
-/* Ensure seamless connection for input groups inside forms */
-.input-group > .form-control,
-.input-group > .form-select,
-.input-group > .input-group-text,
-.input-group > .btn {
+/* Ensure seamless connection for input groups inside cards & forms */
+.card-header form .input-group,
+.card-body form .input-group,
+.wash-filter-form .input-group,
+.filter-form .input-group,
+.atk-filter-bar .input-group,
+.input-group {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: stretch !important;
+}
+
+/* All children inside input-group default to 0 border-radius */
+.card-header form .input-group > *,
+.card-body form .input-group > *,
+.wash-filter-form .input-group > *,
+.filter-form .input-group > *,
+.atk-filter-bar .input-group > *,
+.input-group > * {
   border-radius: 0 !important;
+  height: 36px !important;
+  min-height: 36px !important;
 }
 
-.input-group > :first-child,
-.input-group > :first-child.form-control,
-.input-group > :first-child.input-group-text,
-.input-group > :first-child.btn {
+/* First child of input group */
+.card-header form .input-group > :first-child,
+.card-body form .input-group > :first-child,
+.wash-filter-form .input-group > :first-child,
+.filter-form .input-group > :first-child,
+.atk-filter-bar .input-group > :first-child,
+.input-group > :first-child {
   border-top-left-radius: 8px !important;
   border-bottom-left-radius: 8px !important;
   border-top-right-radius: 0 !important;
   border-bottom-right-radius: 0 !important;
 }
 
-.input-group > :last-child,
-.input-group > :last-child.form-control,
-.input-group > :last-child.input-group-text,
-.input-group > :last-child.btn {
+/* Last child of input group */
+.card-header form .input-group > :last-child,
+.card-body form .input-group > :last-child,
+.wash-filter-form .input-group > :last-child,
+.filter-form .input-group > :last-child,
+.atk-filter-bar .input-group > :last-child,
+.input-group > :last-child {
   border-top-right-radius: 8px !important;
   border-bottom-right-radius: 8px !important;
   border-top-left-radius: 0 !important;
   border-bottom-left-radius: 0 !important;
+}
+
+/* Middle children */
+.card-header form .input-group > :not(:first-child):not(:last-child),
+.card-body form .input-group > :not(:first-child):not(:last-child),
+.wash-filter-form .input-group > :not(:first-child):not(:last-child),
+.filter-form .input-group > :not(:first-child):not(:last-child),
+.atk-filter-bar .input-group > :not(:first-child):not(:last-child),
+.input-group > :not(:first-child):not(:last-child) {
+  border-radius: 0 !important;
+}
+
+/* Single child */
+.card-header form .input-group > :only-child,
+.card-body form .input-group > :only-child,
+.input-group > :only-child {
+  border-radius: 8px !important;
+}
+
+/* ATK Unified Search Box Component */
+.atk-search-box {
+  display: flex !important;
+  align-items: stretch !important;
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.atk-search-box:focus-within {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+}
+
+.card-header form .atk-search-box .form-control,
+.card-body form .atk-search-box .form-control,
+.atk-search-box .form-control {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  padding: 0 0.5rem !important;
+  font-size: 0.835rem !important;
+  color: #1e293b !important;
+}
+
+.atk-search-box .search-icon {
+  display: flex !important;
+  align-items: center !important;
+  padding-left: 0.75rem !important;
+  padding-right: 0.25rem !important;
+  color: #94a3b8 !important;
+  font-size: 0.85rem !important;
+  pointer-events: none !important;
+}
+
+.atk-search-box .btn-scan,
+.atk-search-box .btn-clear {
+  border: none !important;
+  background: transparent !important;
+  color: #94a3b8 !important;
+  padding: 0 0.5rem !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  text-decoration: none !important;
+}
+
+.atk-search-box .btn-scan:hover {
+  color: #3b82f6 !important;
+}
+
+.atk-search-box .btn-clear:hover {
+  color: #ef4444 !important;
+}
+
+.card-header form .atk-search-box .btn-search,
+.card-body form .atk-search-box .btn-search,
+.atk-search-box .btn-search {
+  border-radius: 0 !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  padding: 0 1rem !important;
+  font-size: 0.835rem !important;
+  font-weight: 600 !important;
+  display: flex !important;
+  align-items: center !important;
+  margin: 0 !important;
+  border: none !important;
 }
 
 .form-control:focus,

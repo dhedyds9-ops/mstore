@@ -109,17 +109,17 @@
                 <div class="row g-2 align-items-center atk-filter-bar">
                     {{-- Pencarian --}}
                     <div class="col-12 col-md-4 col-lg-3">
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0 text-muted ps-3">
+                        <div class="atk-search-box">
+                            <span class="search-icon">
                                 <i class="fa-solid fa-magnifying-glass"></i>
                             </span>
-                            <input type="text" name="search" class="form-control border-start-0 border-end-0" placeholder="{{ __('Cari produk, faktur, supplier...') }}" value="{{ request('search') }}">
+                            <input type="text" name="search" class="form-control" placeholder="{{ __('Cari produk, faktur, supplier...') }}" value="{{ request('search') }}">
                             @if(request('search'))
-                                <a href="{{ route('atk.stock-movements.index', array_merge(request()->except(['search', 'page']))) }}" class="btn btn-outline-secondary border-start-0 border-end-0 text-muted px-2" title="{{ __('Hapus Pencarian') }}">
+                                <a href="{{ route('atk.stock-movements.index', array_merge(request()->except(['search', 'page']))) }}" class="btn-clear" title="{{ __('Hapus Pencarian') }}">
                                     <i class="fa-solid fa-xmark"></i>
                                 </a>
                             @endif
-                            <button type="submit" class="btn btn-primary px-3" title="{{ __('Cari') }}">
+                            <button type="submit" class="btn btn-primary btn-search" title="{{ __('Cari') }}">
                                 <span class="fw-semibold">{{ __('Cari') }}</span>
                             </button>
                         </div>
@@ -148,13 +148,13 @@
                     {{-- Periode Tanggal Dari - Sampai --}}
                     <div class="col-6 col-sm-4 col-md-3 col-lg-2">
                         <div class="input-group">
-                            <span class="input-group-text bg-white text-muted small py-1 border-end-0">{{ __('Dari') }}</span>
+                            <span class="input-group-text text-muted small py-1">{{ __('Dari') }}</span>
                             <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}" onchange="this.form.submit()">
                         </div>
                     </div>
                     <div class="col-6 col-sm-4 col-md-3 col-lg-2">
                         <div class="input-group">
-                            <span class="input-group-text bg-white text-muted small py-1 border-end-0">{{ __('S/d') }}</span>
+                            <span class="input-group-text text-muted small py-1">{{ __('S/d') }}</span>
                             <input type="date" name="end_date" class="form-control" value="{{ request('end_date') }}" onchange="this.form.submit()">
                         </div>
                     </div>

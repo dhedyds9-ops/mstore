@@ -75,23 +75,23 @@
     {{-- Filter & Tabel Mutasi --}}
     <div class="card border-0 shadow-sm rounded-4 mb-4">
         <div class="card-header bg-white border-bottom py-3 px-3 px-md-4">
-            <form action="{{ route('atk.cash-movements.index') }}" method="GET" class="row g-2 align-items-center">
+            <form action="{{ route('atk.cash-movements.index') }}" method="GET" class="row g-2 align-items-center atk-filter-bar">
                 <div class="col-6 col-md-3">
-                    <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-white text-muted small border-end-0">{{ __('Dari') }}</span>
-                        <input type="date" name="start_date" class="form-control bg-white" value="{{ request('start_date') }}">
+                    <div class="input-group">
+                        <span class="input-group-text text-muted small py-1">{{ __('Dari') }}</span>
+                        <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}">
                     </div>
                 </div>
 
                 <div class="col-6 col-md-3">
-                    <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-white text-muted small border-end-0">{{ __('Sampai') }}</span>
-                        <input type="date" name="end_date" class="form-control bg-white" value="{{ request('end_date') }}">
+                    <div class="input-group">
+                        <span class="input-group-text text-muted small py-1">{{ __('Sampai') }}</span>
+                        <input type="date" name="end_date" class="form-control" value="{{ request('end_date') }}">
                     </div>
                 </div>
 
                 <div class="col-6 col-md-2">
-                    <select name="movement_type" class="form-select form-select-sm bg-white">
+                    <select name="movement_type" class="form-select">
                         <option value="">{{ __('Semua Jenis') }}</option>
                         @foreach($types as $type)
                             <option value="{{ $type }}" {{ request('movement_type') === $type ? 'selected' : '' }}>{{ ucfirst($type) }}</option>
@@ -100,7 +100,7 @@
                 </div>
 
                 <div class="col-6 col-md-2">
-                    <select name="created_by" class="form-select form-select-sm bg-white">
+                    <select name="created_by" class="form-select">
                         <option value="">{{ __('Semua Kasir') }}</option>
                         @foreach($users as $user)
                             <option value="{{ $user->id }}" {{ request('created_by') == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
@@ -109,11 +109,11 @@
                 </div>
 
                 <div class="col-12 col-md-2 d-flex gap-2 justify-content-end">
-                    <button type="submit" class="btn btn-sm btn-primary px-3 flex-fill flex-md-grow-0" title="{{ __('Terapkan Filter') }}">
+                    <button type="submit" class="btn btn-primary px-3 flex-fill flex-md-grow-0" title="{{ __('Terapkan Filter') }}">
                         <i class="fa-solid fa-filter me-1"></i>{{ __('Filter') }}
                     </button>
                     @if(request('start_date') || request('end_date') || request('movement_type') || request('created_by'))
-                        <a href="{{ route('atk.cash-movements.index') }}" class="btn btn-sm btn-outline-secondary px-2" title="{{ __('Reset Filter') }}">
+                        <a href="{{ route('atk.cash-movements.index') }}" class="btn btn-outline-secondary px-2" title="{{ __('Reset Filter') }}">
                             <i class="fa-solid fa-rotate-left"></i>
                         </a>
                     @endif
