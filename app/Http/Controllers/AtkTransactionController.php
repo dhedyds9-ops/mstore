@@ -724,7 +724,7 @@ class AtkTransactionController extends Controller implements HasMiddleware
             $customerName = trim((string)($request->input('customer_name') ?? ''));
             $customerPhone = trim((string)($request->input('customer_phone') ?? ''));
 
-            $payload = [
+            $rawPayload = [
                 'user_id' => Auth::id(),
                 'queue_number' => $queueNumber,
                 'transaction_number' => 'TRX-'.time(),
@@ -741,12 +741,16 @@ class AtkTransactionController extends Controller implements HasMiddleware
                 'coordinator_id' => ($request->payment_method === 'hutang' || $transactionCategory === 'pembayaran_pelanggan') ? ($request->coordinator_id ?? null) : null,
                 'status' => 'posted', // Set to posted immediately for POS
                 'posted_at' => now(),
+                'atk_cash_register_id' => $activeRegister?->id,
+                'transaction_category' => $transactionCategory,
             ];
-            if (Schema::hasColumn('atk_transactions', 'atk_cash_register_id')) {
-                $payload['atk_cash_register_id'] = $activeRegister?->id;
-            }
-            if (Schema::hasColumn('atk_transactions', 'transaction_category')) {
-                $payload['transaction_category'] = $transactionCategory;
+
+            // Safely filter only existing columns to prevent SQLSTATE[42S22] Column not found
+            $payload = [];
+            foreach ($rawPayload as $column => $value) {
+                if (Schema::hasColumn('atk_transactions', $column)) {
+                    $payload[$column] = $value;
+                }
             }
 
             $transaction = AtkTransaction::create($payload);
