@@ -50,27 +50,27 @@
             <form action="{{ route('atk.reports.owner-funds') }}" method="GET" class="row g-2 align-items-center">
                 <div class="col-6 col-md-3">
                     <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-light text-muted small">{{ __('Dari') }}</span>
-                        <input type="date" name="start_date" class="form-control bg-light" value="{{ old('start_date', (is_object($start) ? $start->format('Y-m-d') : $start)) }}">
+                        <span class="input-group-text bg-white text-muted small border-end-0">{{ __('Dari') }}</span>
+                        <input type="date" name="start_date" class="form-control bg-white" value="{{ old('start_date', (is_object($start) ? $start->format('Y-m-d') : $start)) }}">
                     </div>
                 </div>
 
                 <div class="col-6 col-md-3">
                     <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-light text-muted small">{{ __('Sampai') }}</span>
-                        <input type="date" name="end_date" class="form-control bg-light" value="{{ old('end_date', (is_object($end) ? $end->format('Y-m-d') : $end)) }}">
+                        <span class="input-group-text bg-white text-muted small border-end-0">{{ __('Sampai') }}</span>
+                        <input type="date" name="end_date" class="form-control bg-white" value="{{ old('end_date', (is_object($end) ? $end->format('Y-m-d') : $end)) }}">
                     </div>
                 </div>
 
                 <div class="col-6 col-md-3">
-                    <select name="status" class="form-select form-select-sm bg-light">
+                    <select name="status" class="form-select form-select-sm bg-white">
                         <option value="">{{ __('Semua Status') }}</option>
                         <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>{{ __('Approved (Disetujui)') }}</option>
                     </select>
                 </div>
 
                 <div class="col-6 col-md-3 d-flex gap-2 justify-content-end">
-                    <button type="submit" class="btn btn-sm btn-dark px-3 flex-fill flex-md-grow-0">
+                    <button type="submit" class="btn btn-sm btn-primary px-3 flex-fill flex-md-grow-0">
                         <i class="fa-solid fa-filter me-1"></i>{{ __('Filter Data') }}
                     </button>
                     @if(request('start_date') || request('end_date') || request('status'))

@@ -84,14 +84,57 @@
 
     {{-- Tabel Pengeluaran --}}
     <div class="card border-0 shadow-sm rounded-4 mb-4">
-        <div class="card-header bg-white border-bottom py-3 px-3 px-md-4 d-flex align-items-center justify-content-between">
-            <h6 class="fw-bold mb-0 text-gray-800 d-flex align-items-center gap-2">
-                <i class="fa-solid fa-file-invoice-dollar text-danger"></i>
-                <span>{{ __('Daftar Seluruh Pengeluaran ATK') }}</span>
-            </h6>
-            <span class="badge bg-light text-muted border px-2 py-1 small">
-                {{ $expenses->total() }} {{ __('Data') }}
-            </span>
+        <div class="card-header bg-white border-bottom py-3 px-3 px-md-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <h6 class="fw-bold mb-0 text-gray-800 d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-file-invoice-dollar text-danger"></i>
+                    <span>{{ __('Daftar Seluruh Pengeluaran ATK') }}</span>
+                </h6>
+                <span class="badge bg-light text-muted border px-2 py-1 small">
+                    {{ $expenses->total() }} {{ __('Data') }}
+                </span>
+            </div>
+
+            <form action="{{ route('atk.expenses.index') }}" method="GET" class="row g-2 align-items-center">
+                <div class="col-12 col-md-4">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-white text-muted border-end-0">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </span>
+                        <input type="text" name="search" class="form-control bg-white border-start-0 border-end-0" placeholder="{{ __('Cari keperluan / no referensi...') }}" value="{{ request('search') }}">
+                        @if(request('search'))
+                            <a href="{{ route('atk.expenses.index', array_merge(request()->except(['search', 'page']))) }}" class="btn btn-outline-secondary border-start-0 text-muted px-2" title="{{ __('Hapus Pencarian') }}">
+                                <i class="fa-solid fa-xmark"></i>
+                            </a>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-3 col-lg-2">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-white text-muted small border-end-0">{{ __('Dari') }}</span>
+                        <input type="date" name="start_date" class="form-control bg-white" value="{{ request('start_date') }}">
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-3 col-lg-2">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-white text-muted small border-end-0">{{ __('Sampai') }}</span>
+                        <input type="date" name="end_date" class="form-control bg-white" value="{{ request('end_date') }}">
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-auto ms-auto d-flex gap-2 justify-content-end">
+                    <button type="submit" class="btn btn-sm btn-primary px-3" title="{{ __('Terapkan Filter') }}">
+                        <i class="fa-solid fa-filter me-1"></i>{{ __('Filter') }}
+                    </button>
+                    @if(request('search') || request('start_date') || request('end_date'))
+                        <a href="{{ route('atk.expenses.index') }}" class="btn btn-sm btn-outline-secondary px-2" title="{{ __('Reset Filter') }}">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </a>
+                    @endif
+                </div>
+            </form>
         </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0" id="dataTable" width="100%" cellspacing="0">

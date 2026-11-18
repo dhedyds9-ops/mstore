@@ -29,11 +29,27 @@ class AtkExpenseController extends Controller implements HasMiddleware
             ->where('reference_number', 'like', 'ATK-EXP-%');
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $expenses = $this->queryAtkExpenses()
-            ->latest('transaction_date')
-            ->customPaginate();
+        $query = $this->queryAtkExpenses();
+
+        if ($request->filled('search')) {
+            $s = trim($request->search);
+            $query->where(function ($q) use ($s) {
+                $q->where('description', 'like', "%{$s}%")
+                  ->orWhere('reference_number', 'like', "%{$s}%");
+            });
+        }
+
+        if ($request->filled('start_date')) {
+            $query->whereDate('transaction_date', '>=', $request->start_date);
+        }
+
+        if ($request->filled('end_date')) {
+            $query->whereDate('transaction_date', '<=', $request->end_date);
+        }
+
+        $expenses = $query->latest('transaction_date')->customPaginate();
 
         return view('atk.expenses.index', compact('expenses'));
     }

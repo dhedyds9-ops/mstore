@@ -50,8 +50,8 @@
             <form action="{{ route('atk.reports.float') }}" method="GET" class="row g-2 align-items-center">
                 <div class="col-12 col-md-4">
                     <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-light text-muted small">{{ __('Akun Float') }}</span>
-                        <select name="account_id" class="form-select bg-light" required>
+                        <span class="input-group-text bg-white text-muted small border-end-0">{{ __('Akun Float') }}</span>
+                        <select name="account_id" class="form-select bg-white" required>
                             <option value="">{{ __('Pilih Rekening / Akun') }}</option>
                             @foreach($accounts as $acc)
                             <option value="{{ $acc->id }}" {{ request('account_id') == $acc->id ? 'selected' : '' }}>{{ $acc->name }} ({{ $acc->code }})</option>
@@ -62,20 +62,20 @@
 
                 <div class="col-6 col-md-3">
                     <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-light text-muted small">{{ __('Dari') }}</span>
-                        <input type="date" name="start_date" class="form-control bg-light" value="{{ request('start_date') }}">
+                        <span class="input-group-text bg-white text-muted small border-end-0">{{ __('Dari') }}</span>
+                        <input type="date" name="start_date" class="form-control bg-white" value="{{ request('start_date') }}">
                     </div>
                 </div>
 
                 <div class="col-6 col-md-3">
                     <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-light text-muted small">{{ __('Sampai') }}</span>
-                        <input type="date" name="end_date" class="form-control bg-light" value="{{ request('end_date') }}">
+                        <span class="input-group-text bg-white text-muted small border-end-0">{{ __('Sampai') }}</span>
+                        <input type="date" name="end_date" class="form-control bg-white" value="{{ request('end_date') }}">
                     </div>
                 </div>
 
                 <div class="col-12 col-md-2 d-flex gap-2 justify-content-end">
-                    <button type="submit" class="btn btn-sm btn-dark px-3 flex-fill flex-md-grow-0">
+                    <button type="submit" class="btn btn-sm btn-primary px-3 flex-fill flex-md-grow-0">
                         <i class="fa-solid fa-filter me-1"></i>{{ __('Tampilkan') }}
                     </button>
                     @if(request('account_id') || request('start_date') || request('end_date'))

@@ -50,8 +50,8 @@
             <form action="{{ route('atk.reports.cash') }}" method="GET" class="row g-2 align-items-center">
                 <div class="col-12 col-md-3">
                     <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-light text-muted small">{{ __('Periode') }}</span>
-                        <select name="period" class="form-select bg-light">
+                        <span class="input-group-text bg-white text-muted small border-end-0">{{ __('Periode') }}</span>
+                        <select name="period" class="form-select bg-white">
                             <option value="custom" {{ $period === 'custom' ? 'selected' : '' }}>Custom Range</option>
                             <option value="daily" {{ $period === 'daily' ? 'selected' : '' }}>Harian</option>
                             <option value="weekly" {{ $period === 'weekly' ? 'selected' : '' }}>Mingguan</option>
@@ -62,15 +62,15 @@
 
                 <div class="col-6 col-md-3">
                     <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-light text-muted small">{{ __('Dari') }}</span>
-                        <input type="date" name="start_date" class="form-control bg-light" value="{{ is_object($start) ? $start->format('Y-m-d') : $start }}">
+                        <span class="input-group-text bg-white text-muted small border-end-0">{{ __('Dari') }}</span>
+                        <input type="date" name="start_date" class="form-control bg-white" value="{{ is_object($start) ? $start->format('Y-m-d') : $start }}">
                     </div>
                 </div>
 
                 <div class="col-6 col-md-3">
                     <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-light text-muted small">{{ __('Sampai') }}</span>
-                        <input type="date" name="end_date" class="form-control bg-light" value="{{ is_object($end) ? $end->format('Y-m-d') : $end }}">
+                        <span class="input-group-text bg-white text-muted small border-end-0">{{ __('Sampai') }}</span>
+                        <input type="date" name="end_date" class="form-control bg-white" value="{{ is_object($end) ? $end->format('Y-m-d') : $end }}">
                     </div>
                 </div>
 

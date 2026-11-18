@@ -133,7 +133,12 @@
                         <span class="input-group-text bg-white text-muted border-end-0">
                             <i class="fa-solid fa-magnifying-glass"></i>
                         </span>
-                        <input type="text" name="search" class="form-control bg-white border-start-0" placeholder="{{ __('No. Struk, Produk, Kasir...') }}" value="{{ request('search') }}">
+                        <input type="text" name="search" class="form-control bg-white border-start-0 border-end-0" placeholder="{{ __('No. Struk, Produk, Kasir...') }}" value="{{ request('search') }}">
+                        @if(request('search'))
+                            <a href="{{ route('atk.transactions.index', array_merge(request()->except(['search', 'page']))) }}" class="btn btn-outline-secondary border-start-0 text-muted px-2" title="{{ __('Hapus Pencarian') }}">
+                                <i class="fa-solid fa-xmark"></i>
+                            </a>
+                        @endif
                     </div>
                 </div>
 

@@ -148,13 +148,13 @@
                     {{-- Periode Tanggal Dari - Sampai --}}
                     <div class="col-6 col-sm-4 col-md-3 col-lg-2">
                         <div class="input-group">
-                            <span class="input-group-text bg-white text-muted small py-1">{{ __('Dari') }}</span>
+                            <span class="input-group-text bg-white text-muted small py-1 border-end-0">{{ __('Dari') }}</span>
                             <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}" onchange="this.form.submit()">
                         </div>
                     </div>
                     <div class="col-6 col-sm-4 col-md-3 col-lg-2">
                         <div class="input-group">
-                            <span class="input-group-text bg-white text-muted small py-1">{{ __('S/d') }}</span>
+                            <span class="input-group-text bg-white text-muted small py-1 border-end-0">{{ __('S/d') }}</span>
                             <input type="date" name="end_date" class="form-control" value="{{ request('end_date') }}" onchange="this.form.submit()">
                         </div>
                     </div>

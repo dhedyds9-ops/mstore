@@ -18,8 +18,13 @@
         <div class="d-flex flex-wrap align-items-center gap-2">
             <form action="{{ route('atk.products.barcodes') }}" method="GET" class="d-flex gap-2">
                 <div class="input-group input-group-sm">
-                    <input type="text" name="search" class="form-control bg-light" placeholder="Cari nama / barcode..." value="{{ request('search') }}" autofocus>
-                    <button type="submit" class="btn btn-dark"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    <input type="text" name="search" class="form-control bg-white" placeholder="Cari nama / barcode..." value="{{ request('search') }}" autofocus>
+                    @if(request('search'))
+                        <a href="{{ route('atk.products.barcodes') }}" class="btn btn-outline-secondary" title="{{ __('Hapus Pencarian') }}">
+                            <i class="fa-solid fa-xmark"></i>
+                        </a>
+                    @endif
+                    <button type="submit" class="btn btn-primary" title="{{ __('Cari') }}"><i class="fa-solid fa-magnifying-glass"></i></button>
                 </div>
             </form>
             <a href="{{ route('atk.products.barcodes.pdf', ['paper'=>'a4','mode'=>'preview', 'search' => request('search')]) }}"
