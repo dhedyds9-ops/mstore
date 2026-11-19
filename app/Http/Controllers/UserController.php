@@ -294,8 +294,6 @@ class UserController extends Controller implements HasMiddleware
             'company_id' => ['nullable', 'exists:companies,id'],
             'company_branch_id' => ['nullable', 'exists:company_branches,id'],
             'phone' => ['nullable', 'string', 'max:20'],
-            'daily_salary' => ['nullable', 'numeric', 'min:0'],
-            'monthly_salary' => ['nullable', 'numeric', 'min:0'],
             'bank_name' => ['nullable', 'string', 'max:255'],
             'bank_account_number' => ['nullable', 'string', 'max:255'],
             'bank_account_name' => ['nullable', 'string', 'max:255'],
@@ -412,8 +410,6 @@ class UserController extends Controller implements HasMiddleware
         app(\App\Services\EmployeeSyncService::class)->syncFromUser($createdUser);
         
         $employeeUpdate = [
-            'daily_salary' => $validated['daily_salary'] ?? 0,
-            'monthly_salary' => $validated['monthly_salary'] ?? 0,
             'bank_name' => $validated['bank_name'] ?? null,
             'bank_account_number' => $validated['bank_account_number'] ?? null,
             'bank_account_name' => $validated['bank_account_name'] ?? null,
@@ -482,8 +478,6 @@ class UserController extends Controller implements HasMiddleware
             'company_id' => ['required', 'exists:companies,id'],
             'company_branch_id' => ['nullable', 'exists:company_branches,id'],
             'phone' => ['nullable', 'string', 'max:20'],
-            'daily_salary' => ['nullable', 'numeric', 'min:0'],
-            'monthly_salary' => ['nullable', 'numeric', 'min:0'],
             'bank_name' => ['nullable', 'string', 'max:255'],
             'bank_account_number' => ['nullable', 'string', 'max:255'],
             'bank_account_name' => ['nullable', 'string', 'max:255'],
@@ -556,8 +550,6 @@ class UserController extends Controller implements HasMiddleware
             'phone' => $user->phone,
             'position' => $user->role?->label ?? 'Karyawan',
             'department' => app(\App\Services\EmployeeSyncService::class)->departmentFromRole($user->role?->name),
-            'daily_salary' => $validated['daily_salary'] ?? 0,
-            'monthly_salary' => $validated['monthly_salary'] ?? 0,
             'bank_name' => $validated['bank_name'] ?? null,
             'bank_account_number' => $validated['bank_account_number'] ?? null,
             'bank_account_name' => $validated['bank_account_name'] ?? null,

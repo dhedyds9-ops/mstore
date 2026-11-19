@@ -209,22 +209,29 @@
                             </div>
                             @endif
 
-                            <div class="col-12 col-md-6">
-                                <label for="monthly_salary" class="form-label small fw-semibold text-body-secondary">{{ __('Gaji Pokok Bulanan (Rp)') }}</label>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-light">Rp</span>
-                                    <input type="number" name="monthly_salary" id="monthly_salary" value="{{ old('monthly_salary', $user->monthly_salary) }}" class="form-control form-control-sm font-monospace @error('monthly_salary') is-invalid @enderror" min="0" placeholder="0">
+                            <div class="col-12">
+                                @if($user->employee)
+                                <div class="alert alert-info border-0 rounded-3 d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between p-3 gap-2 mb-0">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="fa-solid fa-wallet fs-5 text-primary"></i>
+                                        <div>
+                                            <div class="fw-semibold text-dark small">{{ __('Gaji Pokok & Kompensasi Dikelola di Menu Data Karyawan') }}</div>
+                                            <div class="text-muted small">
+                                                {{ __('Gaji Pokok saat ini:') }} <strong class="text-success">Rp {{ number_format($user->employee->monthly_salary ?? 0, 0, ',', '.') }}</strong> / bulan
+                                                ({{ __('Harian:') }} Rp {{ number_format($user->employee->daily_salary ?? 0, 0, ',', '.') }})
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <a href="{{ route('employees.edit', $user->employee->id) }}" class="btn btn-sm btn-primary text-nowrap">
+                                        <i class="fa-solid fa-pen-to-square me-1"></i>{{ __('Kelola Gaji di Karyawan') }}
+                                    </a>
                                 </div>
-                                @error('monthly_salary') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <label for="daily_salary" class="form-label small fw-semibold text-body-secondary">{{ __('Gaji Harian (Rp)') }}</label>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-light">Rp</span>
-                                    <input type="number" name="daily_salary" id="daily_salary" value="{{ old('daily_salary', $user->daily_salary) }}" class="form-control form-control-sm font-monospace @error('daily_salary') is-invalid @enderror" min="0" placeholder="0">
+                                @else
+                                <div class="alert alert-light border rounded-3 p-3 text-muted small mb-0 d-flex align-items-center gap-2">
+                                    <i class="fa-solid fa-circle-info text-secondary"></i>
+                                    <span>{{ __('Pengisian Gaji Pokok dikelola terpusat di menu Data Karyawan. Akun pengguna ini belum ditautkan ke data karyawan.') }}</span>
                                 </div>
-                                <div class="form-text small">{{ __('Otomatis terhitung jika gaji bulanan diisi (estimasi 26 hari kerja).') }}</div>
-                                @error('daily_salary') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                                @endif
                             </div>
                             
                             <div class="col-12 col-md-4 mt-3">
@@ -268,8 +275,6 @@
         const usernameInput = document.getElementById('username');
         const companySelect = document.getElementById('company_id');
         const branchSelect = document.getElementById('company_branch_id');
-        const monthlySalaryInput = document.getElementById('monthly_salary');
-        const dailySalaryInput = document.getElementById('daily_salary');
 
         if (nameInput && usernameInput) {
             const slugify = (value) => value
@@ -321,15 +326,6 @@
 
             companySelect.addEventListener('change', refreshBranches);
             refreshBranches();
-        }
-
-        if (monthlySalaryInput && dailySalaryInput) {
-            monthlySalaryInput.addEventListener('input', function() {
-                const monthly = parseFloat(this.value) || 0;
-                const workingDays = 26;
-                const daily = Math.round(monthly / workingDays);
-                dailySalaryInput.value = daily;
-            });
         }
     });
 </script>

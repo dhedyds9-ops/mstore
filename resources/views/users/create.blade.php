@@ -137,7 +137,6 @@
                 @php
                     $hasAdvancedErrors = $errors->has('company_id') || $errors->has('company_branch_id') || 
                                          $errors->has('bu') || $errors->has('bu_level') || $errors->has('department') || 
-                                         $errors->has('monthly_salary') || $errors->has('daily_salary') || 
                                          $errors->has('bank_name') || $errors->has('bank_account_number');
                 @endphp
 
@@ -258,23 +257,11 @@
                                 </div>
                                 @endif
 
-                                <div class="col-12 col-md-6">
-                                    <label for="monthly_salary" class="form-label small fw-semibold text-body-secondary">{{ __('Gaji Pokok Bulanan (Rp)') }}</label>
-                                    <div class="input-group input-group-sm">
-                                        <span class="input-group-text bg-white">Rp</span>
-                                        <input type="number" name="monthly_salary" id="monthly_salary" value="{{ old('monthly_salary') }}" class="form-control form-control-sm font-monospace @error('monthly_salary') is-invalid @enderror" min="0" placeholder="0">
+                                <div class="col-12 mb-2">
+                                    <div class="alert alert-light border rounded-3 p-3 text-muted small d-flex align-items-center gap-2 mb-0">
+                                        <i class="fa-solid fa-circle-info text-primary"></i>
+                                        <span>{{ __('Pengisian Gaji Pokok & Kompensasi dikelola terpusat di menu Data Karyawan. Akun pengguna ini dapat ditautkan ke data karyawan setelah dibuat.') }}</span>
                                     </div>
-                                    @error('monthly_salary') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
-                                </div>
-
-                                <div class="col-12 col-md-6">
-                                    <label for="daily_salary" class="form-label small fw-semibold text-body-secondary">{{ __('Gaji Harian (Rp)') }}</label>
-                                    <div class="input-group input-group-sm">
-                                        <span class="input-group-text bg-white">Rp</span>
-                                        <input type="number" name="daily_salary" id="daily_salary" value="{{ old('daily_salary') }}" class="form-control form-control-sm font-monospace @error('daily_salary') is-invalid @enderror" min="0" placeholder="0">
-                                    </div>
-                                    <div class="form-text small">{{ __('Otomatis terhitung jika gaji bulanan diisi.') }}</div>
-                                    @error('daily_salary') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                                 </div>
 
                                 <div class="col-12 col-md-4 mt-2">
@@ -321,8 +308,6 @@
         const usernameInput = document.getElementById('username');
         const companySelect = document.getElementById('company_id');
         const branchSelect = document.getElementById('company_branch_id');
-        const monthlySalaryInput = document.getElementById('monthly_salary');
-        const dailySalaryInput = document.getElementById('daily_salary');
 
         // Auto Slug Name -> Username
         if (nameInput && usernameInput) {
@@ -381,16 +366,6 @@
 
             companySelect.addEventListener('change', refreshBranches);
             refreshBranches();
-        }
-
-        // Auto calculate daily salary from monthly salary (26 days)
-        if (monthlySalaryInput && dailySalaryInput) {
-            monthlySalaryInput.addEventListener('input', function() {
-                const monthly = parseFloat(this.value) || 0;
-                const workingDays = 26;
-                const daily = Math.round(monthly / workingDays);
-                dailySalaryInput.value = daily > 0 ? daily : 0;
-            });
         }
 
         // Accordion arrow animation
