@@ -40,6 +40,8 @@ class SidebarMenu
                     self::group('bu-wash', 'Jasa & Layanan', [
                         self::link('wash-pos', 'Kasir Cuci (POS)', 'wash.pos', permissions: ['wash.pos']),
                         self::link('wash-transactions', 'Riwayat Transaksi', 'wash.transactions.index', permissions: ['wash.report']),
+                        self::link('wash-members', 'Data Member', 'wash.members.index', permissions: ['wash.member.view', 'wash.view', 'wash.manage']),
+                        self::link('wash-loyalty', 'Bonus & Loyalty', 'wash.loyalty.index', permissions: ['wash.loyalty.view', 'wash.view', 'wash.manage']),
                         self::link('wash-services', 'Daftar Layanan & Tarif', 'wash.services.index', permissions: ['wash.manage']),
                         self::link('wash-shifts', 'Shift & Kas Kasir', 'wash.shifts.index', permissions: ['wash.shift.view']),
                         self::link('wash-expenses', 'Biaya & Pengeluaran', 'wash.expenses.index', permissions: ['wash.expense.view', 'wash.report', 'wash.manage']),

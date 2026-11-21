@@ -673,6 +673,9 @@ Route::get('/webhooks/payment/return', [\App\Http\Controllers\PaymentController:
         Route::get('/members', [\App\Http\Controllers\WashMemberController::class, 'index'])
             ->middleware('permission:wash.member.view')
             ->name('members.index');
+        Route::post('/members', [\App\Http\Controllers\WashMemberController::class, 'store'])
+            ->middleware('permission:wash.member.manage')
+            ->name('members.store');
         Route::get('/members/levels', [\App\Http\Controllers\WashMemberController::class, 'levels'])
             ->middleware('permission:wash.member.view')
             ->name('members.levels');

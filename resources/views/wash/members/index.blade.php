@@ -9,7 +9,12 @@
             <h4 class="mb-1">Member Pelanggan Layanan</h4>
             <div class="text-muted">Database member digital, level, kendaraan, dan spending.</div>
         </div>
-        <a href="{{ route('wash.members.levels') }}" class="btn btn-outline-primary">Membership Level</a>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createMemberModal">
+                <i class="fas fa-plus me-1"></i> Tambah Member Baru
+            </button>
+            <a href="{{ route('wash.members.levels') }}" class="btn btn-outline-primary">Membership Level</a>
+        </div>
     </div>
 
     <div class="card shadow-sm border-0 mb-3">
@@ -99,6 +104,74 @@
 
             <div class="mt-3">
                 {{ $members->appends(request()->query())->links() }}
+            </div>
+        </div>
+    </div>
+    <!-- Modal Tambah Member Baru -->
+    <div class="modal fade" id="createMemberModal" tabindex="-1" aria-labelledby="createMemberModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <form action="{{ route('wash.members.store') }}" method="POST">
+                    @csrf
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="createMemberModalLabel">
+                            <i class="fas fa-user-plus me-1"></i> Pendaftaran Member Baru
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="mb-3">
+                            <label for="new_member_name" class="form-label fw-bold">Nama Lengkap <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="new_member_name" name="name" placeholder="Contoh: Budi Santoso" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="new_member_whatsapp" class="form-label fw-bold">Nomor WhatsApp / HP <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="new_member_whatsapp" name="whatsapp" placeholder="Contoh: 081234567890" required>
+                            <small class="text-muted">Nomor ini digunakan untuk identifikasi member dan pengiriman pesan WhatsApp.</small>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label for="new_vehicle_plate" class="form-label fw-bold">Plat Kendaraan</label>
+                                <input type="text" class="form-control text-uppercase" id="new_vehicle_plate" name="vehicle_plate" placeholder="B 1234 ABC">
+                            </div>
+                            <div class="col-6">
+                                <label for="new_vehicle_brand" class="form-label fw-bold">Merek / Model</label>
+                                <input type="text" class="form-control" id="new_vehicle_brand" name="vehicle_brand" placeholder="Avanza / PCX">
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label for="new_vehicle_type" class="form-label fw-bold">Tipe Kendaraan</label>
+                                <select class="form-select" id="new_vehicle_type" name="vehicle_type">
+                                    <option value="mobil">Mobil</option>
+                                    <option value="motor">Motor</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label for="new_member_level" class="form-label fw-bold">Tier / Level Awal</label>
+                                <select class="form-select" id="new_member_level" name="wash_member_level_id">
+                                    @foreach($levels as $levelOption)
+                                        <option value="{{ $levelOption->id }}">{{ $levelOption->name }} (Diskon {{ $levelOption->discount_percent }}%)</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="new_member_email" class="form-label">Email (Opsional)</label>
+                            <input type="email" class="form-control" id="new_member_email" name="email" placeholder="email@contoh.com">
+                        </div>
+                        <div class="mb-2">
+                            <label for="new_member_address" class="form-label">Alamat (Opsional)</label>
+                            <textarea class="form-control" id="new_member_address" name="address" rows="2" placeholder="Alamat domisili"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary px-4 fw-bold">
+                            <i class="fas fa-save me-1"></i> Simpan Member
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\WashMember;
 use App\Models\WashMemberCard;
 use App\Models\WashMemberLevel;
+use App\Models\WashMemberVehicle;
 use App\Services\Wash\WashMembershipService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class WashMemberController extends Controller implements HasMiddleware
 {
@@ -17,7 +20,7 @@ class WashMemberController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('permission:wash.member.view', only: ['index', 'show', 'levels', 'cardPdf']),
-            new Middleware('permission:wash.member.manage', only: ['update']),
+            new Middleware('permission:wash.member.manage', only: ['store', 'update']),
         ];
     }
 
@@ -49,6 +52,102 @@ class WashMemberController extends Controller implements HasMiddleware
         $levels = WashMemberLevel::query()->where('is_active', true)->orderBy('min_transactions')->get();
 
         return view('wash.members.index', compact('members', 'levels', 'q', 'status', 'level'));
+    }
+
+    public function store(Request $request, WashMembershipService $membershipService)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'whatsapp' => 'required|string|max:50',
+            'email' => 'nullable|email|max:255',
+            'address' => 'nullable|string|max:2000',
+            'vehicle_plate' => 'nullable|string|max:20',
+            'vehicle_brand' => 'nullable|string|max:100',
+            'vehicle_type' => 'nullable|string|in:motor,mobil',
+            'wash_member_level_id' => 'nullable|exists:wash_member_levels,id',
+            'status' => 'nullable|in:active,inactive,blacklist',
+        ]);
+
+        $normalizedPhone = $membershipService->normalizePhone($validated['whatsapp']);
+        if ($normalizedPhone === '') {
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Nomor WhatsApp tidak valid.'], 422);
+            }
+            return back()->withInput()->with('error', 'Nomor WhatsApp tidak valid.');
+        }
+
+        // Check if phone already registered
+        $existing = WashMember::where('whatsapp', $normalizedPhone)->first();
+        if ($existing) {
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Nomor WhatsApp ini sudah terdaftar sebagai member: '.$existing->member_number.' ('.$existing->name.').'], 422);
+            }
+            return back()->withInput()->with('error', 'Nomor WhatsApp ini sudah terdaftar sebagai member: '.$existing->member_number.' ('.$existing->name.').');
+        }
+
+        $defaultLevelId = WashMemberLevel::where('is_active', true)->orderBy('min_transactions')->value('id');
+
+        $member = DB::transaction(function () use ($validated, $normalizedPhone, $defaultLevelId, $membershipService) {
+            $member = WashMember::create([
+                'member_number' => 'TEMP-' . Str::upper(Str::random(10)),
+                'name' => trim($validated['name']),
+                'whatsapp' => $normalizedPhone,
+                'email' => $validated['email'] ?? null,
+                'address' => $validated['address'] ?? null,
+                'joined_at' => now(),
+                'wash_member_level_id' => $validated['wash_member_level_id'] ?? $defaultLevelId,
+                'status' => $validated['status'] ?? 'active',
+                'total_transactions' => 0,
+                'total_visits' => 0,
+                'total_spending' => 0,
+            ]);
+
+            $member->member_number = sprintf('MBR-%04d', $member->id);
+            $member->save();
+
+            if (!empty($validated['vehicle_plate'])) {
+                $plate = $membershipService->normalizePlate($validated['vehicle_plate']);
+                if ($plate !== '') {
+                    WashMemberVehicle::create([
+                        'wash_member_id' => $member->id,
+                        'vehicle_plate' => $plate,
+                        'vehicle_brand' => $validated['vehicle_brand'] ?? null,
+                        'vehicle_type' => $validated['vehicle_type'] ?? 'mobil',
+                        'is_primary' => true,
+                    ]);
+                }
+            }
+
+            $membershipService->ensureMemberCard($member);
+
+            return $member;
+        });
+
+        if ($request->wantsJson()) {
+            $member->load(['level', 'vehicles']);
+            return response()->json([
+                'success' => true,
+                'message' => 'Member baru berhasil didaftarkan.',
+                'member' => [
+                    'id' => $member->id,
+                    'name' => $member->name,
+                    'member_number' => $member->member_number,
+                    'whatsapp' => $member->whatsapp,
+                    'level_code' => $member->level?->code ?? 'bronze',
+                    'level_name' => $member->level?->name ?? 'Bronze Member',
+                    'discount_percent' => (float) ($member->level?->discount_percent ?? 0),
+                    'total_visits' => 0,
+                    'total_transactions' => 0,
+                    'vehicles' => $member->vehicles->map(fn($v) => [
+                        'plate' => $v->vehicle_plate,
+                        'brand' => $v->vehicle_brand,
+                        'type' => $v->vehicle_type,
+                    ])->values()->all(),
+                ]
+            ]);
+        }
+
+        return redirect()->route('wash.members.show', $member)->with('success', 'Member baru berhasil didaftarkan: ' . $member->member_number . ' (' . $member->name . ')');
     }
 
     public function show(WashMember $member, WashMembershipService $membershipService)

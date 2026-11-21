@@ -241,9 +241,14 @@
                                     <label class="wash-field-label mb-0">
                                         <i class="fas fa-id-card text-primary me-1"></i> Data Pelanggan / Member
                                     </label>
-                                    <span id="memberStatusBadge" class="badge bg-light text-secondary border">
-                                        👤 Pelanggan Umum
-                                    </span>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 fw-semibold" id="btnOpenAddMemberModal" data-bs-toggle="modal" data-bs-target="#posAddMemberModal" style="font-size:11px; height:24px;">
+                                            <i class="fas fa-plus-circle me-1"></i>+ Member Baru
+                                        </button>
+                                        <span id="memberStatusBadge" class="badge bg-light text-secondary border">
+                                            👤 Pelanggan Umum
+                                        </span>
+                                    </div>
                                 </div>
 
                                 <!-- Cari Member Terdaftar -->
@@ -445,6 +450,57 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" id="btnLoyaltyBonusOk">OK</button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Daftar Member Baru di POS -->
+<div class="modal fade" id="posAddMemberModal" tabindex="-1" aria-labelledby="posAddMemberModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form id="posAddMemberForm">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="posAddMemberModalLabel">
+                        <i class="fas fa-crown text-warning me-1"></i> Pendaftaran Member Baru di Kasir
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div id="posAddMemberAlert" class="alert alert-danger d-none py-2 px-3 small"></div>
+                    <div class="mb-3">
+                        <label for="pos_member_name" class="form-label fw-bold">Nama Lengkap <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="pos_member_name" required placeholder="Contoh: Budi Santoso">
+                    </div>
+                    <div class="mb-3">
+                        <label for="pos_member_phone" class="form-label fw-bold">Nomor WhatsApp / HP <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="pos_member_phone" required placeholder="Contoh: 081234567890">
+                        <small class="text-muted" style="font-size:11px;">Nomor aktif untuk pengiriman struk dan poin loyalitas.</small>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label for="pos_member_plate" class="form-label fw-bold">Plat Kendaraan</label>
+                            <input type="text" class="form-control text-uppercase" id="pos_member_plate" placeholder="B 1234 ABC">
+                        </div>
+                        <div class="col-6">
+                            <label for="pos_member_brand" class="form-label fw-bold">Merek / Model</label>
+                            <input type="text" class="form-control" id="pos_member_brand" placeholder="Toyota / Honda">
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <label for="pos_member_type" class="form-label fw-bold">Tipe Kendaraan</label>
+                        <select class="form-select" id="pos_member_type">
+                            <option value="mobil">Mobil</option>
+                            <option value="motor">Motor</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary fw-bold" id="btnSubmitPosMember">
+                        <i class="fas fa-check-circle me-1"></i> Simpan & Pilih Member
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -1257,6 +1313,96 @@ document.addEventListener('DOMContentLoaded', function () {
             if (memberSearchDropdown) memberSearchDropdown.classList.add('d-none');
         }
     });
+
+    // POS Register Member Modal Handler
+    const posAddMemberModalEl = document.getElementById('posAddMemberModal');
+    const posAddMemberForm = document.getElementById('posAddMemberForm');
+    const posAddMemberAlert = document.getElementById('posAddMemberAlert');
+    const btnSubmitPosMember = document.getElementById('btnSubmitPosMember');
+
+    if (posAddMemberModalEl) {
+        posAddMemberModalEl.addEventListener('show.bs.modal', function () {
+            // Auto pre-fill from current inputs in POS if available
+            const curName = (document.getElementById('customer_name')?.value || '').trim();
+            const curPhone = (document.getElementById('customer_phone')?.value || '').trim();
+            const curPlate = (document.getElementById('vehicle_plate')?.value || '').trim();
+            const curBrand = (document.getElementById('vehicle_brand')?.value || '').trim();
+
+            if (curName) document.getElementById('pos_member_name').value = curName;
+            if (curPhone) document.getElementById('pos_member_phone').value = curPhone;
+            if (curPlate) document.getElementById('pos_member_plate').value = curPlate;
+            if (curBrand) document.getElementById('pos_member_brand').value = curBrand;
+
+            if (posAddMemberAlert) {
+                posAddMemberAlert.classList.add('d-none');
+                posAddMemberAlert.textContent = '';
+            }
+        });
+    }
+
+    if (posAddMemberForm) {
+        posAddMemberForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const name = document.getElementById('pos_member_name').value.trim();
+            const whatsapp = document.getElementById('pos_member_phone').value.trim();
+            const vehicle_plate = document.getElementById('pos_member_plate').value.trim();
+            const vehicle_brand = document.getElementById('pos_member_brand').value.trim();
+            const vehicle_type = document.getElementById('pos_member_type').value;
+
+            if (!name || !whatsapp) {
+                if (posAddMemberAlert) {
+                    posAddMemberAlert.textContent = 'Nama dan Nomor WhatsApp wajib diisi.';
+                    posAddMemberAlert.classList.remove('d-none');
+                }
+                return;
+            }
+
+            const origHtml = btnSubmitPosMember.innerHTML;
+            btnSubmitPosMember.disabled = true;
+            btnSubmitPosMember.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan...';
+
+            fetch('{{ route("wash.members.store") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    name: name,
+                    whatsapp: whatsapp,
+                    vehicle_plate: vehicle_plate,
+                    vehicle_brand: vehicle_brand,
+                    vehicle_type: vehicle_type
+                })
+            })
+            .then(res => res.json().then(data => ({ status: res.status, ok: res.ok, body: data })))
+            .then(result => {
+                if (!result.ok || !result.body.success) {
+                    throw new Error(result.body.message || 'Gagal mendaftarkan member.');
+                }
+                const newMember = result.body.member;
+                allMembers.push(newMember);
+                selectMember(newMember);
+
+                const modal = bootstrap.Modal.getInstance(posAddMemberModalEl) || new bootstrap.Modal(posAddMemberModalEl);
+                modal.hide();
+                posAddMemberForm.reset();
+                alert(`✅ Member baru berhasil didaftarkan!\nNomor: ${newMember.member_number}\nNama: ${newMember.name}`);
+            })
+            .catch(err => {
+                console.error('Error register member:', err);
+                if (posAddMemberAlert) {
+                    posAddMemberAlert.textContent = err.message;
+                    posAddMemberAlert.classList.remove('d-none');
+                }
+            })
+            .finally(() => {
+                btnSubmitPosMember.disabled = false;
+                btnSubmitPosMember.innerHTML = origHtml;
+            });
+        });
+    }
 
     function escapeHtml(value) {
         return String(value ?? '')
