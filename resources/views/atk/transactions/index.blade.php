@@ -128,7 +128,7 @@
             </div>
 
             <form action="{{ route('atk.transactions.index') }}" method="GET" class="row g-2 align-items-center atk-filter-bar">
-                <div class="col-12 col-md-3">
+                <div class="col-12 col-md-4 col-lg-3">
                     <div class="atk-search-box">
                         <span class="search-icon">
                             <i class="fa-solid fa-magnifying-glass"></i>
@@ -142,21 +142,21 @@
                     </div>
                 </div>
 
-                <div class="col-6 col-md-2">
+                <div class="col-6 col-md-4 col-lg-2">
                     <div class="input-group">
-                        <span class="input-group-text text-muted small py-1">{{ __('Dari') }}</span>
+                        <span class="input-group-text text-muted small"><i class="fa-regular fa-calendar me-1"></i>{{ __('Dari') }}</span>
                         <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}">
                     </div>
                 </div>
 
-                <div class="col-6 col-md-2">
+                <div class="col-6 col-md-4 col-lg-2">
                     <div class="input-group">
-                        <span class="input-group-text text-muted small py-1">{{ __('Sampai') }}</span>
+                        <span class="input-group-text text-muted small"><i class="fa-regular fa-calendar me-1"></i>{{ __('Sampai') }}</span>
                         <input type="date" name="end_date" class="form-control" value="{{ request('end_date') }}">
                     </div>
                 </div>
 
-                <div class="col-6 col-md-2">
+                <div class="col-6 col-md-4 col-lg-3">
                     @php
                         $opts = isset($categories) ? $categories : ['ATK','JASA POTOCOPY','JASA TRANSFER BANK'];
                     @endphp
@@ -168,8 +168,8 @@
                     </select>
                 </div>
 
-                <div class="col-6 col-md-3 d-flex gap-2 justify-content-end">
-                    <button type="submit" class="btn btn-primary px-3 flex-fill flex-md-grow-0" title="{{ __('Terapkan Filter') }}">
+                <div class="col-6 col-md-auto col-lg-auto d-flex align-items-center gap-1.5">
+                    <button type="submit" class="btn btn-primary px-3 shadow-2xs" title="{{ __('Terapkan Filter') }}">
                         <i class="fa-solid fa-filter me-1"></i>{{ __('Filter') }}
                     </button>
                     @if(request('search') || request('start_date') || request('end_date') || request('category'))

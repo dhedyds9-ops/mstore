@@ -75,22 +75,41 @@
     {{-- Filter & Tabel Mutasi --}}
     <div class="card border-0 shadow-sm rounded-4 mb-4">
         <div class="card-header bg-white border-bottom py-3 px-3 px-md-4">
+            {{-- Filter Cepat (Quick Date Filters) --}}
+            <div class="d-flex flex-wrap align-items-center gap-1 mb-2.5">
+                <span class="text-muted small me-1"><i class="fa-solid fa-clock-rotate-left me-1"></i>{{ __('Filter Cepat:') }}</span>
+                <a href="{{ route('atk.cash-movements.index', array_merge(request()->except(['start_date', 'end_date', 'page']), ['start_date' => today()->toDateString(), 'end_date' => today()->toDateString()])) }}" class="badge {{ request('start_date') === today()->toDateString() && request('end_date') === today()->toDateString() ? 'bg-primary text-white' : 'bg-light text-dark border' }} text-decoration-none px-2.5 py-1 small rounded-pill">
+                    {{ __('Hari Ini') }}
+                </a>
+                <a href="{{ route('atk.cash-movements.index', array_merge(request()->except(['start_date', 'end_date', 'page']), ['start_date' => today()->subDay()->toDateString(), 'end_date' => today()->subDay()->toDateString()])) }}" class="badge {{ request('start_date') === today()->subDay()->toDateString() && request('end_date') === today()->subDay()->toDateString() ? 'bg-primary text-white' : 'bg-light text-dark border' }} text-decoration-none px-2.5 py-1 small rounded-pill">
+                    {{ __('Kemarin') }}
+                </a>
+                <a href="{{ route('atk.cash-movements.index', array_merge(request()->except(['start_date', 'end_date', 'page']), ['start_date' => now()->startOfMonth()->toDateString(), 'end_date' => now()->endOfMonth()->toDateString()])) }}" class="badge {{ request('start_date') === now()->startOfMonth()->toDateString() && request('end_date') === now()->endOfMonth()->toDateString() ? 'bg-primary text-white' : 'bg-light text-dark border' }} text-decoration-none px-2.5 py-1 small rounded-pill">
+                    {{ __('Bulan Ini') }}
+                </a>
+                @if(request('start_date') || request('end_date') || request('movement_type') || request('created_by'))
+                <a href="{{ route('atk.cash-movements.index') }}" class="badge bg-danger-subtle text-danger border border-danger-subtle text-decoration-none px-2.5 py-1 small rounded-pill">
+                    <i class="fa-solid fa-rotate-left me-1"></i>{{ __('Reset') }}
+                </a>
+                @endif
+            </div>
+
             <form action="{{ route('atk.cash-movements.index') }}" method="GET" class="row g-2 align-items-center atk-filter-bar">
-                <div class="col-6 col-md-3">
+                <div class="col-6 col-md-3 col-lg-2">
                     <div class="input-group">
-                        <span class="input-group-text text-muted small py-1">{{ __('Dari') }}</span>
+                        <span class="input-group-text text-muted small"><i class="fa-regular fa-calendar me-1"></i>{{ __('Dari') }}</span>
                         <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}">
                     </div>
                 </div>
 
-                <div class="col-6 col-md-3">
+                <div class="col-6 col-md-3 col-lg-2">
                     <div class="input-group">
-                        <span class="input-group-text text-muted small py-1">{{ __('Sampai') }}</span>
+                        <span class="input-group-text text-muted small"><i class="fa-regular fa-calendar me-1"></i>{{ __('Sampai') }}</span>
                         <input type="date" name="end_date" class="form-control" value="{{ request('end_date') }}">
                     </div>
                 </div>
 
-                <div class="col-6 col-md-2">
+                <div class="col-6 col-md-3 col-lg-2">
                     <select name="movement_type" class="form-select">
                         <option value="">{{ __('Semua Jenis') }}</option>
                         @foreach($types as $type)
@@ -99,7 +118,7 @@
                     </select>
                 </div>
 
-                <div class="col-6 col-md-2">
+                <div class="col-6 col-md-3 col-lg-2">
                     <select name="created_by" class="form-select">
                         <option value="">{{ __('Semua Kasir') }}</option>
                         @foreach($users as $user)
@@ -108,8 +127,8 @@
                     </select>
                 </div>
 
-                <div class="col-12 col-md-2 d-flex gap-2 justify-content-end">
-                    <button type="submit" class="btn btn-primary px-3 flex-fill flex-md-grow-0" title="{{ __('Terapkan Filter') }}">
+                <div class="col-12 col-md-auto col-lg-auto d-flex align-items-center gap-1.5">
+                    <button type="submit" class="btn btn-primary px-3 shadow-2xs" title="{{ __('Terapkan Filter') }}">
                         <i class="fa-solid fa-filter me-1"></i>{{ __('Filter') }}
                     </button>
                     @if(request('start_date') || request('end_date') || request('movement_type') || request('created_by'))

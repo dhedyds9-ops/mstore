@@ -95,8 +95,27 @@
                 </span>
             </div>
 
+            {{-- Filter Cepat (Quick Date Filters) --}}
+            <div class="d-flex flex-wrap align-items-center gap-1 mb-2.5">
+                <span class="text-muted small me-1"><i class="fa-solid fa-clock-rotate-left me-1"></i>{{ __('Filter Cepat:') }}</span>
+                <a href="{{ route('atk.expenses.index', array_merge(request()->except(['start_date', 'end_date', 'page']), ['start_date' => today()->toDateString(), 'end_date' => today()->toDateString()])) }}" class="badge {{ request('start_date') === today()->toDateString() && request('end_date') === today()->toDateString() ? 'bg-primary text-white' : 'bg-light text-dark border' }} text-decoration-none px-2.5 py-1 small rounded-pill">
+                    {{ __('Hari Ini') }}
+                </a>
+                <a href="{{ route('atk.expenses.index', array_merge(request()->except(['start_date', 'end_date', 'page']), ['start_date' => today()->subDay()->toDateString(), 'end_date' => today()->subDay()->toDateString()])) }}" class="badge {{ request('start_date') === today()->subDay()->toDateString() && request('end_date') === today()->subDay()->toDateString() ? 'bg-primary text-white' : 'bg-light text-dark border' }} text-decoration-none px-2.5 py-1 small rounded-pill">
+                    {{ __('Kemarin') }}
+                </a>
+                <a href="{{ route('atk.expenses.index', array_merge(request()->except(['start_date', 'end_date', 'page']), ['start_date' => now()->startOfMonth()->toDateString(), 'end_date' => now()->endOfMonth()->toDateString()])) }}" class="badge {{ request('start_date') === now()->startOfMonth()->toDateString() && request('end_date') === now()->endOfMonth()->toDateString() ? 'bg-primary text-white' : 'bg-light text-dark border' }} text-decoration-none px-2.5 py-1 small rounded-pill">
+                    {{ __('Bulan Ini') }}
+                </a>
+                @if(request('search') || request('start_date') || request('end_date'))
+                <a href="{{ route('atk.expenses.index') }}" class="badge bg-danger-subtle text-danger border border-danger-subtle text-decoration-none px-2.5 py-1 small rounded-pill">
+                    <i class="fa-solid fa-rotate-left me-1"></i>{{ __('Reset') }}
+                </a>
+                @endif
+            </div>
+
             <form action="{{ route('atk.expenses.index') }}" method="GET" class="row g-2 align-items-center atk-filter-bar">
-                <div class="col-12 col-md-4">
+                <div class="col-12 col-md-5 col-lg-4">
                     <div class="atk-search-box">
                         <span class="search-icon">
                             <i class="fa-solid fa-magnifying-glass"></i>
@@ -112,20 +131,20 @@
 
                 <div class="col-6 col-md-3 col-lg-2">
                     <div class="input-group">
-                        <span class="input-group-text text-muted small py-1">{{ __('Dari') }}</span>
+                        <span class="input-group-text text-muted small"><i class="fa-regular fa-calendar me-1"></i>{{ __('Dari') }}</span>
                         <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}">
                     </div>
                 </div>
 
                 <div class="col-6 col-md-3 col-lg-2">
                     <div class="input-group">
-                        <span class="input-group-text text-muted small py-1">{{ __('Sampai') }}</span>
+                        <span class="input-group-text text-muted small"><i class="fa-regular fa-calendar me-1"></i>{{ __('Sampai') }}</span>
                         <input type="date" name="end_date" class="form-control" value="{{ request('end_date') }}">
                     </div>
                 </div>
 
-                <div class="col-12 col-md-auto ms-auto d-flex gap-2 justify-content-end">
-                    <button type="submit" class="btn btn-primary px-3" title="{{ __('Terapkan Filter') }}">
+                <div class="col-12 col-md-auto col-lg-auto d-flex align-items-center gap-1.5">
+                    <button type="submit" class="btn btn-primary px-3 shadow-2xs" title="{{ __('Terapkan Filter') }}">
                         <i class="fa-solid fa-filter me-1"></i>{{ __('Filter') }}
                     </button>
                     @if(request('search') || request('start_date') || request('end_date'))

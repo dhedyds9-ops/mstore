@@ -105,6 +105,25 @@
     <div class="card border-0 shadow-sm rounded-4 mb-4">
         {{-- Filter Bar --}}
         <div class="card-header bg-white border-bottom py-3 px-3 px-md-4">
+            {{-- Filter Cepat (Quick Date Filters) --}}
+            <div class="d-flex flex-wrap align-items-center gap-1 mb-2.5">
+                <span class="text-muted small me-1"><i class="fa-solid fa-clock-rotate-left me-1"></i>{{ __('Filter Cepat:') }}</span>
+                <a href="{{ route('atk.stock-movements.index', array_merge(request()->except(['start_date', 'end_date', 'page']), ['start_date' => today()->toDateString(), 'end_date' => today()->toDateString()])) }}" class="badge {{ request('start_date') === today()->toDateString() && request('end_date') === today()->toDateString() ? 'bg-primary text-white' : 'bg-light text-dark border' }} text-decoration-none px-2.5 py-1 small rounded-pill">
+                    {{ __('Hari Ini') }}
+                </a>
+                <a href="{{ route('atk.stock-movements.index', array_merge(request()->except(['start_date', 'end_date', 'page']), ['start_date' => today()->subDay()->toDateString(), 'end_date' => today()->subDay()->toDateString()])) }}" class="badge {{ request('start_date') === today()->subDay()->toDateString() && request('end_date') === today()->subDay()->toDateString() ? 'bg-primary text-white' : 'bg-light text-dark border' }} text-decoration-none px-2.5 py-1 small rounded-pill">
+                    {{ __('Kemarin') }}
+                </a>
+                <a href="{{ route('atk.stock-movements.index', array_merge(request()->except(['start_date', 'end_date', 'page']), ['start_date' => now()->startOfMonth()->toDateString(), 'end_date' => now()->endOfMonth()->toDateString()])) }}" class="badge {{ request('start_date') === now()->startOfMonth()->toDateString() && request('end_date') === now()->endOfMonth()->toDateString() ? 'bg-primary text-white' : 'bg-light text-dark border' }} text-decoration-none px-2.5 py-1 small rounded-pill">
+                    {{ __('Bulan Ini') }}
+                </a>
+                @if(request('search') || request('type') || request('product_id') || request('supplier_id') || request('start_date') || request('end_date'))
+                <a href="{{ route('atk.stock-movements.index') }}" class="badge bg-danger-subtle text-danger border border-danger-subtle text-decoration-none px-2.5 py-1 small rounded-pill">
+                    <i class="fa-solid fa-rotate-left me-1"></i>{{ __('Reset') }}
+                </a>
+                @endif
+            </div>
+
             <form method="GET" action="{{ route('atk.stock-movements.index') }}" id="filterForm">
                 <div class="row g-2 align-items-center atk-filter-bar">
                     {{-- Pencarian --}}
@@ -119,15 +138,12 @@
                                     <i class="fa-solid fa-xmark"></i>
                                 </a>
                             @endif
-                            <button type="submit" class="btn btn-primary btn-search" title="{{ __('Cari') }}">
-                                <span class="fw-semibold">{{ __('Cari') }}</span>
-                            </button>
                         </div>
                     </div>
 
                     {{-- Tipe Mutasi --}}
-                    <div class="col-6 col-sm-4 col-md-2 col-lg-2">
-                        <select name="type" class="form-select" onchange="this.form.submit()">
+                    <div class="col-6 col-sm-6 col-md-2 col-lg-2">
+                        <select name="type" class="form-select">
                             <option value="">{{ __('Semua Tipe Mutasi') }}</option>
                             <option value="in" {{ request('type') === 'in' ? 'selected' : '' }}>{{ __('Barang Masuk (Restok)') }}</option>
                             <option value="out" {{ request('type') === 'out' ? 'selected' : '' }}>{{ __('Barang Keluar (POS)') }}</option>
@@ -136,35 +152,37 @@
                     </div>
 
                     {{-- Produk --}}
-                    <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-                        <select name="product_id" class="form-select" onchange="this.form.submit()">
+                    <div class="col-6 col-sm-6 col-md-3 col-lg-2">
+                        <select name="product_id" class="form-select">
                             <option value="">{{ __('Semua Produk') }}</option>
                             @foreach($products as $p)
-                                <option value="{{ $p->id }}" {{ request('product_id') == $p->id ? 'selected' : '' }}>{{ Str::limit($p->name, 25) }}</option>
+                                <option value="{{ $p->id }}" {{ request('product_id') == $p->id ? 'selected' : '' }}>{{ Str::limit($p->name, 22) }}</option>
                             @endforeach
                         </select>
                     </div>
 
                     {{-- Periode Tanggal Dari - Sampai --}}
-                    <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+                    <div class="col-6 col-sm-6 col-md-3 col-lg-2">
                         <div class="input-group">
-                            <span class="input-group-text text-muted small py-1">{{ __('Dari') }}</span>
-                            <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}" onchange="this.form.submit()">
+                            <span class="input-group-text text-muted small"><i class="fa-regular fa-calendar me-1"></i>{{ __('Dari') }}</span>
+                            <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}">
                         </div>
                     </div>
-                    <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+                    <div class="col-6 col-sm-6 col-md-3 col-lg-2">
                         <div class="input-group">
-                            <span class="input-group-text text-muted small py-1">{{ __('S/d') }}</span>
-                            <input type="date" name="end_date" class="form-control" value="{{ request('end_date') }}" onchange="this.form.submit()">
+                            <span class="input-group-text text-muted small"><i class="fa-regular fa-calendar me-1"></i>{{ __('Sampai') }}</span>
+                            <input type="date" name="end_date" class="form-control" value="{{ request('end_date') }}">
                         </div>
                     </div>
 
-                    {{-- Reset Filter Button --}}
-                    <div class="col-12 col-md-auto ms-auto d-flex justify-content-end">
+                    {{-- Action Buttons --}}
+                    <div class="col-12 col-md-auto col-lg-auto d-flex align-items-center gap-1.5">
+                        <button type="submit" class="btn btn-primary px-3 shadow-2xs" title="{{ __('Terapkan Filter') }}">
+                            <i class="fa-solid fa-filter me-1"></i>{{ __('Filter') }}
+                        </button>
                         @if(request('search') || request('type') || request('product_id') || request('supplier_id') || request('start_date') || request('end_date'))
-                            <a href="{{ route('atk.stock-movements.index') }}" class="btn btn-outline-danger d-inline-flex align-items-center gap-1 text-nowrap" style="height: 38px;" title="{{ __('Reset Filter') }}">
+                            <a href="{{ route('atk.stock-movements.index') }}" class="btn btn-outline-secondary px-2" title="{{ __('Reset Filter') }}">
                                 <i class="fa-solid fa-rotate-left"></i>
-                                <span>{{ __('Reset') }}</span>
                             </a>
                         @endif
                     </div>
