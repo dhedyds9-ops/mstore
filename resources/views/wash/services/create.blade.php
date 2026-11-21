@@ -12,217 +12,307 @@
         </a>
     </div>
 
-    <div class="card shadow mb-4">
-        <div class="card-body">
-            <form id="createServiceForm" action="{{ route('wash.services.store') }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                <div class="mb-3">
-                    <label for="name" class="form-label" id="nameLabel">Nama Layanan</label>
-                    <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name') }}" required>
-                    @error('name')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
+    <form id="createServiceForm" action="{{ route('wash.services.store') }}" method="POST" enctype="multipart/form-data">
+        @csrf
 
-                <div class="mb-3">
-            <label for="vehicle_type" class="form-label" id="vehicleTypeLabel">Jenis Kendaraan</label>
-            <select class="form-select @error('vehicle_type') is-invalid @enderror" id="vehicle_type" name="vehicle_type" required>
-                <option value="car" {{ old('vehicle_type') == 'car' ? 'selected' : '' }}>Mobil</option>
-                <option value="motor" {{ old('vehicle_type') == 'motor' ? 'selected' : '' }}>Motor</option>
-                <option value="coffee" {{ old('vehicle_type') == 'coffee' ? 'selected' : '' }}>Caffe</option>
-            </select>
-            @error('vehicle_type')
-                <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
-            <div class="form-text text-primary d-none" id="coffeeModeHint">
-                Mode Caffe aktif: form disederhanakan seperti produk ATK.
-            </div>
-        </div>
-
-        <div class="mb-3" id="stockItemField">
-            <label for="wash_stock_item_id" class="form-label">Produk Stok (Opsional)</label>
-            <select class="form-select @error('wash_stock_item_id') is-invalid @enderror" id="wash_stock_item_id" name="wash_stock_item_id">
-                <option value="">Pilih Produk Stok</option>
-                @foreach($stockItems as $item)
-                    <option value="{{ $item->id }}" {{ old('wash_stock_item_id') == $item->id ? 'selected' : '' }}>
-                        {{ $item->name }} (Stok: {{ number_format($item->current_stock, 2, ',', '.') }} {{ $item->unit }})
-                    </option>
-                @endforeach
-            </select>
-            @error('wash_stock_item_id')
-                <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
-            <div class="form-text text-muted">Hubungkan produk Caffe dengan stok barang.</div>
-        </div>
-
-                <div class="row g-3 mb-3" id="washAttributeGroup">
-                    <div class="col-12 col-md-4">
-                        <label for="service_category" class="form-label">Kategori Layanan</label>
-                        <select class="form-select @error('service_category') is-invalid @enderror" id="service_category" name="service_category" required>
-                            @foreach(\App\Models\WashService::CATEGORY_OPTIONS as $value => $label)
-                                <option value="{{ $value }}" {{ old('service_category', 'main') === $value ? 'selected' : '' }}>{{ $label }}</option>
-                            @endforeach
-                        </select>
-                        @error('service_category')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+        <div class="row g-4">
+            <!-- Kolom Kiri: Info Utama & Harga -->
+            <div class="col-12 col-lg-7">
+                <!-- Card 1: Informasi Layanan -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h5 class="card-title mb-0 fw-bold text-dark">
+                            <i class="fas fa-info-circle text-primary me-2"></i>Informasi Layanan
+                        </h5>
                     </div>
-                    <div class="col-12 col-md-4">
-                        <label for="size_tier" class="form-label">Ukuran Kendaraan</label>
-                        <select class="form-select @error('size_tier') is-invalid @enderror" id="size_tier" name="size_tier" required>
-                            @foreach(\App\Models\WashService::SIZE_TIER_OPTIONS as $value => $label)
-                                <option value="{{ $value }}" {{ old('size_tier', 'none') === $value ? 'selected' : '' }}>{{ $label }}</option>
-                            @endforeach
-                        </select>
-                        @error('size_tier')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                    <div class="col-12 col-md-4">
-                        <label for="package_type" class="form-label">Jenis Paket</label>
-                        <select class="form-select @error('package_type') is-invalid @enderror" id="package_type" name="package_type" required>
-                            @foreach(\App\Models\WashService::PACKAGE_TYPE_OPTIONS as $value => $label)
-                                <option value="{{ $value }}" {{ old('package_type', 'general') === $value ? 'selected' : '' }}>{{ $label }}</option>
-                            @endforeach
-                        </select>
-                        @error('package_type')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
+                    <div class="card-body p-4">
+                        <div class="mb-3">
+                            <label for="name" class="form-label fw-semibold" id="nameLabel">Nama Layanan</label>
+                            <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name') }}" required placeholder="Contoh: Cuci Motor Sedang">
+                            @error('name')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
 
-                <div class="mb-3" id="sortOrderGroup">
-                    <label for="sort_order" class="form-label">Urutan Tampil</label>
-                    <input type="number" class="form-control @error('sort_order') is-invalid @enderror" id="sort_order" name="sort_order" value="{{ old('sort_order', 0) }}" min="0">
-                    @error('sort_order')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-12 col-md-6">
+                                <label for="vehicle_type" class="form-label fw-semibold" id="vehicleTypeLabel">Jenis Kendaraan / Produk</label>
+                                <select class="form-select @error('vehicle_type') is-invalid @enderror" id="vehicle_type" name="vehicle_type" required>
+                                    <option value="car" {{ old('vehicle_type') == 'car' ? 'selected' : '' }}>Mobil (Car)</option>
+                                    <option value="motor" {{ old('vehicle_type', 'motor') == 'motor' ? 'selected' : '' }}>Motor (Motorcycle)</option>
+                                    <option value="coffee" {{ old('vehicle_type') == 'coffee' ? 'selected' : '' }}>Caffe (Minuman/Snack)</option>
+                                </select>
+                                @error('vehicle_type')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <div class="form-text text-primary d-none small mt-1" id="coffeeModeHint">
+                                    <i class="fas fa-info-circle me-1"></i>Mode Caffe aktif: formulir disederhanakan.
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="service_category" class="form-label fw-semibold">Kategori Layanan</label>
+                                <select class="form-select @error('service_category') is-invalid @enderror" id="service_category" name="service_category" required>
+                                    @foreach(\App\Models\WashService::CATEGORY_OPTIONS as $value => $label)
+                                        <option value="{{ $value }}" {{ old('service_category', 'main') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                                @error('service_category')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
 
-                <div class="row g-3 mb-3">
-                    <div class="col-12 col-md-6">
-                        <label for="cost_price" class="form-label" id="costPriceLabel">Harga Beli</label>
-                        <input type="number" class="form-control @error('cost_price') is-invalid @enderror" id="cost_price" name="cost_price" value="{{ old('cost_price', 0) }}" min="0">
-                        @error('cost_price')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                    <div class="col-12 col-md-6">
-                        <label for="price" class="form-label" id="sellingPriceLabel">Harga Jual</label>
-                        <input type="number" class="form-control @error('price') is-invalid @enderror" id="price" name="price" value="{{ old('price') }}" required min="0">
-                        @error('price')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                        <div class="row g-3 mb-3" id="washAttributeGroup">
+                            <div class="col-12 col-md-6">
+                                <label for="size_tier" class="form-label fw-semibold">Ukuran Kendaraan</label>
+                                <select class="form-select @error('size_tier') is-invalid @enderror" id="size_tier" name="size_tier" required>
+                                    @foreach(\App\Models\WashService::SIZE_TIER_OPTIONS as $value => $label)
+                                        <option value="{{ $value }}" {{ old('size_tier', 'none') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                                @error('size_tier')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="package_type" class="form-label fw-semibold">Jenis Paket</label>
+                                <select class="form-select @error('package_type') is-invalid @enderror" id="package_type" name="package_type" required>
+                                    @foreach(\App\Models\WashService::PACKAGE_TYPE_OPTIONS as $value => $label)
+                                        <option value="{{ $value }}" {{ old('package_type', 'general') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                                @error('package_type')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="mb-2" id="stockItemField">
+                            <label for="wash_stock_item_id" class="form-label fw-semibold">Produk Stok Terkait (Opsional)</label>
+                            <select class="form-select @error('wash_stock_item_id') is-invalid @enderror" id="wash_stock_item_id" name="wash_stock_item_id">
+                                <option value="">Tidak terhubung ke stok bahan</option>
+                                @foreach($stockItems as $item)
+                                    <option value="{{ $item->id }}" {{ old('wash_stock_item_id') == $item->id ? 'selected' : '' }}>
+                                        {{ $item->name }} (Stok: {{ number_format($item->current_stock, 2, ',', '.') }} {{ $item->unit }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('wash_stock_item_id')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <div class="form-text text-muted small">Pilih jika layanan ini otomatis memotong stok barang saat transaksi.</div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="mb-3" id="holidayPriceGroup">
-                    <label for="holiday_price" class="form-label">Penyesuaian Harga Hari Raya (+/-)</label>
-                    <input type="number" class="form-control @error('holiday_price') is-invalid @enderror" id="holiday_price" name="holiday_price" value="{{ old('holiday_price') }}" placeholder="Contoh: 5000 atau -3000">
-                    @error('holiday_price')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
+                <!-- Card 2: Penetapan Harga (Tarif) -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h5 class="card-title mb-0 fw-bold text-dark">
+                            <i class="fas fa-tags text-success me-2"></i>Penetapan Harga & Tarif
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3 mb-3">
+                            <div class="col-12 col-md-6">
+                                <label for="price" class="form-label fw-bold text-success fs-6" id="sellingPriceLabel">Harga Jual (Tarif Kasir) <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-success bg-opacity-10 text-success fw-bold">Rp</span>
+                                    <input type="number" class="form-control form-control-lg fw-bold text-success @error('price') is-invalid @enderror" id="price" name="price" value="{{ old('price') }}" required min="0" placeholder="25000">
+                                </div>
+                                @error('price')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="cost_price" class="form-label fw-semibold" id="costPriceLabel">Harga Modal / HPP</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted">Rp</span>
+                                    <input type="number" class="form-control @error('cost_price') is-invalid @enderror" id="cost_price" name="cost_price" value="{{ old('cost_price', 0) }}" min="0" placeholder="0">
+                                </div>
+                                @error('cost_price')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                                <small class="text-muted" style="font-size:11px;">Biaya modal bahan/operasional per layanan.</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-2" id="holidayPriceGroup">
+                            <label for="holiday_price" class="form-label fw-semibold">Penyesuaian Hari Raya (+ / -)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted">Rp</span>
+                                <input type="number" class="form-control @error('holiday_price') is-invalid @enderror" id="holiday_price" name="holiday_price" value="{{ old('holiday_price') }}" placeholder="Contoh: 5000 atau -3000">
+                            </div>
+                            @error('holiday_price')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                            <div class="form-text text-muted small">Penambahan atau pengurangan tarif otomatis saat jadwal Hari Raya aktif.</div>
+                        </div>
+                    </div>
                 </div>
 
+                <!-- Card 3: Aturan Variasi Harga POS (Accordion Rapi) -->
                 @php
                     $rulePrices = old('rule_price', []);
                     $ruleRows = max(1, count($rulePrices));
+                    $hasRules = count($rulePrices) > 0;
                 @endphp
-                <div class="mb-3" id="priceRulesSection">
-                    <label class="form-label d-flex justify-content-between align-items-center">
-                        <span>Aturan Harga POS (Opsional)</span>
+                <div class="card shadow-sm border-0 mb-4" id="priceRulesSection">
+                    <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-2">
+                            <h5 class="card-title mb-0 fw-bold text-dark">
+                                <i class="fas fa-sliders-h text-info me-2"></i>Aturan Variasi Harga POS
+                            </h5>
+                            <span class="badge {{ $hasRules ? 'bg-primary' : 'bg-light text-muted border' }}">
+                                {{ $hasRules ? count($rulePrices) . ' Aturan' : 'Opsional' }}
+                            </span>
+                        </div>
                         <div class="d-flex gap-2">
                             <button type="button" class="btn btn-sm btn-outline-secondary" id="applyPriceTemplate">Template Otomatis</button>
-                            <button type="button" class="btn btn-sm btn-outline-primary" id="addPriceRuleRow">Tambah Baris</button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="addPriceRuleRow">+ Tambah Baris</button>
                         </div>
-                    </label>
-                    <div class="table-responsive">
-                        <table class="table table-sm table-bordered align-middle mb-0" id="priceRulesTable">
-                            <thead>
-                                <tr>
-                                    <th>Tipe</th>
-                                    <th>Ukuran</th>
-                                    <th>Paket</th>
-                                    <th>Harga</th>
-                                    <th>Urutan</th>
-                                    <th>Aktif</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @for($i = 0; $i < $ruleRows; $i++)
+                    </div>
+                    <div class="card-body p-3">
+                        <p class="text-muted small mb-3">
+                            Gunakan aturan variasi ini jika 1 layanan memiliki opsi tarif bertingkat (berdasarkan ukuran kendaraan atau paket). Jika tidak ada variasi, tabel ini boleh dikosongkan.
+                        </p>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered align-middle mb-0" id="priceRulesTable">
+                                <thead class="table-light">
                                     <tr>
-                                        <td>
-                                            <select class="form-select form-select-sm" name="rule_vehicle_type[]">
-                                                <option value="all" {{ old('rule_vehicle_type.'.$i, 'all') === 'all' ? 'selected' : '' }}>Semua</option>
-                                                <option value="car" {{ old('rule_vehicle_type.'.$i) === 'car' ? 'selected' : '' }}>Mobil</option>
-                                                <option value="motor" {{ old('rule_vehicle_type.'.$i) === 'motor' ? 'selected' : '' }}>Motor</option>
-                                                <option value="coffee" {{ old('rule_vehicle_type.'.$i) === 'coffee' ? 'selected' : '' }}>Caffe</option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <select class="form-select form-select-sm" name="rule_size_tier[]">
-                                                @foreach(\App\Models\WashService::SIZE_TIER_OPTIONS as $value => $label)
-                                                    <option value="{{ $value }}" {{ old('rule_size_tier.'.$i, 'none') === $value ? 'selected' : '' }}>{{ $label }}</option>
-                                                @endforeach
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <select class="form-select form-select-sm" name="rule_package_type[]">
-                                                @foreach(\App\Models\WashService::PACKAGE_TYPE_OPTIONS as $value => $label)
-                                                    <option value="{{ $value }}" {{ old('rule_package_type.'.$i, 'general') === $value ? 'selected' : '' }}>{{ $label }}</option>
-                                                @endforeach
-                                            </select>
-                                        </td>
-                                        <td><input type="number" min="0" class="form-control form-control-sm" name="rule_price[]" value="{{ old('rule_price.'.$i) }}" placeholder="0"></td>
-                                        <td><input type="number" min="0" class="form-control form-control-sm" name="rule_sort_order[]" value="{{ old('rule_sort_order.'.$i, 0) }}"></td>
-                                        <td class="text-center">
-                                            <input type="checkbox" class="form-check-input" name="rule_is_active[]" value="{{ $i }}" {{ in_array((string) $i, collect(old('rule_is_active', ['0']))->map(fn($v) => (string) $v)->all(), true) ? 'checked' : '' }}>
-                                        </td>
-                                        <td class="text-center">
-                                            <button type="button" class="btn btn-sm btn-outline-danger" data-remove-rule>&times;</button>
-                                        </td>
+                                        <th style="min-width: 100px;">Tipe</th>
+                                        <th style="min-width: 100px;">Ukuran</th>
+                                        <th style="min-width: 140px;">Paket</th>
+                                        <th style="min-width: 120px;">Harga (Rp)</th>
+                                        <th style="width: 70px;">Urutan</th>
+                                        <th style="width: 60px;" class="text-center">Aktif</th>
+                                        <th style="width: 45px;"></th>
                                     </tr>
-                                @endfor
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label for="description" class="form-label" id="descriptionLabel">Deskripsi</label>
-                    <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description" rows="3">{{ old('description') }}</textarea>
-                    <div class="wash-description-editor mt-2" data-description-editor data-target="description" id="descriptionEditorWrap">
-                        <div class="wash-description-chips" data-description-chips></div>
-                        <div class="input-group input-group-sm mt-2">
-                            <input type="text" class="form-control" data-description-input placeholder="Tambah label, contoh: Scoopy">
-                            <button class="btn btn-outline-primary" type="button" data-description-add>Tambah</button>
+                                </thead>
+                                <tbody>
+                                    @for($i = 0; $i < $ruleRows; $i++)
+                                        <tr>
+                                            <td>
+                                                <select class="form-select form-select-sm" name="rule_vehicle_type[]">
+                                                    <option value="all" {{ old('rule_vehicle_type.'.$i, 'all') === 'all' ? 'selected' : '' }}>Semua</option>
+                                                    <option value="car" {{ old('rule_vehicle_type.'.$i) === 'car' ? 'selected' : '' }}>Mobil</option>
+                                                    <option value="motor" {{ old('rule_vehicle_type.'.$i) === 'motor' ? 'selected' : '' }}>Motor</option>
+                                                    <option value="coffee" {{ old('rule_vehicle_type.'.$i) === 'coffee' ? 'selected' : '' }}>Caffe</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <select class="form-select form-select-sm" name="rule_size_tier[]">
+                                                    @foreach(\App\Models\WashService::SIZE_TIER_OPTIONS as $value => $label)
+                                                        <option value="{{ $value }}" {{ old('rule_size_tier.'.$i, 'none') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <select class="form-select form-select-sm" name="rule_package_type[]">
+                                                    @foreach(\App\Models\WashService::PACKAGE_TYPE_OPTIONS as $value => $label)
+                                                        <option value="{{ $value }}" {{ old('rule_package_type.'.$i, 'general') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </td>
+                                            <td><input type="number" min="0" class="form-control form-control-sm" name="rule_price[]" value="{{ old('rule_price.'.$i) }}" placeholder="0"></td>
+                                            <td><input type="number" min="0" class="form-control form-control-sm" name="rule_sort_order[]" value="{{ old('rule_sort_order.'.$i, 0) }}"></td>
+                                            <td class="text-center">
+                                                <input type="checkbox" class="form-check-input" name="rule_is_active[]" value="{{ $i }}" {{ in_array((string) $i, collect(old('rule_is_active', ['0']))->map(fn($v) => (string) $v)->all(), true) ? 'checked' : '' }}>
+                                            </td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2" data-remove-rule title="Hapus baris">&times;</button>
+                                            </td>
+                                        </tr>
+                                    @endfor
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                    @error('description')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
+                </div>
+            </div>
+
+            <!-- Kolom Kanan: Foto, Deskripsi, Status & Aksi -->
+            <div class="col-12 col-lg-5">
+                <!-- Card 4: Media & Gambar Layanan -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h5 class="card-title mb-0 fw-bold text-dark">
+                            <i class="fas fa-image text-warning me-2"></i>Foto & Media Layanan
+                        </h5>
+                    </div>
+                    <div class="card-body p-4 text-center">
+                        <label for="image" class="form-label d-block text-start fw-semibold" id="imageLabel">Unggah Foto Layanan</label>
+                        <div class="bg-light rounded p-4 mb-3 text-center text-muted border border-dashed">
+                            <i class="fas fa-cloud-upload-alt fa-2x mb-2 text-secondary"></i>
+                            <div class="small">Pilih foto dari perangkat Anda</div>
+                        </div>
+                        <input type="file" class="form-control @error('image') is-invalid @enderror" id="image" name="image" accept="image/*">
+                        @error('image')
+                            <div class="invalid-feedback text-start">{{ $message }}</div>
+                        @enderror
+                        <div class="form-text text-start text-muted small mt-1">Format: JPG, PNG, WEBP. Maks 2MB.</div>
+                    </div>
                 </div>
 
-                <div class="mb-3">
-                    <label for="image" class="form-label" id="imageLabel">Gambar Layanan</label>
-                    <input type="file" class="form-control @error('image') is-invalid @enderror" id="image" name="image" accept="image/*">
-                    @error('image')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
+                <!-- Card 5: Pengaturan Tampilan & Deskripsi -->
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h5 class="card-title mb-0 fw-bold text-dark">
+                            <i class="fas fa-cog text-secondary me-2"></i>Status & Keterangan
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="mb-3 d-flex justify-content-between align-items-center p-3 bg-light rounded border">
+                            <div>
+                                <label class="form-check-label fw-bold d-block text-dark" for="is_active">Status Layanan</label>
+                                <small class="text-muted">Aktifkan agar layanan muncul di Kasir POS.</small>
+                            </div>
+                            <div class="form-check form-switch mb-0">
+                                <input type="hidden" name="is_active" value="0">
+                                <input type="checkbox" class="form-check-input" id="is_active" name="is_active" value="1" style="width: 2.4em; height: 1.3em;" {{ old('is_active', 1) ? 'checked' : '' }}>
+                            </div>
+                        </div>
+
+                        <div class="mb-3" id="sortOrderGroup">
+                            <label for="sort_order" class="form-label fw-semibold">Urutan Tampil di POS</label>
+                            <input type="number" class="form-control @error('sort_order') is-invalid @enderror" id="sort_order" name="sort_order" value="{{ old('sort_order', 0) }}" min="0" placeholder="0">
+                            @error('sort_order')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <div class="form-text text-muted small">Nomor urut lebih kecil akan tampil lebih awal di POS.</div>
+                        </div>
+
+                        <div class="mb-2">
+                            <label for="description" class="form-label fw-semibold" id="descriptionLabel">Deskripsi / Contoh Kendaraan</label>
+                            <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description" rows="3" placeholder="Contoh: Beat, Vario, Scoopy...">{{ old('description') }}</textarea>
+                            <div class="wash-description-editor mt-2" data-description-editor data-target="description" id="descriptionEditorWrap">
+                                <div class="wash-description-chips" data-description-chips></div>
+                                <div class="input-group input-group-sm mt-2">
+                                    <input type="text" class="form-control" data-description-input placeholder="Tambah contoh motor/tag cepat...">
+                                    <button class="btn btn-outline-primary" type="button" data-description-add>+ Tambah</button>
+                                </div>
+                            </div>
+                            @error('description')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
                 </div>
 
-                <div class="mb-3 form-check">
-                    <input type="hidden" name="is_active" value="0">
-                    <input type="checkbox" class="form-check-input" id="is_active" name="is_active" value="1" {{ old('is_active', 1) ? 'checked' : '' }}>
-                    <label class="form-check-label" for="is_active">Aktif</label>
+                <!-- Card 6: Aksi Simpan -->
+                <div class="card shadow-sm border-0 mb-4 bg-light">
+                    <div class="card-body p-3 d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg fw-bold" id="submitButtonDesktop">
+                            <i class="fas fa-save me-2"></i>Simpan Layanan Baru
+                        </button>
+                        <a href="{{ route('wash.services.index') }}" class="btn btn-outline-secondary">
+                            Batal
+                        </a>
+                    </div>
                 </div>
-
-                <button type="submit" class="btn btn-primary" id="submitButtonDesktop">Simpan Layanan</button>
-                <a href="{{ route('wash.services.index') }}" class="btn btn-secondary">Batal</a>
-            </form>
+            </div>
         </div>
-    </div>
+    </form>
 </div>
 <!-- Sticky Mobile Action Bar -->
 <div class="position-fixed bottom-0 start-0 end-0 bg-body border-top shadow d-md-none" style="z-index: 1030;">
