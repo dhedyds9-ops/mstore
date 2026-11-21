@@ -169,6 +169,7 @@ class SettingController extends Controller implements HasMiddleware
             'wash_receipt_powered_by' => 'nullable|string|max:120',
             'wash_receipt_holiday_greeting' => 'nullable|string|max:500',
             'wash_loyalty_target' => 'nullable|integer|min:1',
+            'wash_loyalty_member_only' => 'nullable|in:0,1',
             'wash_commission_car_small_medium' => 'nullable|integer|min:0',
             'wash_commission_car_large_xlarge' => 'nullable|integer|min:0',
             'wash_commission_motor_small_medium' => 'nullable|integer|min:0',

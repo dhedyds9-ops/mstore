@@ -73,6 +73,38 @@ class WashLoyaltyService
         return $mode;
     }
 
+    public function isMemberOnly(): bool
+    {
+        try {
+            return (bool) Setting::getValue('wash_loyalty_member_only', false);
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    public function resolveMemberId(WashTransaction $transaction): ?int
+    {
+        if ($transaction->wash_member_id) {
+            return (int) $transaction->wash_member_id;
+        }
+
+        $plate = $this->normalizePlate($transaction->vehicle_plate);
+        if ($plate !== '' && Schema::hasTable('wash_member_vehicles')) {
+            try {
+                $memberId = \App\Models\WashMemberVehicle::query()
+                    ->where('vehicle_plate', $plate)
+                    ->where('is_active', true)
+                    ->value('wash_member_id');
+                if ($memberId) {
+                    return (int) $memberId;
+                }
+            } catch (\Throwable) {
+            }
+        }
+
+        return null;
+    }
+
     public function normalizePlate(?string $plate): string
     {
         return strtoupper(preg_replace('/[^A-Za-z0-9]/', '', (string) $plate));
@@ -472,7 +504,7 @@ class WashLoyaltyService
         });
     }
 
-    public function checkInstantBonusEligibility(string $vehiclePlate): array
+    public function checkInstantBonusEligibility(string $vehiclePlate, ?int $memberId = null): array
     {
         $mode = $this->bonusMode();
         $result = [
@@ -482,11 +514,32 @@ class WashLoyaltyService
             'progress' => 0,
             'remaining' => $this->target(),
             'note' => null,
+            'member_only' => $this->isMemberOnly(),
         ];
         $plate = $this->normalizePlate($vehiclePlate);
         if ($plate === '' || ! Schema::hasTable('wash_loyalty_counters')) {
             return $result;
         }
+
+        if ($this->isMemberOnly()) {
+            $resolvedMemberId = $memberId;
+            if (! $resolvedMemberId && Schema::hasTable('wash_member_vehicles')) {
+                try {
+                    $resolvedMemberId = \App\Models\WashMemberVehicle::query()
+                        ->where('vehicle_plate', $plate)
+                        ->where('is_active', true)
+                        ->value('wash_member_id');
+                } catch (\Throwable) {
+                }
+            }
+            if (! $resolvedMemberId) {
+                $result['eligible'] = false;
+                $result['member_only_restricted'] = true;
+                $result['note'] = 'Bonus loyalty hanya berlaku untuk anggota Member terdaftar.';
+                return $result;
+            }
+        }
+
         $counter = WashLoyaltyCounter::query()->where('vehicle_plate', $plate)->first();
         if (! $counter) {
             return $result;
@@ -667,10 +720,22 @@ class WashLoyaltyService
             ];
         }
 
+        // Check if loyalty is restricted to registered members only
+        $resolvedMemberId = $this->resolveMemberId($transaction);
+        if ($this->isMemberOnly() && ! $resolvedMemberId) {
+            return [
+                'created_voucher' => null,
+                'progress' => null,
+                'instant_bonus_applied' => false,
+                'redeemed_voucher_code' => null,
+                'member_only_skipped' => true,
+            ];
+        }
+
         $target = $this->target();
         $mode = $this->bonusMode();
 
-        return DB::transaction(function () use ($transaction, $plate, $target, $mode, $autoRedeemCreatedVoucher) {
+        return DB::transaction(function () use ($transaction, $plate, $target, $mode, $autoRedeemCreatedVoucher, $resolvedMemberId) {
             $counter = WashLoyaltyCounter::query()
                 ->where('vehicle_plate', $plate)
                 ->lockForUpdate()
@@ -679,7 +744,7 @@ class WashLoyaltyService
             if (! $counter) {
                 $counter = WashLoyaltyCounter::create([
                     'wash_customer_id' => $transaction->wash_customer_id,
-                    'wash_member_id' => $transaction->wash_member_id,
+                    'wash_member_id' => $resolvedMemberId ?: $transaction->wash_member_id,
                     'vehicle_plate' => $plate,
                     'cycle_paid_count' => 0,
                     'lifetime_paid_count' => 0,
@@ -687,8 +752,8 @@ class WashLoyaltyService
             } elseif (! $counter->wash_customer_id && $transaction->wash_customer_id) {
                 $counter->wash_customer_id = $transaction->wash_customer_id;
             }
-            if (! $counter->wash_member_id && $transaction->wash_member_id) {
-                $counter->wash_member_id = $transaction->wash_member_id;
+            if (! $counter->wash_member_id && ($resolvedMemberId ?: $transaction->wash_member_id)) {
+                $counter->wash_member_id = $resolvedMemberId ?: $transaction->wash_member_id;
             }
 
             $counter->cycle_paid_count = ((int) $counter->cycle_paid_count) + 1;

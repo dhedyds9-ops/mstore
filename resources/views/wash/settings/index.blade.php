@@ -119,6 +119,14 @@
                                 <input type="number" min="1" class="form-control" id="wash_loyalty_target" name="wash_loyalty_target" value="{{ \App\Models\Setting::getValue('wash_loyalty_target', '11') }}">
                                 <div class="small text-muted mt-1">Misalnya isi 11, maka pada cuci ke-11 akan mendapat bonus gratis 1 layanan.</div>
                             </div>
+                            <div class="col-md-6">
+                                <label for="wash_loyalty_member_only" class="form-label fw-medium">Hak Mendapatkan Bonus Loyalty</label>
+                                <select class="form-select" id="wash_loyalty_member_only" name="wash_loyalty_member_only">
+                                    <option value="0" {{ \App\Models\Setting::getValue('wash_loyalty_member_only', '0') == '0' ? 'selected' : '' }}>Semua Pelanggan (Berdasarkan Plat Nomor)</option>
+                                    <option value="1" {{ \App\Models\Setting::getValue('wash_loyalty_member_only', '0') == '1' ? 'selected' : '' }}>Khusus Anggota Member Terdaftar Saja</option>
+                                </select>
+                                <div class="small text-muted mt-1">Pilih "Khusus Anggota Member Terdaftar Saja" agar hanya pelanggan yang terdaftar Member yang mengumpulkan stamp dan berhak cuci gratis.</div>
+                            </div>
                         </div>
                     </div>
 

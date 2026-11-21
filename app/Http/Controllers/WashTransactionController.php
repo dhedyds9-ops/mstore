@@ -415,7 +415,7 @@ class WashTransactionController extends Controller implements HasMiddleware
 
         $voucherCodes = $vouchers->pluck('code')->take(10)->values()->all();
 
-        $instantBonus = $loyalty->checkInstantBonusEligibility($plate);
+        $instantBonus = $loyalty->checkInstantBonusEligibility($plate, $member?->id);
 
         $found = (bool) $customer || ((int) $counter->lifetime_paid_count) > 0;
 
@@ -428,6 +428,7 @@ class WashTransactionController extends Controller implements HasMiddleware
             'voucher_count' => (int) $vouchers->count(),
             'voucher_codes' => $voucherCodes,
             'loyalty_basis' => 'plate',
+            'loyalty_member_only' => $loyalty->isMemberOnly(),
             'loyalty_mode' => $instantBonus['mode'],
             'instant_bonus_eligible' => (bool) ($instantBonus['eligible'] ?? false),
             'instant_bonus_note' => $instantBonus['note'] ?? null,

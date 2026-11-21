@@ -5,7 +5,14 @@
     <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
         <div>
             <h4 class="mb-1">Loyalty Program</h4>
-            <div class="text-muted">Skema: 10x cuci berbayar → voucher gratis 1x cuci</div>
+            <div class="text-muted d-flex flex-wrap align-items-center gap-2">
+                <span>Skema: {{ $target - 1 }}x cuci berbayar → voucher gratis 1x cuci</span>
+                @if(\App\Models\Setting::getValue('wash_loyalty_member_only', '0') == '1')
+                    <span class="badge bg-warning text-dark"><i class="fa-solid fa-crown me-1"></i>Khusus Member Terdaftar</span>
+                @else
+                    <span class="badge bg-primary-subtle text-primary"><i class="fa-solid fa-users me-1"></i>Semua Pelanggan</span>
+                @endif
+            </div>
         </div>
         <form method="GET" class="d-flex gap-2">
             <input type="text" name="q" class="form-control" placeholder="Cari plat / nama / no HP" value="{{ $q }}">
