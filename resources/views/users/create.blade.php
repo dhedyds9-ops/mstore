@@ -230,32 +230,27 @@
                                     @error('bu_level') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
 
-                                <!-- Bagian Presensi & Payroll -->
+                                <!-- Bagian Presensi & Profil Kepegawaian -->
                                 <div class="col-12 mt-3">
                                     <hr class="my-2 border-secondary opacity-25">
                                     <h6 class="fw-bold small text-dark mt-2 mb-3">
-                                        <i class="fa-solid fa-wallet text-secondary me-1"></i>{{ __('Data Presensi & Gaji (Opsional)') }}
+                                        <i class="fa-solid fa-id-card-clip text-secondary me-1"></i>{{ __('Pendaftaran Karyawan & Presensi (Opsional)') }}
                                     </h6>
                                 </div>
 
-                                @if(\App\Support\ModuleGate::isEnabled('hr'))
-                                <div class="col-12 col-md-6 mb-2">
-                                    <label for="attendance_card_code" class="form-label small fw-semibold text-body-secondary">{{ __('Kode ID Card Absensi') }}</label>
-                                    <input type="text" name="attendance_card_code" id="attendance_card_code" value="{{ old('attendance_card_code') }}" class="form-control form-control-sm font-monospace @error('attendance_card_code') is-invalid @enderror" placeholder="Contoh: EMP001">
-                                    <div class="form-text small">{{ __('Barcode / QR Code mesin absensi kios.') }}</div>
-                                    @error('attendance_card_code') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                </div>
-                                <div class="col-12 col-md-6 mb-2 d-flex align-items-center">
-                                    <div class="form-check form-switch pt-md-3">
-                                        <input type="hidden" name="is_attendance_required" value="0">
-                                        <input class="form-check-input" type="checkbox" role="switch" id="is_attendance_required" name="is_attendance_required" value="1" {{ old('is_attendance_required', '1') ? 'checked' : '' }}>
-                                        <label class="form-check-label fw-semibold small" for="is_attendance_required">
-                                            {{ __('Wajib Absensi Harian') }}
-                                        </label>
-                                        <div class="form-text small">{{ __('Karyawan wajib clock-in/out setiap hari kerja.') }}</div>
+                                <div class="col-12 mb-3">
+                                    <div class="p-3 bg-light rounded-3 border">
+                                        <div class="form-check form-switch m-0">
+                                            <input class="form-check-input" type="checkbox" role="switch" name="register_as_employee" id="register_as_employee" value="1" {{ old('register_as_employee') ? 'checked' : '' }}>
+                                            <label class="form-check-label fw-semibold text-dark small" for="register_as_employee">
+                                                {{ __('Daftarkan Akun ini ke Data Karyawan (Profil HRD)') }}
+                                            </label>
+                                        </div>
+                                        <div class="text-muted small mt-1 ps-4">
+                                            {{ __('Centang jika akun ini adalah pegawai perusahaan yang digaji. Jika tidak dicentang (misal akun Pemilik, Direksi, Investor, Auditor, atau Vendor), akun ini HANYA menjadi akun login dan TIDAK akan masuk ke daftar Karyawan.') }}
+                                        </div>
                                     </div>
                                 </div>
-                                @endif
 
                                 <div class="col-12 mb-2">
                                     <div class="alert alert-light border rounded-3 p-3 text-muted small d-flex align-items-center gap-2 mb-0">

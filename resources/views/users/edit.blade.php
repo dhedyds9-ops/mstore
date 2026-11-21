@@ -227,9 +227,16 @@
                                     </a>
                                 </div>
                                 @else
-                                <div class="alert alert-light border rounded-3 p-3 text-muted small mb-0 d-flex align-items-center gap-2">
-                                    <i class="fa-solid fa-circle-info text-secondary"></i>
-                                    <span>{{ __('Pengisian Gaji Pokok dikelola terpusat di menu Data Karyawan. Akun pengguna ini belum ditautkan ke data karyawan.') }}</span>
+                                <div class="p-3 bg-light rounded-3 border">
+                                    <div class="form-check form-switch m-0">
+                                        <input class="form-check-input" type="checkbox" role="switch" name="register_as_employee" id="register_as_employee" value="1" {{ old('register_as_employee') ? 'checked' : '' }}>
+                                        <label class="form-check-label fw-semibold text-dark small" for="register_as_employee">
+                                            {{ __('Daftarkan Pengguna ini ke Data Karyawan (Profil HRD)') }}
+                                        </label>
+                                    </div>
+                                    <div class="text-muted small mt-1 ps-4">
+                                        {{ __('Akun ini saat ini hanya berupa akun pengguna/login sistem. Centang opsi ini jika ingin membuatkan profil kepegawaian untuknya di menu Data Karyawan.') }}
+                                    </div>
                                 </div>
                                 @endif
                             </div>

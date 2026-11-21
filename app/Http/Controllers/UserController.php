@@ -406,24 +406,26 @@ class UserController extends Controller implements HasMiddleware
 
         $createdUser = User::create($createData);
 
-        // Sync to employee
-        app(\App\Services\EmployeeSyncService::class)->syncFromUser($createdUser);
-        
-        $employeeUpdate = [
-            'bank_name' => $validated['bank_name'] ?? null,
-            'bank_account_number' => $validated['bank_account_number'] ?? null,
-            'bank_account_name' => $validated['bank_account_name'] ?? null,
-        ];
-        if ($request->has('is_attendance_required')) {
-            $employeeUpdate['is_attendance_required'] = $request->boolean('is_attendance_required');
-        }
-        if ($this->hasAttendanceCardColumn()) {
-            $employeeUpdate['attendance_card_code'] = trim((string) ($validated['attendance_card_code'] ?? '')) ?: \App\Models\User::generateUniqueAttendanceCardCode(\App\Models\User::defaultAttendanceCardCodeById((int) $createdUser->id), (int) $createdUser->id);
-        }
+        // Sync to employee only if explicitly requested
+        if ($request->boolean('register_as_employee')) {
+            app(\App\Services\EmployeeSyncService::class)->syncFromUser($createdUser, true);
+            
+            $employeeUpdate = [
+                'bank_name' => $validated['bank_name'] ?? null,
+                'bank_account_number' => $validated['bank_account_number'] ?? null,
+                'bank_account_name' => $validated['bank_account_name'] ?? null,
+            ];
+            if ($request->has('is_attendance_required')) {
+                $employeeUpdate['is_attendance_required'] = $request->boolean('is_attendance_required');
+            }
+            if ($this->hasAttendanceCardColumn()) {
+                $employeeUpdate['attendance_card_code'] = trim((string) ($validated['attendance_card_code'] ?? '')) ?: \App\Models\User::generateUniqueAttendanceCardCode(\App\Models\User::defaultAttendanceCardCodeById((int) $createdUser->id), (int) $createdUser->id);
+            }
 
-        \App\Models\Employee::query()
-            ->where('user_id', $createdUser->id)
-            ->update($employeeUpdate);
+            \App\Models\Employee::query()
+                ->where('user_id', $createdUser->id)
+                ->update($employeeUpdate);
+        }
 
         return redirect()->route('users.index')->with('success', __('User created successfully.'));
     }
@@ -544,26 +546,30 @@ class UserController extends Controller implements HasMiddleware
         
         $user->update($updateData);
 
-        $employeeUpdate = [
-            'full_name' => $user->name,
-            'email' => $user->email,
-            'phone' => $user->phone,
-            'position' => $user->role?->label ?? 'Karyawan',
-            'department' => app(\App\Services\EmployeeSyncService::class)->departmentFromRole($user->role?->name),
-            'bank_name' => $validated['bank_name'] ?? null,
-            'bank_account_number' => $validated['bank_account_number'] ?? null,
-            'bank_account_name' => $validated['bank_account_name'] ?? null,
-        ];
-        if ($request->has('is_attendance_required')) {
-            $employeeUpdate['is_attendance_required'] = $request->boolean('is_attendance_required');
-        }
-        if ($this->hasAttendanceCardColumn()) {
-            $employeeUpdate['attendance_card_code'] = trim((string) ($validated['attendance_card_code'] ?? '')) ?: \App\Models\User::generateUniqueAttendanceCardCode(\App\Models\User::defaultAttendanceCardCodeById((int) $user->id), (int) $user->id);
+        if ($request->boolean('register_as_employee')) {
+            app(\App\Services\EmployeeSyncService::class)->syncFromUser($user, true);
         }
 
-        \App\Models\Employee::query()
-            ->where('user_id', $user->id)
-            ->update($employeeUpdate);
+        if ($user->employee) {
+            $employeeUpdate = [
+                'full_name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'position' => $user->role?->label ?? 'Karyawan',
+                'department' => app(\App\Services\EmployeeSyncService::class)->departmentFromRole($user->role?->name),
+                'bank_name' => $validated['bank_name'] ?? null,
+                'bank_account_number' => $validated['bank_account_number'] ?? null,
+                'bank_account_name' => $validated['bank_account_name'] ?? null,
+            ];
+            if ($request->has('is_attendance_required')) {
+                $employeeUpdate['is_attendance_required'] = $request->boolean('is_attendance_required');
+            }
+            if ($this->hasAttendanceCardColumn()) {
+                $employeeUpdate['attendance_card_code'] = trim((string) ($validated['attendance_card_code'] ?? '')) ?: \App\Models\User::generateUniqueAttendanceCardCode(\App\Models\User::defaultAttendanceCardCodeById((int) $user->id), (int) $user->id);
+            }
+
+            $user->employee->update($employeeUpdate);
+        }
 
         if ($request->boolean('reset_default_password')) {
             $user->update([

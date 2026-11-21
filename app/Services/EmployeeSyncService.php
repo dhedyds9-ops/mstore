@@ -157,13 +157,19 @@ class EmployeeSyncService
         return 'Operasional';
     }
 
-    public function syncFromUser(User $user): void
+    public function syncFromUser(User $user, bool $allowCreate = false): void
     {
         if (! $this->shouldSyncUser($user)) {
             return;
         }
 
-        $employee = $this->findEmployeeForUser($user) ?? new Employee;
+        $employee = $this->findEmployeeForUser($user);
+        if (! $employee) {
+            if (! $allowCreate) {
+                return;
+            }
+            $employee = new Employee;
+        }
         $employee->user_id = $user->id;
 
         $employee->full_name = $user->name;
@@ -359,6 +365,13 @@ class EmployeeSyncService
             'field-leader',
             'field-technician',
             'technician',
+            'super-admin',
+            'superadmin',
+            'owner',
+            'direktur',
+            'investor',
+            'auditor',
+            'vendor',
         ];
 
         return Role::query()

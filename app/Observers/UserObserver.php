@@ -9,12 +9,14 @@ class UserObserver
 {
     public function created(User $user): void
     {
-        app(EmployeeSyncService::class)->syncFromUser($user);
+        $allowCreate = request()->boolean('register_as_employee');
+        app(EmployeeSyncService::class)->syncFromUser($user, $allowCreate);
     }
 
     public function updated(User $user): void
     {
-        app(EmployeeSyncService::class)->syncFromUser($user);
+        $allowCreate = request()->boolean('register_as_employee');
+        app(EmployeeSyncService::class)->syncFromUser($user, $allowCreate);
     }
 
     public function deleted(User $user): void
