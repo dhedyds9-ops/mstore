@@ -101,6 +101,9 @@ $showDiscountType = !empty($transaction->notes) || (($transaction->discount_amou
             <div class="receipt-context">
                 <div class="context-line"><span>{{ __('Toko') }}</span><span>{{ $receiptStoreName }}</span></div>
                 <div class="context-line"><span>{{ __('Pelanggan / Kendaraan') }}</span><span>{{ $customerName }} / {{ $vehiclePlate }}</span></div>
+                @if($transaction->member)
+                <div class="context-line"><span>{{ __('Status Member') }}</span><span class="badge bg-warning text-dark"><i class="fas fa-crown"></i> {{ $transaction->member->name }} [{{ $transaction->member->member_number }}] - {{ $transaction->member->level?->name ?? 'Member' }}</span></div>
+                @endif
                 @if(!empty($transaction->queue_number))
                 <div class="context-line"><span>{{ __('Nomor Antrean') }}</span><span>#{{ $transaction->queue_number }}</span></div>
                 <div class="context-line"><span>{{ __('Queue Priority') }}</span><span>{{ $transaction->queue_priority_label }} ({{ $transaction->queue_display }})</span></div>

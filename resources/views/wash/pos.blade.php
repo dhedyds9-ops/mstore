@@ -211,7 +211,7 @@
                                 </div>
                                 <div class="col-6">
                                     <label for="vehicle_plate" class="wash-field-label">Plat Nomor</label>
-                                    <input type="text" class="form-control wash-input text-uppercase" id="vehicle_plate" name="vehicle_plate" list="vehiclePlateOptions" placeholder="B 1234 ABC">
+                                    <input type="text" class="form-control wash-input text-uppercase" id="vehicle_plate" name="vehicle_plate" list="vehiclePlateOptions" placeholder="B 1234 ABC" autocomplete="off">
                                     <datalist id="vehiclePlateOptions">
                                         @foreach($knownVehiclePlates ?? [] as $plateOption)
                                             <option value="{{ $plateOption['plate'] }}">
@@ -220,42 +220,83 @@
                                         @endforeach
                                     </datalist>
                                 </div>
-                                <div class="col-6">
-            <label for="known_plate_search" class="wash-field-label">Plat Tersimpan</label>
-            <div class="position-relative">
-                <input type="text" class="form-control wash-input" id="known_plate_search" placeholder="Cari plat nomor..." autocomplete="off">
-                <select class="form-select wash-input position-absolute top-100 start-0 end-0 z-1 d-none" id="known_plate">
-                    <option value="">Pilih dari riwayat</option>
-                    @foreach($knownVehiclePlates ?? [] as $plateOption)
-                        <option value="{{ $plateOption['plate'] }}" data-brand="{{ $plateOption['brand'] }}">
-                            {{ $plateOption['plate'] }}@if(!empty($plateOption['brand'])) - {{ $plateOption['brand'] }}@endif
-                        </option>
-                    @endforeach
-                </select>
-                <div class="list-group position-absolute top-100 start-0 end-0 z-2 d-none" id="known_plate_dropdown"></div>
-            </div>
-        </div>
+                                <div class="col-12 mt-1">
+                                    <div class="position-relative">
+                                        <input type="text" class="form-control form-control-sm wash-input" id="known_plate_search" placeholder="🔍 Cari dari riwayat plat tersimpan..." autocomplete="off">
+                                        <select class="form-select wash-input position-absolute top-100 start-0 end-0 z-1 d-none" id="known_plate">
+                                            <option value="">Pilih dari riwayat</option>
+                                            @foreach($knownVehiclePlates ?? [] as $plateOption)
+                                                <option value="{{ $plateOption['plate'] }}" data-brand="{{ $plateOption['brand'] }}">
+                                                    {{ $plateOption['plate'] }}@if(!empty($plateOption['brand'])) - {{ $plateOption['brand'] }}@endif
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <div class="list-group position-absolute top-100 start-0 end-0 z-2 d-none shadow-sm" id="known_plate_dropdown" style="max-height: 180px; overflow-y: auto;"></div>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="mb-3">
-                                <label for="customer_phone" class="wash-field-label">Nomor HP & Nama</label>
-                                <div class="d-flex gap-2 mb-2">
-                                    <input type="text" class="form-control wash-input" id="customer_phone" name="customer_phone" placeholder="0812...">
-                                    <button class="btn wash-secondary-btn" type="button" id="btnCheckCustomer">Cek</button>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label class="wash-field-label mb-0">
+                                        <i class="fas fa-id-card text-primary me-1"></i> Data Pelanggan / Member
+                                    </label>
+                                    <span id="memberStatusBadge" class="badge bg-light text-secondary border">
+                                        👤 Pelanggan Umum
+                                    </span>
                                 </div>
+
+                                <!-- Cari Member Terdaftar -->
+                                <div class="position-relative mb-2">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0 text-muted" style="height: 38px;">
+                                            <i class="fas fa-crown text-warning"></i>
+                                        </span>
+                                        <input type="text" class="form-control wash-input border-start-0" id="member_search" placeholder="Cari Member (Nama / No. HP / No. Member)..." autocomplete="off">
+                                        <button class="btn wash-secondary-btn" type="button" id="btnClearMember" title="Bukan Member / Reset" style="display:none; height: 38px;">
+                                            <i class="fas fa-times text-danger"></i>
+                                        </button>
+                                    </div>
+                                    <div class="list-group position-absolute top-100 start-0 end-0 z-3 shadow-sm d-none" id="member_search_dropdown" style="max-height: 220px; overflow-y: auto;"></div>
+                                </div>
+                                <input type="hidden" id="wash_member_id" name="wash_member_id" value="">
+
+                                <!-- Nomor HP & Cek Button -->
+                                <div class="d-flex gap-2 mb-2">
+                                    <input type="text" class="form-control wash-input" id="customer_phone" name="customer_phone" placeholder="Nomor WhatsApp / HP (0812...)">
+                                    <button class="btn wash-secondary-btn" type="button" id="btnCheckCustomer" title="Cek riwayat cuci & bonus">Cek</button>
+                                </div>
+
+                                <!-- Nama Pelanggan -->
                                 <input type="text" class="form-control wash-input" id="customer_name" name="customer_name" placeholder="Nama Pelanggan">
-                                <small id="customerInfo" class="form-text mt-2 d-block"></small>
-                                <div id="memberInfoCard" class="card border-0 bg-light mt-2" style="display:none;">
+                                
+                                <!-- Member Info Card -->
+                                <div id="memberInfoCard" class="card border border-warning bg-light mt-2" style="display:none;">
                                     <div class="card-body py-2 px-3">
-                                        <div class="fw-semibold" id="memberInfoName">-</div>
-                                        <div class="small text-muted mb-2" id="memberInfoNumber">-</div>
-                                        <div class="d-flex flex-wrap gap-2 small">
-                                            <span class="badge bg-primary" id="memberInfoLevel">Bronze</span>
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <div class="fw-bold text-dark d-flex align-items-center gap-1">
+                                                    <i class="fas fa-crown text-warning"></i> <span id="memberInfoName">-</span>
+                                                </div>
+                                                <div class="small text-muted" id="memberInfoNumber">-</div>
+                                            </div>
+                                            <button type="button" class="btn btn-sm btn-link text-danger p-0 text-decoration-none" id="btnDetachMember" title="Lepas status member">
+                                                <i class="fas fa-times-circle"></i> Lepas
+                                            </button>
+                                        </div>
+                                        <div class="d-flex flex-wrap gap-2 small mt-2">
+                                            <span class="badge bg-primary" id="memberInfoLevel">Bronze Member</span>
                                             <span class="badge bg-success" id="memberInfoDiscount">Diskon 0%</span>
-                                            <span class="badge bg-dark" id="memberInfoVisits">Kunjungan 0</span>
+                                            <span class="badge bg-dark" id="memberInfoVisits">0 Kunjungan</span>
+                                        </div>
+                                        <div id="memberVehiclesWrap" class="mt-2 pt-2 border-top" style="display:none;">
+                                            <small class="text-muted d-block mb-1" style="font-size:11px;">Pilih Kendaraan Member:</small>
+                                            <div class="d-flex flex-wrap gap-1" id="memberVehiclesChips"></div>
                                         </div>
                                     </div>
                                 </div>
+
+                                <small id="customerInfo" class="form-text mt-2 d-block"></small>
                             </div>
 
                             <div class="form-check mb-3 wash-inline-check">
@@ -683,8 +724,8 @@ document.addEventListener('DOMContentLoaded', function () {
             let memberLine = '';
             if (data.member_found) {
                 memberLine = `<br><span class="text-primary">Member ${data.member_level_name || 'Bronze Member'} | Diskon ${data.member_discount_percent || 0}% | Kunjungan ${data.member_total_visits || 0}</span>`;
-            } else {
-                resetMemberInfo();
+            } else if (!document.getElementById('wash_member_id')?.value) {
+                clearMember();
             }
             const mode = data.loyalty_mode || 'voucher';
             let kind;
@@ -700,14 +741,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function checkCustomerByFields(options = {}) {
         const opts = Object.assign({ silent: false }, options || {});
+        const memberId = document.getElementById('wash_member_id')?.value || '';
         const phone = document.getElementById('customer_phone').value;
         const vehiclePlate = document.getElementById('vehicle_plate').value;
         const customerName = document.getElementById('customer_name').value;
-        if (!vehiclePlate) {
-            if (!opts.silent) alert('Isi plat kendaraan untuk cek bonus cuci');
+        if (!vehiclePlate && !memberId && !phone) {
+            if (!opts.silent) alert('Isi plat kendaraan, nomor HP, atau pilih member untuk cek riwayat/bonus');
             return Promise.resolve(null);
         }
         const params = new URLSearchParams({
+            member_id: memberId,
             phone: phone || '',
             vehicle_plate: vehiclePlate || '',
             customer_name: customerName || ''
@@ -981,19 +1024,39 @@ document.addEventListener('DOMContentLoaded', function () {
         return 'Rp ' + new Intl.NumberFormat('id-ID').format(value || 0);
     }
 
+    const allMembers = @json($members ?? []);
+    const memberSearchInput = document.getElementById('member_search');
+    const memberSearchDropdown = document.getElementById('member_search_dropdown');
+    const btnClearMember = document.getElementById('btnClearMember');
+    const btnDetachMember = document.getElementById('btnDetachMember');
+    const washMemberIdInput = document.getElementById('wash_member_id');
+    const memberStatusBadge = document.getElementById('memberStatusBadge');
+    const memberVehiclesWrap = document.getElementById('memberVehiclesWrap');
+    const memberVehiclesChips = document.getElementById('memberVehiclesChips');
+
     function resetMemberInfo() {
-        currentMember = null;
-        const card = document.getElementById('memberInfoCard');
-        if (card) card.style.display = 'none';
+        if (!washMemberIdInput || !washMemberIdInput.value) {
+            currentMember = null;
+            const card = document.getElementById('memberInfoCard');
+            if (card) card.style.display = 'none';
+            if (memberStatusBadge) {
+                memberStatusBadge.className = 'badge bg-light text-secondary border';
+                memberStatusBadge.innerHTML = '👤 Pelanggan Umum';
+            }
+            if (memberVehiclesWrap) memberVehiclesWrap.style.display = 'none';
+        }
     }
 
     function setMemberInfo(data) {
         if (!data || !data.member_found) {
-            resetMemberInfo();
+            if (!document.getElementById('wash_member_id')?.value) {
+                clearMember();
+            }
             return;
         }
 
         currentMember = {
+            id: data.member_id || (currentMember ? currentMember.id : null),
             number: data.member_number || '',
             name: data.member_name || data.name || '',
             levelCode: data.member_level_code || 'bronze',
@@ -1002,7 +1065,23 @@ document.addEventListener('DOMContentLoaded', function () {
             totalVisits: parseInt(data.member_total_visits || 0, 10) || 0,
             totalTransactions: parseInt(data.member_total_transactions || 0, 10) || 0,
             totalSpending: parseFloat(data.member_total_spending || 0) || 0,
+            vehicles: Array.isArray(data.member_vehicles) ? data.member_vehicles : (currentMember?.vehicles || []),
         };
+
+        if (washMemberIdInput && currentMember.id) {
+            washMemberIdInput.value = currentMember.id;
+        }
+
+        if (memberSearchInput && currentMember.number) {
+            memberSearchInput.value = `[${currentMember.number}] ${currentMember.name}`;
+        }
+
+        if (btnClearMember) btnClearMember.style.display = 'block';
+
+        if (memberStatusBadge) {
+            memberStatusBadge.className = 'badge bg-warning text-dark border border-warning';
+            memberStatusBadge.innerHTML = `<i class="fas fa-crown me-1"></i> Member: ${escapeHtml(currentMember.levelName)}`;
+        }
 
         const card = document.getElementById('memberInfoCard');
         const nameEl = document.getElementById('memberInfoName');
@@ -1015,9 +1094,169 @@ document.addEventListener('DOMContentLoaded', function () {
         if (numberEl) numberEl.textContent = currentMember.number || '-';
         if (levelEl) levelEl.textContent = currentMember.levelName;
         if (discountEl) discountEl.textContent = 'Diskon ' + currentMember.discountPercent + '%';
-        if (visitsEl) visitsEl.textContent = 'Kunjungan ' + currentMember.totalVisits;
+        if (visitsEl) visitsEl.textContent = currentMember.totalVisits + ' Kunjungan';
         if (card) card.style.display = '';
+
+        // Handle vehicles
+        if (memberVehiclesWrap && memberVehiclesChips && currentMember.vehicles.length > 0) {
+            memberVehiclesWrap.style.display = 'block';
+            memberVehiclesChips.innerHTML = '';
+            currentMember.vehicles.forEach((veh, idx) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'btn btn-sm btn-outline-primary py-0 px-2' + (idx === 0 ? ' active' : '');
+                btn.innerHTML = `<i class="fas fa-car me-1"></i> ${escapeHtml(veh.plate)} ${veh.brand ? '(' + escapeHtml(veh.brand) + ')' : ''}`;
+                btn.addEventListener('click', function() {
+                    memberVehiclesChips.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    setVehicleFromMember(veh);
+                });
+                memberVehiclesChips.appendChild(btn);
+            });
+        }
     }
+
+    function selectMember(member) {
+        if (!member) return;
+        setMemberInfo({
+            member_found: true,
+            member_id: member.id,
+            member_number: member.member_number,
+            member_name: member.name,
+            member_phone: member.whatsapp,
+            member_level_code: member.level_code,
+            member_level_name: member.level_name,
+            member_discount_percent: member.discount_percent,
+            member_total_visits: member.total_visits,
+            member_total_transactions: member.total_transactions,
+            member_vehicles: member.vehicles || []
+        });
+
+        const nameInput = document.getElementById('customer_name');
+        const phoneInput = document.getElementById('customer_phone');
+        if (nameInput) nameInput.value = member.name || '';
+        if (phoneInput && member.whatsapp) phoneInput.value = member.whatsapp;
+
+        if (memberSearchDropdown) memberSearchDropdown.classList.add('d-none');
+
+        // If member has vehicles and vehicle plate is empty, populate from primary vehicle
+        if (Array.isArray(member.vehicles) && member.vehicles.length > 0) {
+            const plateInput = document.getElementById('vehicle_plate');
+            if (plateInput && !plateInput.value.trim()) {
+                setVehicleFromMember(member.vehicles[0]);
+            }
+        }
+
+        updateCartUI();
+
+        // Check customer loyalty and vouchers
+        const plate = (document.getElementById('vehicle_plate')?.value || '').trim();
+        if (plate) {
+            checkCustomerByFields({ silent: true });
+        }
+    }
+
+    function setVehicleFromMember(veh) {
+        if (!veh) return;
+        const plateInput = document.getElementById('vehicle_plate');
+        const brandSelect = document.getElementById('vehicle_brand');
+        const brandSearch = document.getElementById('vehicle_brand_search');
+        if (plateInput && veh.plate) {
+            plateInput.value = veh.plate;
+        }
+        if (veh.brand) {
+            if (brandSelect) brandSelect.value = veh.brand;
+            if (brandSearch) brandSearch.value = veh.brand;
+        }
+        checkCustomerByFields({ silent: true });
+    }
+
+    function clearMember() {
+        currentMember = null;
+        if (washMemberIdInput) washMemberIdInput.value = '';
+        if (memberSearchInput) memberSearchInput.value = '';
+        if (btnClearMember) btnClearMember.style.display = 'none';
+        if (memberStatusBadge) {
+            memberStatusBadge.className = 'badge bg-light text-secondary border';
+            memberStatusBadge.innerHTML = '👤 Pelanggan Umum';
+        }
+        const card = document.getElementById('memberInfoCard');
+        if (card) card.style.display = 'none';
+        const memberVehiclesWrap = document.getElementById('memberVehiclesWrap');
+        if (memberVehiclesWrap) memberVehiclesWrap.style.display = 'none';
+        updateCartUI();
+    }
+
+    if (btnClearMember) btnClearMember.addEventListener('click', clearMember);
+    if (btnDetachMember) btnDetachMember.addEventListener('click', clearMember);
+
+    function renderMemberDropdown(query = '') {
+        if (!memberSearchDropdown) return;
+        const q = (query || '').toLowerCase().trim();
+        let matches = allMembers;
+        if (q) {
+            matches = allMembers.filter(m => {
+                const nameMatch = (m.name || '').toLowerCase().includes(q);
+                const numMatch = (m.member_number || '').toLowerCase().includes(q);
+                const phoneMatch = (m.whatsapp || '').includes(q);
+                const plateMatch = Array.isArray(m.vehicles) && m.vehicles.some(v => (v.plate || '').toLowerCase().replace(/[^a-z0-9]/g, '').includes(q.replace(/[^a-z0-9]/g, '')));
+                return nameMatch || numMatch || phoneMatch || plateMatch;
+            });
+        }
+
+        if (matches.length === 0) {
+            memberSearchDropdown.innerHTML = '<div class="list-group-item text-muted small py-2">Member tidak ditemukan</div>';
+            memberSearchDropdown.classList.remove('d-none');
+            return;
+        }
+
+        let html = '';
+        matches.slice(0, 10).forEach(m => {
+            const platesStr = Array.isArray(m.vehicles) && m.vehicles.length > 0 
+                ? m.vehicles.map(v => v.plate).join(', ') 
+                : '-';
+            html += `
+                <button type="button" class="list-group-item list-group-item-action py-2 px-3 member-search-item" data-id="${m.id}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong class="d-block text-dark">${escapeHtml(m.name)}</strong>
+                            <small class="text-muted">${escapeHtml(m.member_number)} &bull; ${escapeHtml(m.whatsapp || '-')}</small>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-primary">${escapeHtml(m.level_name)}</span>
+                            <small class="d-block text-muted" style="font-size:11px;">Plat: ${escapeHtml(platesStr)}</small>
+                        </div>
+                    </div>
+                </button>
+            `;
+        });
+
+        memberSearchDropdown.innerHTML = html;
+        memberSearchDropdown.classList.remove('d-none');
+
+        memberSearchDropdown.querySelectorAll('.member-search-item').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const mId = parseInt(this.dataset.id, 10);
+                const member = allMembers.find(m => m.id === mId);
+                selectMember(member);
+            });
+        });
+    }
+
+    if (memberSearchInput) {
+        memberSearchInput.addEventListener('focus', function() {
+            renderMemberDropdown(this.value);
+        });
+        memberSearchInput.addEventListener('input', function() {
+            renderMemberDropdown(this.value);
+        });
+    }
+
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('#member_search') && !e.target.closest('#member_search_dropdown')) {
+            if (memberSearchDropdown) memberSearchDropdown.classList.add('d-none');
+        }
+    });
 
     function escapeHtml(value) {
         return String(value ?? '')
@@ -1059,7 +1298,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <div style="text-align:center;color:#4b5563;">Detail Transaksi Wash</div>
             <div style="margin-top:8px;">No. Transaksi: #${escapeHtml(transactionId)}</div>
             <div>Tanggal: ${escapeHtml(new Date().toLocaleString('id-ID'))}</div>
-            <div>Pelanggan: ${escapeHtml(payload.customerName || '-')}</div>
+            <div>Pelanggan: ${escapeHtml(payload.customerName || '-')} ${currentMember ? '<span style="font-weight:bold;color:#d97706;">(' + escapeHtml(currentMember.levelName) + ')</span>' : ''}</div>
             <div>Kendaraan: ${escapeHtml(payload.vehicleBrand || '-')} - ${escapeHtml(payload.vehiclePlate || '-')}</div>
             <div style="margin-top:8px;">
                 <table style="width:100%;border-collapse:collapse;">
@@ -1264,7 +1503,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (applyNowRadio) applyNowRadio.checked = false;
         if (saveLaterRadio) saveLaterRadio.checked = false;
         if (skipAutoRedeemInput) skipAutoRedeemInput.value = '0';
-        resetMemberInfo();
+        clearMember();
         
         resetServiceSelection();
 
@@ -1559,6 +1798,7 @@ document.addEventListener('DOMContentLoaded', function () {
             items: cart,
             payment_method: method,
             cash_amount: method === 'cash' ? cash : null,
+            wash_member_id: currentMember ? currentMember.id : (document.getElementById('wash_member_id')?.value || null),
             customer_name: document.getElementById('customer_name').value,
             customer_phone: document.getElementById('customer_phone').value,
             use_voucher: document.getElementById('use_voucher').checked,

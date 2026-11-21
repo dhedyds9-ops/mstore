@@ -357,11 +357,36 @@ class WashTransactionController extends Controller implements HasMiddleware
         $knownVehiclePlates = $this->getKnownVehiclePlates();
         $commissionRequireEmployee = (bool) ((int) \App\Models\Setting::getValue('wash_commission_require_employee', 0) ?: 0);
 
-        return view('wash.pos', compact('services', 'brands', 'employees', 'allUsers', 'holidaySchedule', 'knownVehiclePlates', 'commissionRequireEmployee'));
+        $members = WashMember::query()
+            ->with(['level', 'vehicles'])
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get()
+            ->map(function ($m) {
+                return [
+                    'id' => $m->id,
+                    'name' => $m->name,
+                    'member_number' => $m->member_number,
+                    'whatsapp' => $m->whatsapp,
+                    'level_code' => $m->level?->code ?? 'bronze',
+                    'level_name' => $m->level?->name ?? 'Bronze Member',
+                    'discount_percent' => (float) ($m->level?->discount_percent ?? 0),
+                    'total_visits' => (int) $m->total_visits,
+                    'total_transactions' => (int) $m->total_transactions,
+                    'vehicles' => $m->vehicles->map(fn ($v) => [
+                        'plate' => $v->vehicle_plate,
+                        'brand' => $v->vehicle_brand,
+                        'type' => $v->vehicle_type,
+                    ])->values()->all(),
+                ];
+            });
+
+        return view('wash.pos', compact('services', 'brands', 'employees', 'allUsers', 'holidaySchedule', 'knownVehiclePlates', 'commissionRequireEmployee', 'members'));
     }
 
     public function checkCustomer(Request $request)
     {
+        $memberId = $request->query('member_id');
         $phone = $request->query('phone');
         $vehiclePlate = $request->query('vehicle_plate');
         $customerName = $request->query('customer_name');
@@ -376,18 +401,31 @@ class WashTransactionController extends Controller implements HasMiddleware
         $target = $loyalty->target();
 
         $member = null;
-        if ($plate !== '') {
+        if ($memberId) {
+            $member = WashMember::with(['level', 'vehicles', 'card'])->find($memberId);
+        }
+        if (! $member && $plate !== '') {
             $member = $membership->findMemberByPlate($plate);
         }
         if (! $member && is_string($phone) && trim($phone) !== '') {
             $member = $membership->findMemberByPhone((string) $phone);
         }
+
+        if ($member) {
+            if ($plate === '' && $member->vehicles->isNotEmpty()) {
+                $plate = $loyalty->normalizePlate((string) $member->vehicles->first()->vehicle_plate);
+            }
+            if (! $customer && $member->whatsapp) {
+                $customer = WashCustomer::where('phone', $member->whatsapp)->first();
+            }
+        }
+
         $memberDiscountPercent = $membership->calculateDiscountPercent($member);
 
         if ($plate === '' || ! Schema::hasTable('wash_loyalty_counters')) {
             return response()->json([
                 'found' => (bool) $customer,
-                'name' => $customer?->name ?? $customerName,
+                'name' => $customer?->name ?? ($member?->name ?? $customerName),
                 'progress' => 0,
                 'target' => $target,
                 'remaining' => $target,
@@ -398,12 +436,19 @@ class WashTransactionController extends Controller implements HasMiddleware
                 'instant_bonus_eligible' => false,
                 'instant_bonus_note' => null,
                 'member_found' => (bool) $member,
+                'member_id' => $member?->id,
                 'member_number' => $member?->member_number,
                 'member_name' => $member?->name,
+                'member_phone' => $member?->whatsapp,
                 'member_status' => $member?->status,
                 'member_level_code' => $member?->level?->code,
                 'member_level_name' => $member?->level?->name,
                 'member_discount_percent' => $memberDiscountPercent,
+                'member_vehicles' => $member?->vehicles->map(fn ($v) => [
+                    'plate' => $v->vehicle_plate,
+                    'brand' => $v->vehicle_brand,
+                    'type' => $v->vehicle_type,
+                ])->values()->all() ?? [],
             ]);
         }
 
@@ -421,7 +466,7 @@ class WashTransactionController extends Controller implements HasMiddleware
 
         return response()->json([
             'found' => $found,
-            'name' => $customer?->name ?? $customerName,
+            'name' => $customer?->name ?? ($member?->name ?? $customerName),
             'progress' => (int) ($progress['progress'] ?? 0),
             'target' => (int) ($progress['target'] ?? $target),
             'remaining' => (int) ($progress['remaining'] ?? $target),
@@ -433,8 +478,10 @@ class WashTransactionController extends Controller implements HasMiddleware
             'instant_bonus_eligible' => (bool) ($instantBonus['eligible'] ?? false),
             'instant_bonus_note' => $instantBonus['note'] ?? null,
             'member_found' => (bool) $member,
+            'member_id' => $member?->id,
             'member_number' => $member?->member_number,
             'member_name' => $member?->name,
+            'member_phone' => $member?->whatsapp,
             'member_status' => $member?->status,
             'member_level_code' => $member?->level?->code,
             'member_level_name' => $member?->level?->name,
@@ -442,6 +489,11 @@ class WashTransactionController extends Controller implements HasMiddleware
             'member_total_transactions' => (int) ($member?->total_transactions ?? 0),
             'member_total_visits' => (int) ($member?->total_visits ?? 0),
             'member_total_spending' => (float) ($member?->total_spending ?? 0),
+            'member_vehicles' => $member?->vehicles->map(fn ($v) => [
+                'plate' => $v->vehicle_plate,
+                'brand' => $v->vehicle_brand,
+                'type' => $v->vehicle_type,
+            ])->values()->all() ?? [],
         ]);
     }
 
@@ -454,6 +506,7 @@ class WashTransactionController extends Controller implements HasMiddleware
             'items.*.rule_id' => 'nullable|integer|exists:wash_service_price_rules,id',
             'payment_method' => 'required|string',
             'cash_amount' => 'nullable|numeric',
+            'wash_member_id' => 'nullable|integer|exists:wash_members,id',
             'customer_name' => 'nullable|string',
             'customer_phone' => 'nullable|string',
             'vehicle_plate' => 'nullable|string',
@@ -475,22 +528,29 @@ class WashTransactionController extends Controller implements HasMiddleware
                 $vehiclePlateForStore = $normalizedPlateInput;
             }
 
+            // Handle Member
+            $member = null;
+            if ($request->wash_member_id) {
+                $member = WashMember::find($request->wash_member_id);
+            }
+
             // Handle Customer
             $customer = null;
-            if ($request->customer_phone) {
+            $customerPhone = $request->customer_phone ?: $member?->whatsapp;
+            $customerName = $request->customer_name ?: $member?->name;
+            if ($customerPhone) {
                 $customer = WashCustomer::firstOrCreate(
-                    ['phone' => $request->customer_phone],
-                    ['name' => $request->customer_name ?? 'Guest']
+                    ['phone' => $customerPhone],
+                    ['name' => $customerName ?? 'Guest']
                 );
 
                 // Update name if provided
-                if ($request->customer_name && $customer->name === 'Guest') {
-                    $customer->update(['name' => $request->customer_name]);
+                if ($customerName && $customer->name === 'Guest') {
+                    $customer->update(['name' => $customerName]);
                 }
             }
 
-            $member = null;
-            if (is_string($request->customer_phone) && trim((string) $request->customer_phone) !== '' && $vehiclePlateForStore !== '') {
+            if (! $member && is_string($request->customer_phone) && trim((string) $request->customer_phone) !== '' && $vehiclePlateForStore !== '') {
                 $memberName = trim((string) ($request->customer_name ?? $customer?->name ?? ''));
                 $member = app(WashMembershipService::class)->ensureMember(
                     $memberName,
@@ -579,7 +639,7 @@ class WashTransactionController extends Controller implements HasMiddleware
                     $isWashOnly = true; break;
                 }
             }
-            $bonusCheck = $loyaltyService->checkInstantBonusEligibility($normalizedPlateInput);
+            $bonusCheck = $loyaltyService->checkInstantBonusEligibility($normalizedPlateInput, $member?->id);
             $loyaltyMode = $bonusCheck['mode'] ?? 'voucher';
 
             $skipAutoRedeem = (bool) $request->input('skip_auto_redeem_voucher', false);

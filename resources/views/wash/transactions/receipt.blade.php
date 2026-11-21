@@ -325,6 +325,9 @@
             <tr><td class="label">Waktu</td><td>: {{ $transaction->created_at->format('d/m/y H:i') }}</td></tr>
             <tr><td class="label">Kasir</td><td>: {{ $cashierName }}</td></tr>
             <tr><td class="label">Pelanggan/Plat</td><td>: {{ $customerName }} / {{ $vehiclePlate }}</td></tr>
+            @if($transaction->member)
+                <tr><td class="label">Status Member</td><td>: {{ $transaction->member->name }} [{{ $transaction->member->member_number }}] - {{ $transaction->member->level?->name ?? 'Member' }}</td></tr>
+            @endif
             <tr><td class="label">Priority</td><td>: {{ $queuePriorityLabel }}</td></tr>
             <tr><td class="label">Urutan Layanan</td><td>: #{{ $queueServiceOrder }}</td></tr>
             @if($isRedemption)
