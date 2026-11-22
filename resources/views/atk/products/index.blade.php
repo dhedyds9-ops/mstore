@@ -378,11 +378,14 @@
                         </td>
                         <td>
                             @php
+                                $catRaw = strtoupper(trim((string) ($product->category ?? '')));
                                 $catClass = 'bg-primary-subtle text-primary border border-primary-subtle';
-                                if(str_contains(strtoupper($product->category ?? ''), 'FOTOCOPY')) {
+                                if (str_contains($catRaw, 'FOTOCOPY') || str_contains($catRaw, 'JASA')) {
                                     $catClass = 'bg-info-subtle text-info-emphasis border border-info-subtle';
-                                } elseif(str_contains(strtoupper($product->category ?? ''), 'TRANSFER')) {
-                                    $catClass = 'bg-success-subtle text-success border border-success-subtle';
+                                } elseif (str_contains($catRaw, 'TRANSFER') || str_contains($catRaw, 'BANK')) {
+                                    $catClass = 'bg-warning-subtle text-warning-emphasis border border-warning-subtle';
+                                } elseif (str_contains($catRaw, 'KONTER') || str_contains($catRaw, 'COUNTER') || str_contains($catRaw, 'PULSA') || str_contains($catRaw, 'HP')) {
+                                    $catClass = 'bg-purple-subtle text-purple border border-purple-subtle';
                                 }
                             @endphp
                             <span class="badge rounded-pill {{ $catClass }} fw-medium px-2 py-1">
@@ -670,6 +673,25 @@
 @push('scripts')
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
+    .bg-purple-subtle {
+        background-color: #f3e8ff !important;
+    }
+    .text-purple {
+        color: #7e22ce !important;
+    }
+    .border-purple-subtle {
+        border-color: #e9d5ff !important;
+    }
+    [data-bs-theme="dark"] .bg-purple-subtle {
+        background-color: rgba(147, 51, 234, 0.2) !important;
+    }
+    [data-bs-theme="dark"] .text-purple {
+        color: #c084fc !important;
+    }
+    [data-bs-theme="dark"] .border-purple-subtle {
+        border-color: rgba(147, 51, 234, 0.4) !important;
+    }
+
     .atk-scan-reader video {
         width: 100% !important;
         height: auto !important;

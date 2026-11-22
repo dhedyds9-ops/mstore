@@ -51,7 +51,8 @@
                                     <option value="">{{ __('Pilih Kategori (opsional)') }}</option>
                                     @php
                                         $dbCats = \App\Models\AtkProduct::whereNotNull('category')->where('category', '!=', '')->distinct()->pluck('category')->toArray();
-                                        $opts = array_values(array_unique(array_filter(array_merge(['ATK', 'JASA POTOCOPY', 'JASA TRANSFER BANK'], $dbCats))));
+                                        $mainCats = ['ATK', 'Jasa', 'Transfer', 'Konter'];
+                                        $opts = array_values(array_unique(array_filter(array_merge($mainCats, $dbCats))));
                                         sort($opts);
                                     @endphp
                                     @foreach($opts as $opt)

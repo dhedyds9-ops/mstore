@@ -204,7 +204,7 @@ class AtkProductController extends Controller implements HasMiddleware
             [
                 'SVC-FCP-001',
                 'Jasa Fotocopy A4 Hitam Putih',
-                'JASA POTOCOPY',
+                'Jasa',
                 300,
                 150,
                 9999,
@@ -212,6 +212,30 @@ class AtkProductController extends Controller implements HasMiddleware
                 'TIDAK',
                 'Lembar',
                 'Jasa fotocopy bolak balik / biasa',
+            ],
+            [
+                'KNT-CHG-001',
+                'Kabel Data Type-C Fast Charging 2.4A',
+                'Konter',
+                25000,
+                12000,
+                30,
+                5,
+                'YA',
+                'Pcs',
+                'Kabel charger Type-C panjang 1 meter',
+            ],
+            [
+                'TRF-ADM-001',
+                'Jasa Admin Transfer Bank',
+                'Transfer',
+                5000,
+                0,
+                9999,
+                0,
+                'TIDAK',
+                'Transaksi',
+                'Biaya jasa admin transfer uang',
             ],
         ];
 
@@ -513,7 +537,7 @@ class AtkProductController extends Controller implements HasMiddleware
 
     public function index(Request $request)
     {
-        $defaultCategories = ['ATK', 'JASA POTOCOPY', 'JASA TRANSFER BANK'];
+        $defaultCategories = ['ATK', 'Jasa', 'Transfer', 'Konter'];
         $dbCategories = AtkProduct::whereNotNull('category')
             ->where('category', '!=', '')
             ->distinct()

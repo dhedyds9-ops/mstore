@@ -79,8 +79,9 @@
                             <h2 class="atk-card-title m-0 fw-bold fs-6 text-dark">
                                 <i class="fas fa-th-large text-primary me-1"></i> Pilih Produk & Layanan
                             </h2>
-                            <div class="atk-filter-group p-1 bg-light rounded-pill border d-inline-flex gap-1">
-                                <button class="filter-btn active rounded-pill px-3 py-1 small fw-semibold" data-tab="products" type="button">Produk</button>
+                            <div class="atk-filter-group p-1 bg-light rounded-pill border d-inline-flex gap-1 flex-wrap">
+                                <button class="filter-btn active rounded-pill px-3 py-1 small fw-semibold" data-tab="products" type="button">ATK</button>
+                                <button class="filter-btn rounded-pill px-3 py-1 small fw-semibold" data-tab="konter" type="button"><i class="fas fa-mobile-alt me-1 text-primary"></i>Konter</button>
                                 <button class="filter-btn rounded-pill px-3 py-1 small fw-semibold" data-tab="services" type="button">Jasa</button>
                                 <button class="filter-btn rounded-pill px-3 py-1 small fw-semibold" data-tab="manual" type="button">Manual</button>
                                 <button class="filter-btn rounded-pill px-3 py-1 small fw-semibold" data-tab="bank" type="button">Bank</button>
@@ -106,7 +107,7 @@
                         <!-- Products Tab -->
                         <div id="productList" class="row g-2 g-md-3">
                             @foreach($products as $product)
-                            <div class="col-6 col-md-4 col-xl-3 product-item" data-name="{{ strtolower($product->name) }}" data-code="{{ strtolower($product->code) }}">
+                            <div class="col-6 col-md-4 col-xl-3 product-item" data-name="{{ strtolower($product->name) }}" data-code="{{ strtolower($product->code) }}" data-category="{{ strtolower($product->category ?: 'atk') }}">
                                 <div class="product-card product-card-product" data-fasttap data-id="{{ $product->id }}" data-name="{{ $product->name }}" data-price="{{ $product->price }}" data-type="product" data-stock="{{ $product->stock }}">
                                     <div class="product-image-wrap">
                                         @if($product->image)
@@ -806,6 +807,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Product search with instant Enter key support
+    let currentPosTab = 'products';
     const searchInputEl = document.getElementById('productSearch');
     if (searchInputEl) {
         searchInputEl.addEventListener('input', function(e) {
@@ -821,7 +823,19 @@ document.addEventListener('DOMContentLoaded', function () {
             document.querySelectorAll(activeList).forEach(item => {
                 const name = String(item.dataset.name || '').toLowerCase();
                 const code = String(item.dataset.code || '').toLowerCase();
-                item.style.display = (name.includes(search) || code.includes(search)) ? '' : 'none';
+                const cat = String(item.dataset.category || '').toLowerCase();
+
+                let matchesCategory = true;
+                if (activeList === '.product-item') {
+                    const isKonter = cat.includes('konter') || cat.includes('counter') || cat.includes('pulsa') || cat.includes('hp');
+                    if (currentPosTab === 'konter') {
+                        matchesCategory = isKonter;
+                    } else if (currentPosTab === 'products') {
+                        matchesCategory = !isKonter;
+                    }
+                }
+
+                item.style.display = (matchesCategory && (name.includes(search) || code.includes(search))) ? '' : 'none';
             });
         });
 
@@ -1143,27 +1157,39 @@ function switchTab(tab) {
     filterBtns.forEach(btn => btn.classList.remove('active'));
 
     if (tab === 'products') {
+        currentPosTab = 'products';
         pList.classList.remove('d-none');
         filterBtns.forEach(btn => { if (btn.dataset.tab === 'products') btn.classList.add('active'); });
+    } else if (tab === 'konter') {
+        currentPosTab = 'konter';
+        pList.classList.remove('d-none');
+        filterBtns.forEach(btn => { if (btn.dataset.tab === 'konter') btn.classList.add('active'); });
     } else if (tab === 'services') {
+        currentPosTab = 'services';
         sList.classList.remove('d-none');
         filterBtns.forEach(btn => { if (btn.dataset.tab === 'services') btn.classList.add('active'); });
     } else if (tab === 'manual') {
+        currentPosTab = 'manual';
         mPanel.classList.remove('d-none');
         filterBtns.forEach(btn => { if (btn.dataset.tab === 'manual') btn.classList.add('active'); });
     } else if (tab === 'bank') {
+        currentPosTab = 'bank';
         bPanel.classList.remove('d-none');
         filterBtns.forEach(btn => { if (btn.dataset.tab === 'bank') btn.classList.add('active'); });
     } else if (tab === 'cash-out') {
+        currentPosTab = 'cash-out';
         coPanel.classList.remove('d-none');
         filterBtns.forEach(btn => { if (btn.dataset.tab === 'cash-out') btn.classList.add('active'); });
     } else if (tab === 'top-up') {
+        currentPosTab = 'top-up';
         tuPanel.classList.remove('d-none');
         filterBtns.forEach(btn => { if (btn.dataset.tab === 'top-up') btn.classList.add('active'); });
     } else if (tab === 'ppob') {
+        currentPosTab = 'ppob';
         ppPanel.classList.remove('d-none');
         filterBtns.forEach(btn => { if (btn.dataset.tab === 'ppob') btn.classList.add('active'); });
     } else if (tab === 'customer-payments') {
+        currentPosTab = 'customer-payments';
         cpList.classList.remove('d-none');
         filterBtns.forEach(btn => { if (btn.dataset.tab === 'customer-payments') btn.classList.add('active'); });
     }

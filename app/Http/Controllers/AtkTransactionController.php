@@ -253,10 +253,10 @@ class AtkTransactionController extends Controller implements HasMiddleware
     {
         $products = AtkProduct::where('is_active', true)->where(function ($q) {
             $q->whereNull('category')
-              ->orWhereNotIn('category', ['JASA POTOCOPY', 'JASA TRANSFER BANK']);
+              ->orWhereNotIn('category', ['JASA POTOCOPY', 'JASA TRANSFER BANK', 'Jasa', 'Transfer']);
         })->where('stock', '>', 0)->orderBy('name')->get();
-        $services = AtkProduct::where('category', 'JASA POTOCOPY')->orderBy('name')->get();
-        $bankServices = AtkProduct::where('category', 'JASA TRANSFER BANK')->orderBy('name')->get();
+        $services = AtkProduct::whereIn('category', ['JASA POTOCOPY', 'Jasa'])->orderBy('name')->get();
+        $bankServices = AtkProduct::whereIn('category', ['JASA TRANSFER BANK', 'Transfer'])->orderBy('name')->get();
         $customers = Customer::orderBy('name')->get(['id', 'name', 'phone']);
         $coordinators = Coordinator::orderBy('name')->get(['id', 'name']);
         $investors = Investor::orderBy('name')->get(['id', 'name', 'coordinator_id']);
