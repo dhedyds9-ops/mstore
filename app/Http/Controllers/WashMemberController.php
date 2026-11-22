@@ -20,7 +20,7 @@ class WashMemberController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('permission:wash.member.view', only: ['index', 'show', 'levels', 'cardPdf']),
-            new Middleware('permission:wash.member.manage', only: ['store', 'update']),
+            new Middleware('permission:wash.member.manage', only: ['store', 'update', 'destroy']),
         ];
     }
 
@@ -173,6 +173,31 @@ class WashMemberController extends Controller implements HasMiddleware
         return redirect()
             ->route('wash.members.show', $member)
             ->with('success', 'Data member berhasil diperbarui.');
+    }
+
+    public function destroy(WashMember $member)
+    {
+        $number = $member->member_number;
+        $name = $member->name;
+
+        DB::transaction(function () use ($member) {
+            // Lepas asosiasi wash_member_id dari riwayat transaksi dan loyalty agar pencatatan kas/transaksi tetap utuh
+            \App\Models\WashTransaction::where('wash_member_id', $member->id)->update(['wash_member_id' => null]);
+            \App\Models\WashLoyaltyCounter::where('wash_member_id', $member->id)->update(['wash_member_id' => null]);
+            \App\Models\WashRewardVoucher::where('wash_member_id', $member->id)->update(['wash_member_id' => null]);
+
+            // Hapus data terkait member
+            $member->vehicles()->delete();
+            $member->card()->delete();
+            $member->subscriptions()->delete();
+            $member->pointTransactions()->delete();
+
+            $member->delete();
+        });
+
+        return redirect()
+            ->route('wash.members.index')
+            ->with('success', "Member {$number} ({$name}) berhasil dihapus.");
     }
 
     public function levels()

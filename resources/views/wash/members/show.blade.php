@@ -9,9 +9,20 @@
             <h4 class="mb-1">{{ $member->name }}</h4>
             <div class="text-muted">{{ $member->member_number }} | {{ $member->whatsapp }}</div>
         </div>
-        <div class="d-flex gap-2">
-            <a href="{{ route('wash.members.card', $member) }}" class="btn btn-primary">Unduh Kartu PDF</a>
-            <a href="{{ route('wash.members.index') }}" class="btn btn-outline-secondary">Kembali</a>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{{ route('wash.members.card', $member) }}" class="btn btn-primary">
+                <i class="fas fa-file-pdf me-1"></i> Unduh Kartu PDF
+            </a>
+            <a href="{{ route('wash.members.index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Kembali
+            </a>
+            <form action="{{ route('wash.members.destroy', $member) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus member {{ $member->member_number }} ({{ $member->name }})?\n\nTindakan ini tidak dapat dibatalkan.');">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-outline-danger">
+                    <i class="fas fa-trash-alt me-1"></i> Hapus Member
+                </button>
+            </form>
         </div>
     </div>
 

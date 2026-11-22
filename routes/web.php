@@ -685,6 +685,9 @@ Route::get('/webhooks/payment/return', [\App\Http\Controllers\PaymentController:
         Route::put('/members/{member}', [\App\Http\Controllers\WashMemberController::class, 'update'])
             ->middleware('permission:wash.member.manage')
             ->name('members.update');
+        Route::delete('/members/{member}', [\App\Http\Controllers\WashMemberController::class, 'destroy'])
+            ->middleware('permission:wash.member.manage')
+            ->name('members.destroy');
         Route::get('/members/{member}/card', [\App\Http\Controllers\WashMemberController::class, 'cardPdf'])
             ->middleware('permission:wash.member.view')
             ->name('members.card');

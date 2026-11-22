@@ -17,6 +17,19 @@
         </div>
     </div>
 
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+            <i class="fas fa-check-circle me-1"></i> {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+            <i class="fas fa-exclamation-circle me-1"></i> {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     <div class="card shadow-sm border-0 mb-3">
         <div class="card-body">
             <form method="GET" class="row g-2">
@@ -90,7 +103,18 @@
                                     <span class="badge bg-{{ $badge }}">{{ $label }}</span>
                                 </td>
                                 <td class="text-end">
-                                    <a href="{{ route('wash.members.show', $member) }}" class="btn btn-sm btn-outline-primary">Detail</a>
+                                    <div class="d-inline-flex gap-1">
+                                        <a href="{{ route('wash.members.show', $member) }}" class="btn btn-sm btn-outline-primary" title="Lihat Detail">
+                                            <i class="fas fa-eye me-1"></i> Detail
+                                        </a>
+                                        <form action="{{ route('wash.members.destroy', $member) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus member {{ $member->member_number }} ({{ $member->name }})?\n\nMember yang dihapus tidak dapat dipulihkan kembali.');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus Member">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
