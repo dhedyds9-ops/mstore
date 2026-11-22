@@ -80,8 +80,9 @@
                                 <i class="fas fa-th-large text-primary me-1"></i> Pilih Produk & Layanan
                             </h2>
                             <div class="atk-filter-group p-1 bg-light rounded-pill border d-inline-flex gap-1 flex-wrap">
-                                <button class="filter-btn active rounded-pill px-3 py-1 small fw-semibold" data-tab="products" type="button">ATK</button>
-                                <button class="filter-btn rounded-pill px-3 py-1 small fw-semibold" data-tab="konter" type="button"><i class="fas fa-mobile-alt me-1 text-primary"></i>Konter</button>
+                                <button class="filter-btn active rounded-pill px-3 py-1 small fw-semibold" data-tab="products" type="button">Semua Produk</button>
+                                <button class="filter-btn rounded-pill px-3 py-1 small fw-semibold" data-tab="atk" type="button"><i class="fas fa-pencil-ruler me-1 text-primary"></i>ATK</button>
+                                <button class="filter-btn rounded-pill px-3 py-1 small fw-semibold" data-tab="konter" type="button"><i class="fas fa-mobile-alt me-1 text-purple"></i>Konter</button>
                                 <button class="filter-btn rounded-pill px-3 py-1 small fw-semibold" data-tab="services" type="button">Jasa</button>
                                 <button class="filter-btn rounded-pill px-3 py-1 small fw-semibold" data-tab="manual" type="button">Manual</button>
                                 <button class="filter-btn rounded-pill px-3 py-1 small fw-semibold" data-tab="bank" type="button">Bank</button>
@@ -134,6 +135,16 @@
                                 </div>
                             </div>
                             @endforeach
+                            <div id="productEmptyFilterState" class="col-12 text-center py-5 d-none">
+                                <div class="p-4 bg-light rounded-4 border d-inline-block text-center shadow-sm" style="max-width: 420px;">
+                                    <i class="fas fa-box-open text-muted fs-1 mb-2 d-block" id="emptyFilterIcon"></i>
+                                    <h6 class="fw-bold text-dark mb-1" id="emptyFilterTitle">Tidak Ada Produk</h6>
+                                    <p class="text-muted small mb-3" id="emptyFilterDesc">Belum ada produk yang cocok dengan kategori ini.</p>
+                                    <a href="{{ route('atk.products.create') }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-plus me-1"></i> Tambah Produk Baru
+                                    </a>
+                                </div>
+                            </div>
                             @if($products->isEmpty())
                             <div class="col-12 text-center py-5">
                                 <p class="text-muted">Belum ada produk. <a href="{{ route('atk.products.create') }}">Tambah Produk</a></p>
@@ -807,36 +818,12 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Product search with instant Enter key support
-    let currentPosTab = 'products';
     const searchInputEl = document.getElementById('productSearch');
     if (searchInputEl) {
         searchInputEl.addEventListener('input', function(e) {
-            const search = e.target.value.toLowerCase();
-            let activeList = '.product-item';
-            if (!document.getElementById('serviceList').classList.contains('d-none')) {
-                activeList = '.service-item';
-            } else if (!document.getElementById('manualPanel').classList.contains('d-none')) {
-                return;
-            } else if (!document.getElementById('customerPaymentList').classList.contains('d-none')) {
-                return;
+            if (typeof window.applyPosProductFilter === 'function') {
+                window.applyPosProductFilter();
             }
-            document.querySelectorAll(activeList).forEach(item => {
-                const name = String(item.dataset.name || '').toLowerCase();
-                const code = String(item.dataset.code || '').toLowerCase();
-                const cat = String(item.dataset.category || '').toLowerCase();
-
-                let matchesCategory = true;
-                if (activeList === '.product-item') {
-                    const isKonter = cat.includes('konter') || cat.includes('counter') || cat.includes('pulsa') || cat.includes('hp');
-                    if (currentPosTab === 'konter') {
-                        matchesCategory = isKonter;
-                    } else if (currentPosTab === 'products') {
-                        matchesCategory = !isKonter;
-                    }
-                }
-
-                item.style.display = (matchesCategory && (name.includes(search) || code.includes(search))) ? '' : 'none';
-            });
         });
 
         searchInputEl.addEventListener('keydown', function(e) {
@@ -1134,7 +1121,79 @@ async function startAtkBarcodeScanner() {
     }, 280);
 }
 
+window.currentPosTab = 'products';
+
+window.applyPosProductFilter = function() {
+    const searchInput = document.getElementById('productSearch');
+    const search = (searchInput ? searchInput.value : '').toLowerCase().trim();
+    const activeTab = window.currentPosTab || 'products';
+
+    const sList = document.getElementById('serviceList');
+    if (sList && !sList.classList.contains('d-none')) {
+        document.querySelectorAll('.service-item').forEach(item => {
+            const name = String(item.dataset.name || '').toLowerCase();
+            const code = String(item.dataset.code || '').toLowerCase();
+            const show = !search || name.includes(search) || code.includes(search);
+            item.style.display = show ? '' : 'none';
+        });
+        return;
+    }
+
+    const pList = document.getElementById('productList');
+    if (pList && !pList.classList.contains('d-none')) {
+        let visibleCount = 0;
+        document.querySelectorAll('#productList .product-item').forEach(item => {
+            const name = String(item.dataset.name || '').toLowerCase();
+            const code = String(item.dataset.code || '').toLowerCase();
+            const cat = String(item.dataset.category || '').toLowerCase();
+
+            const isKonter = cat.includes('konter') || cat.includes('counter') || cat.includes('pulsa') || cat.includes('hp');
+
+            let matchesCategory = true;
+            if (activeTab === 'konter') {
+                matchesCategory = isKonter;
+            } else if (activeTab === 'atk') {
+                matchesCategory = !isKonter;
+            } else if (activeTab === 'products') {
+                matchesCategory = true; // Semua produk (ATK + Konter)
+            }
+
+            const matchesSearch = !search || name.includes(search) || code.includes(search);
+            const show = matchesCategory && matchesSearch;
+            item.style.display = show ? '' : 'none';
+            if (show) visibleCount++;
+        });
+
+        const emptyEl = document.getElementById('productEmptyFilterState');
+        const emptyTitle = document.getElementById('emptyFilterTitle');
+        const emptyDesc = document.getElementById('emptyFilterDesc');
+        const emptyIcon = document.getElementById('emptyFilterIcon');
+
+        if (emptyEl) {
+            if (visibleCount === 0) {
+                emptyEl.classList.remove('d-none');
+                if (activeTab === 'konter') {
+                    if (emptyIcon) emptyIcon.className = 'fas fa-mobile-alt text-primary fs-1 mb-2 d-block';
+                    if (emptyTitle) emptyTitle.textContent = 'Belum Ada Produk Konter';
+                    if (emptyDesc) emptyDesc.textContent = search ? 'Tidak ada produk konter yang cocok dengan kata kunci pencarian.' : 'Belum ada produk berstok dalam kategori Konter (aksesoris HP, pulsa, kuota, dsb).';
+                } else if (activeTab === 'atk') {
+                    if (emptyIcon) emptyIcon.className = 'fas fa-pencil-ruler text-primary fs-1 mb-2 d-block';
+                    if (emptyTitle) emptyTitle.textContent = 'Tidak Ada Produk ATK';
+                    if (emptyDesc) emptyDesc.textContent = search ? 'Tidak ada produk ATK yang cocok dengan kata kunci pencarian.' : 'Belum ada produk berstok dalam kategori ATK.';
+                } else {
+                    if (emptyIcon) emptyIcon.className = 'fas fa-search text-muted fs-1 mb-2 d-block';
+                    if (emptyTitle) emptyTitle.textContent = 'Produk Tidak Ditemukan';
+                    if (emptyDesc) emptyDesc.textContent = 'Tidak ada produk yang cocok dengan pencarian Anda.';
+                }
+            } else {
+                emptyEl.classList.add('d-none');
+            }
+        }
+    }
+};
+
 function switchTab(tab) {
+    window.currentPosTab = tab;
     const pList = document.getElementById('productList');
     const sList = document.getElementById('serviceList');
     const mPanel = document.getElementById('manualPanel');
@@ -1146,55 +1205,43 @@ function switchTab(tab) {
     const filterBtns = document.querySelectorAll('.atk-filter-group .filter-btn');
 
     // Reset all
-    pList.classList.add('d-none');
-    sList.classList.add('d-none');
-    mPanel.classList.add('d-none');
-    cpList.classList.add('d-none');
-    bPanel.classList.add('d-none');
-    coPanel.classList.add('d-none');
-    tuPanel.classList.add('d-none');
-    ppPanel.classList.add('d-none');
+    if (pList) pList.classList.add('d-none');
+    if (sList) sList.classList.add('d-none');
+    if (mPanel) mPanel.classList.add('d-none');
+    if (cpList) cpList.classList.add('d-none');
+    if (bPanel) bPanel.classList.add('d-none');
+    if (coPanel) coPanel.classList.add('d-none');
+    if (tuPanel) tuPanel.classList.add('d-none');
+    if (ppPanel) ppPanel.classList.add('d-none');
     filterBtns.forEach(btn => btn.classList.remove('active'));
 
-    if (tab === 'products') {
-        currentPosTab = 'products';
-        pList.classList.remove('d-none');
-        filterBtns.forEach(btn => { if (btn.dataset.tab === 'products') btn.classList.add('active'); });
-    } else if (tab === 'konter') {
-        currentPosTab = 'konter';
-        pList.classList.remove('d-none');
-        filterBtns.forEach(btn => { if (btn.dataset.tab === 'konter') btn.classList.add('active'); });
+    if (tab === 'products' || tab === 'atk' || tab === 'konter') {
+        if (pList) pList.classList.remove('d-none');
+        filterBtns.forEach(btn => { if (btn.dataset.tab === tab) btn.classList.add('active'); });
     } else if (tab === 'services') {
-        currentPosTab = 'services';
-        sList.classList.remove('d-none');
+        if (sList) sList.classList.remove('d-none');
         filterBtns.forEach(btn => { if (btn.dataset.tab === 'services') btn.classList.add('active'); });
     } else if (tab === 'manual') {
-        currentPosTab = 'manual';
-        mPanel.classList.remove('d-none');
+        if (mPanel) mPanel.classList.remove('d-none');
         filterBtns.forEach(btn => { if (btn.dataset.tab === 'manual') btn.classList.add('active'); });
     } else if (tab === 'bank') {
-        currentPosTab = 'bank';
-        bPanel.classList.remove('d-none');
+        if (bPanel) bPanel.classList.remove('d-none');
         filterBtns.forEach(btn => { if (btn.dataset.tab === 'bank') btn.classList.add('active'); });
     } else if (tab === 'cash-out') {
-        currentPosTab = 'cash-out';
-        coPanel.classList.remove('d-none');
+        if (coPanel) coPanel.classList.remove('d-none');
         filterBtns.forEach(btn => { if (btn.dataset.tab === 'cash-out') btn.classList.add('active'); });
     } else if (tab === 'top-up') {
-        currentPosTab = 'top-up';
-        tuPanel.classList.remove('d-none');
+        if (tuPanel) tuPanel.classList.remove('d-none');
         filterBtns.forEach(btn => { if (btn.dataset.tab === 'top-up') btn.classList.add('active'); });
     } else if (tab === 'ppob') {
-        currentPosTab = 'ppob';
-        ppPanel.classList.remove('d-none');
+        if (ppPanel) ppPanel.classList.remove('d-none');
         filterBtns.forEach(btn => { if (btn.dataset.tab === 'ppob') btn.classList.add('active'); });
     } else if (tab === 'customer-payments') {
-        currentPosTab = 'customer-payments';
-        cpList.classList.remove('d-none');
+        if (cpList) cpList.classList.remove('d-none');
         filterBtns.forEach(btn => { if (btn.dataset.tab === 'customer-payments') btn.classList.add('active'); });
     }
 
-    document.getElementById('productSearch').dispatchEvent(new Event('input'));
+    window.applyPosProductFilter();
     updatePengurusVisibility();
 }
 
