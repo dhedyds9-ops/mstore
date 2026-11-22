@@ -188,8 +188,9 @@
                             </div>
                         @endif
                         <form id="checkoutForm" class="checkout-form">
+                            <!-- Kendaraan: Merek & Plat Nomor -->
                             <div class="row g-2 mb-3">
-                                <div class="col-6">
+                                <div class="col-5">
                                     <label for="vehicle_brand" class="wash-field-label">Merek</label>
                                     <div class="position-relative">
                                         <input type="text" class="form-control wash-input" id="vehicle_brand_search" placeholder="Cari merek..." autocomplete="off">
@@ -206,102 +207,105 @@
                                                 @endforeach
                                             </optgroup>
                                         </select>
-                                        <div class="list-group position-absolute top-100 start-0 end-0 z-2 d-none" id="vehicle_brand_dropdown"></div>
+                                        <div class="list-group position-absolute top-100 start-0 end-0 z-2 d-none shadow-sm" id="vehicle_brand_dropdown"></div>
                                     </div>
                                 </div>
-                                <div class="col-6">
-                                    <label for="vehicle_plate" class="wash-field-label">Plat Nomor</label>
-                                    <input type="text" class="form-control wash-input text-uppercase" id="vehicle_plate" name="vehicle_plate" list="vehiclePlateOptions" placeholder="B 1234 ABC" autocomplete="off">
-                                    <datalist id="vehiclePlateOptions">
-                                        @foreach($knownVehiclePlates ?? [] as $plateOption)
-                                            <option value="{{ $plateOption['plate'] }}">
-                                                {{ $plateOption['plate'] }}@if(!empty($plateOption['brand'])) - {{ $plateOption['brand'] }}@endif
-                                            </option>
-                                        @endforeach
-                                    </datalist>
-                                </div>
-                                <div class="col-12 mt-1">
+                                <div class="col-7">
+                                    <label for="vehicle_plate" class="wash-field-label d-flex justify-content-between align-items-center">
+                                        <span>Plat Nomor</span>
+                                        <span class="text-muted fw-normal" style="font-size: 10px; text-transform: none;">Riwayat Otomatis</span>
+                                    </label>
                                     <div class="position-relative">
-                                        <input type="text" class="form-control form-control-sm wash-input" id="known_plate_search" placeholder="🔍 Cari dari riwayat plat tersimpan..." autocomplete="off">
-                                        <select class="form-select wash-input position-absolute top-100 start-0 end-0 z-1 d-none" id="known_plate">
-                                            <option value="">Pilih dari riwayat</option>
-                                            @foreach($knownVehiclePlates ?? [] as $plateOption)
-                                                <option value="{{ $plateOption['plate'] }}" data-brand="{{ $plateOption['brand'] }}">
-                                                    {{ $plateOption['plate'] }}@if(!empty($plateOption['brand'])) - {{ $plateOption['brand'] }}@endif
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        <div class="list-group position-absolute top-100 start-0 end-0 z-2 d-none shadow-sm" id="known_plate_dropdown" style="max-height: 180px; overflow-y: auto;"></div>
+                                        <input type="text" class="form-control wash-input text-uppercase fw-bold" id="vehicle_plate" name="vehicle_plate" placeholder="B 1234 ABC" autocomplete="off">
+                                        <div class="list-group position-absolute top-100 start-0 end-0 z-3 d-none shadow-sm" id="vehicle_plate_dropdown" style="max-height: 200px; overflow-y: auto;"></div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="mb-3">
-                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <label class="wash-field-label mb-0">
-                                        <i class="fas fa-id-card text-primary me-1"></i> Data Pelanggan / Member
-                                    </label>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 fw-semibold" id="btnOpenAddMemberModal" data-bs-toggle="modal" data-bs-target="#posAddMemberModal" style="font-size:11px; height:24px;">
-                                            <i class="fas fa-plus-circle me-1"></i>+ Member Baru
-                                        </button>
-                                        <span id="memberStatusBadge" class="badge bg-light text-secondary border">
-                                            👤 Pelanggan Umum
-                                        </span>
+                            <!-- Data Pelanggan & Member -->
+                            <div class="customer-section-box mb-3 p-2 rounded-3 border bg-light-subtle">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="d-flex align-items-center gap-1">
+                                        <i class="fas fa-id-card text-primary"></i>
+                                        <span class="wash-field-label mb-0 text-dark fw-bold">Pelanggan</span>
                                     </div>
+                                    <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 fw-semibold" id="btnOpenAddMemberModal" data-bs-toggle="modal" data-bs-target="#posAddMemberModal" style="font-size: 11px; height: 24px; border-radius: 6px;">
+                                        <i class="fas fa-user-plus me-1"></i>+ Member Baru
+                                    </button>
                                 </div>
 
-                                <!-- Cari Member Terdaftar -->
-                                <div class="position-relative mb-2">
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-white border-end-0 text-muted" style="height: 38px;">
-                                            <i class="fas fa-crown text-warning"></i>
-                                        </span>
-                                        <input type="text" class="form-control wash-input border-start-0" id="member_search" placeholder="Cari Member (Nama / No. HP / No. Member)..." autocomplete="off">
-                                        <button class="btn wash-secondary-btn" type="button" id="btnClearMember" title="Bukan Member / Reset" style="display:none; height: 38px;">
-                                            <i class="fas fa-times text-danger"></i>
-                                        </button>
-                                    </div>
-                                    <div class="list-group position-absolute top-100 start-0 end-0 z-3 shadow-sm d-none" id="member_search_dropdown" style="max-height: 220px; overflow-y: auto;"></div>
+                                <!-- Tab Switch: Pelanggan Umum vs Anggota Member -->
+                                <div class="btn-group w-100 mb-2" role="group">
+                                    <input type="radio" class="btn-check" name="customer_mode_toggle" id="modeCustomerUmum" value="umum" checked autocomplete="off">
+                                    <label class="btn btn-sm btn-outline-secondary py-1 fw-semibold" for="modeCustomerUmum" style="font-size: 11.5px;">
+                                        <i class="fas fa-user me-1"></i> Umum
+                                    </label>
+
+                                    <input type="radio" class="btn-check" name="customer_mode_toggle" id="modeCustomerMember" value="member" autocomplete="off">
+                                    <label class="btn btn-sm btn-outline-warning text-dark py-1 fw-semibold" for="modeCustomerMember" id="modeCustomerMemberLabel" style="font-size: 11.5px;">
+                                        <i class="fas fa-crown text-warning me-1"></i> Member
+                                    </label>
                                 </div>
+
                                 <input type="hidden" id="wash_member_id" name="wash_member_id" value="">
 
-                                <!-- Nomor HP & Cek Button -->
-                                <div class="d-flex gap-2 mb-2">
-                                    <input type="text" class="form-control wash-input" id="customer_phone" name="customer_phone" placeholder="Nomor WhatsApp / HP (0812...)">
-                                    <button class="btn wash-secondary-btn" type="button" id="btnCheckCustomer" title="Cek riwayat cuci & bonus">Cek</button>
+                                <!-- Mode 1: Pelanggan Umum -->
+                                <div id="panelCustomerUmum">
+                                    <div class="input-group mb-2">
+                                        <span class="input-group-text bg-white text-muted" style="height: 38px;">
+                                            <i class="fab fa-whatsapp text-success"></i>
+                                        </span>
+                                        <input type="text" class="form-control wash-input border-start-0" id="customer_phone" name="customer_phone" placeholder="No. WhatsApp / HP">
+                                        <button class="btn wash-secondary-btn" type="button" id="btnCheckCustomer" title="Cek riwayat cuci & bonus" style="height: 38px;">Cek</button>
+                                    </div>
+                                    <input type="text" class="form-control wash-input" id="customer_name" name="customer_name" placeholder="Nama Pelanggan (opsional)">
                                 </div>
 
-                                <!-- Nama Pelanggan -->
-                                <input type="text" class="form-control wash-input" id="customer_name" name="customer_name" placeholder="Nama Pelanggan">
-                                
-                                <!-- Member Info Card -->
-                                <div id="memberInfoCard" class="card border border-warning bg-light mt-2" style="display:none;">
-                                    <div class="card-body py-2 px-3">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <div>
-                                                <div class="fw-bold text-dark d-flex align-items-center gap-1">
-                                                    <i class="fas fa-crown text-warning"></i> <span id="memberInfoName">-</span>
-                                                </div>
-                                                <div class="small text-muted" id="memberInfoNumber">-</div>
-                                            </div>
-                                            <button type="button" class="btn btn-sm btn-link text-danger p-0 text-decoration-none" id="btnDetachMember" title="Lepas status member">
-                                                <i class="fas fa-times-circle"></i> Lepas
+                                <!-- Mode 2: Anggota Member -->
+                                <div id="panelCustomerMember" style="display: none;">
+                                    <!-- Search Input Member (aktif saat belum ada member terpilih) -->
+                                    <div class="position-relative mb-2" id="memberSearchBoxWrap">
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white border-end-0 text-muted" style="height: 38px;">
+                                                <i class="fas fa-crown text-warning"></i>
+                                            </span>
+                                            <input type="text" class="form-control wash-input border-start-0" id="member_search" placeholder="Cari nama, No. HP, No. Member..." autocomplete="off">
+                                            <button class="btn wash-secondary-btn" type="button" id="btnClearMember" title="Reset Member" style="display:none; height: 38px;">
+                                                <i class="fas fa-times text-danger"></i>
                                             </button>
                                         </div>
-                                        <div class="d-flex flex-wrap gap-2 small mt-2">
-                                            <span class="badge bg-primary" id="memberInfoLevel">Bronze Member</span>
-                                            <span class="badge bg-success" id="memberInfoDiscount">Diskon 0%</span>
-                                            <span class="badge bg-dark" id="memberInfoVisits">0 Kunjungan</span>
-                                        </div>
-                                        <div id="memberVehiclesWrap" class="mt-2 pt-2 border-top" style="display:none;">
-                                            <small class="text-muted d-block mb-1" style="font-size:11px;">Pilih Kendaraan Member:</small>
-                                            <div class="d-flex flex-wrap gap-1" id="memberVehiclesChips"></div>
+                                        <div class="list-group position-absolute top-100 start-0 end-0 z-3 shadow-sm d-none" id="member_search_dropdown" style="max-height: 220px; overflow-y: auto;"></div>
+                                    </div>
+
+                                    <!-- Member Info Card (aktif saat member terpilih) -->
+                                    <div id="memberInfoCard" class="card border border-warning bg-warning bg-opacity-10" style="display:none;">
+                                        <div class="card-body p-2">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <div class="fw-bold text-dark d-flex align-items-center gap-1">
+                                                        <i class="fas fa-crown text-warning"></i> <span id="memberInfoName">-</span>
+                                                    </div>
+                                                    <div class="small text-muted" id="memberInfoNumber">-</div>
+                                                </div>
+                                                <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2 fw-semibold" id="btnDetachMember" title="Lepas status member" style="font-size: 11px;">
+                                                    <i class="fas fa-times me-1"></i>Lepas
+                                                </button>
+                                            </div>
+                                            <div class="d-flex flex-wrap gap-1 small mt-2">
+                                                <span class="badge bg-primary" id="memberInfoLevel">Bronze Member</span>
+                                                <span class="badge bg-success" id="memberInfoDiscount">Diskon 0%</span>
+                                                <span class="badge bg-dark" id="memberInfoVisits">0 Kunjungan</span>
+                                            </div>
+                                            <div id="memberVehiclesWrap" class="mt-2 pt-2 border-top border-warning-subtle" style="display:none;">
+                                                <small class="text-muted d-block mb-1 fw-semibold" style="font-size:10.5px;">Kendaraan Terdaftar (Klik untuk isi):</small>
+                                                <div class="d-flex flex-wrap gap-1" id="memberVehiclesChips"></div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <small id="customerInfo" class="form-text mt-2 d-block"></small>
+                                <!-- Box Notifikasi Progres Loyalty / Cuci Gratis -->
+                                <div id="customerInfo" class="mt-2" style="display:none;"></div>
                             </div>
 
                             <div class="form-check mb-3 wash-inline-check">
@@ -758,39 +762,44 @@ document.addEventListener('DOMContentLoaded', function () {
             if (data.name && !nameInput.value) {
                 nameInput.value = data.name;
             }
-            let memberLine = '';
-            if (data.member_found) {
-                memberLine = `<br><span class="text-primary">Member ${data.member_level_name || 'Bronze Member'} | Diskon ${data.member_discount_percent || 0}% | Kunjungan ${data.member_total_visits || 0}</span>`;
+            if (data.member_found && (!currentMember || !currentMember.id)) {
+                setCustomerMode('member');
             }
-            let progressLine;
-            const mode = data.loyalty_mode || 'voucher';
             if (window.__washLoyalty.instantBonusEligible) {
-                if (mode === 'instant_discount') {
-                    progressLine = `<span class="fw-bold text-success">🎉 <u>GRATIS!</u> ${basis}: ${data.progress}/${data.target}. Bonus ${data.target}x cuci otomatis (1 layanan qty 1).</span>`;
-                } else {
-                    progressLine = `<span class="fw-bold text-success">🎉 <u>GRATIS!</u> ${basis}: ${data.progress}/${data.target}. Bonus ${data.target}x cuci: <b>VOUCHER</b> (1 layanan qty 1).</span>`;
-                }
-            } else if (mode === 'instant_discount') {
-                progressLine = `<span class="text-success">${basis}: ${data.progress}/${data.target}. Sisa ${data.remaining}x <b>GRATIS LANGSUNG</b>.</span>`;
+                info.style.display = 'block';
+                info.innerHTML = `
+                    <div class="alert alert-success py-1 px-2 mb-0 d-flex align-items-center gap-2 border-success" style="font-size:11.5px; border-radius: 8px;">
+                        <i class="fas fa-gift text-success fs-5"></i>
+                        <div><strong class="text-success">🎉 BONUS CUCI GRATIS TERSEDIA!</strong><br><span class="text-muted" style="font-size:11px;">Transaksi ke-${data.target} ini memenuhi syarat gratis.</span></div>
+                    </div>
+                `;
             } else {
-                progressLine = `<span class="text-success">${basis}: ${data.progress}/${data.target}. Sisa ${data.remaining}x <b>VOUCHER GRATIS</b>.</span>`;
+                info.style.display = 'block';
+                info.innerHTML = `
+                    <div class="alert alert-primary py-1 px-2 mb-0 d-flex justify-content-between align-items-center border-primary-subtle" style="font-size:11.5px; border-radius: 8px;">
+                        <div><i class="fas fa-car-side text-primary me-1"></i> Progres Cuci: <b>${data.progress} / ${data.target}</b></div>
+                        <span class="badge bg-primary text-white" style="font-size:10px;">Sisa ${data.remaining}x gratis</span>
+                    </div>
+                `;
             }
-            info.innerHTML = `${progressLine}${memberLine}`;
         } else {
-            let memberLine = '';
-            if (data.member_found) {
-                memberLine = `<br><span class="text-primary">Member ${data.member_level_name || 'Bronze Member'} | Diskon ${data.member_discount_percent || 0}% | Kunjungan ${data.member_total_visits || 0}</span>`;
+            if (data.member_found && (!currentMember || !currentMember.id)) {
+                setCustomerMode('member');
             } else if (!document.getElementById('wash_member_id')?.value) {
                 clearMember();
             }
-            const mode = data.loyalty_mode || 'voucher';
-            let kind;
-            if (mode === 'instant_discount') {
-                kind = `<b>CUCI GRATIS LANGSUNG</b> (tanpa voucher, di transaksi ke-${data.target})`;
+            const plateVal = (document.getElementById('vehicle_plate')?.value || '').trim();
+            if (plateVal) {
+                info.style.display = 'block';
+                info.innerHTML = `
+                    <div class="alert alert-light py-1 px-2 mb-0 text-muted border" style="font-size:11px; border-radius: 8px;">
+                        <i class="fas fa-info-circle text-info me-1"></i> Plat baru. Kumpulkan <b>${data.target || 11}x cuci</b> untuk dapat <b>1x GRATIS</b>.
+                    </div>
+                `;
             } else {
-                kind = `<b>VOUCHER GRATIS</b> (diterbitkan & langsung dipakai di transaksi ke-${data.target})`;
+                info.style.display = 'none';
+                info.innerHTML = '';
             }
-            info.innerHTML = `<span class="text-warning">Belum ada riwayat ${basis}. Mulai kumpulkan ${data.target} transaksi berbayar untuk dapat ${kind}.</span>${memberLine}`;
         }
         updateCartUI();
     }
@@ -854,78 +863,76 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    const knownPlateSelect = document.getElementById('known_plate');
-    const knownPlateSearchInput = document.getElementById('known_plate_search');
-    const knownPlateDropdown = document.getElementById('known_plate_dropdown');
-    const allKnownPlates = [];
-    // Collect all known plates from select
-    if (knownPlateSelect) {
-        Array.from(knownPlateSelect.querySelectorAll('option')).forEach(option => {
-            if (option.value) {
-                allKnownPlates.push({
-                    value: option.value,
-                    label: option.textContent,
-                    brand: option.dataset.brand
-                });
-            }
+    // Riwayat Plat Kendaraan Terintegrasi ke Input Plat Nomor
+    const vehiclePlateInput = document.getElementById('vehicle_plate');
+    const vehiclePlateDropdown = document.getElementById('vehicle_plate_dropdown');
+    const allKnownPlates = @json($knownVehiclePlates ?? []);
+
+    function renderVehiclePlateDropdown(filter = '') {
+        if (!vehiclePlateDropdown) return;
+        const filterClean = (filter || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+        const filteredPlates = allKnownPlates.filter(p => {
+            const plateStr = (p.plate || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+            const brandStr = (p.brand || '').toUpperCase();
+            return !filterClean || plateStr.includes(filterClean) || brandStr.includes(filterClean);
         });
 
-        function renderKnownPlateDropdown(filter = '') {
-            const filterLower = filter.toLowerCase();
-            const filteredPlates = allKnownPlates.filter(plate => 
-                plate.label.toLowerCase().includes(filterLower)
-            );
-            
-            if (filteredPlates.length === 0) {
-                knownPlateDropdown.innerHTML = '<div class="list-group-item text-muted">Tidak ditemukan</div>';
-                knownPlateDropdown.classList.remove('d-none');
-                return;
-            }
-
-            let html = '';
-            filteredPlates.forEach(plate => {
-                html += `<button type="button" class="list-group-item list-group-item-action known-plate-option" data-value="${plate.value}" data-brand="${plate.brand}">${plate.label}</button>`;
-            });
-
-            knownPlateDropdown.innerHTML = html;
-            knownPlateDropdown.classList.remove('d-none');
-
-            // Add click listeners to plate options
-            knownPlateDropdown.querySelectorAll('.known-plate-option').forEach(button => {
-                button.addEventListener('click', function() {
-                    const value = this.dataset.value;
-                    const brand = this.dataset.brand;
-                    knownPlateSelect.value = value;
-                    knownPlateSearchInput.value = this.textContent;
-                    const plateInput = document.getElementById('vehicle_plate');
-                    const brandSelect = document.getElementById('vehicle_brand');
-                    const brandSearchInputEl = document.getElementById('vehicle_brand_search');
-                    plateInput.value = value;
-                    if (brand) {
-                        brandSelect.value = brand;
-                        brandSearchInputEl.value = brand;
-                    }
-                    knownPlateDropdown.classList.add('d-none');
-                    document.getElementById('btnCheckCustomer').click();
-                });
-            });
+        if (filteredPlates.length === 0) {
+            vehiclePlateDropdown.innerHTML = '<div class="list-group-item text-muted small py-2 px-3">Riwayat plat tidak ditemukan</div>';
+            vehiclePlateDropdown.classList.remove('d-none');
+            return;
         }
 
-        knownPlateSearchInput.addEventListener('focus', function() {
-            renderKnownPlateDropdown(this.value);
+        let html = '';
+        filteredPlates.slice(0, 8).forEach(item => {
+            html += `
+                <button type="button" class="list-group-item list-group-item-action py-1 px-3 d-flex justify-content-between align-items-center vehicle-plate-opt" data-plate="${escapeHtml(item.plate)}" data-brand="${escapeHtml(item.brand || '')}">
+                    <span class="fw-bold text-dark font-monospace">${escapeHtml(item.plate)}</span>
+                    <small class="text-muted">${escapeHtml(item.brand || '')}</small>
+                </button>
+            `;
         });
 
-        knownPlateSearchInput.addEventListener('input', function() {
-            renderKnownPlateDropdown(this.value);
-        });
+        vehiclePlateDropdown.innerHTML = html;
+        vehiclePlateDropdown.classList.remove('d-none');
 
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!e.target.closest('#known_plate_search') && !e.target.closest('#known_plate_dropdown')) {
-                knownPlateDropdown.classList.add('d-none');
+        vehiclePlateDropdown.querySelectorAll('.vehicle-plate-opt').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const plate = this.dataset.plate;
+                const brand = this.dataset.brand;
+                if (vehiclePlateInput) vehiclePlateInput.value = plate;
+                if (brand) {
+                    const brandSelect = document.getElementById('vehicle_brand');
+                    const brandSearchInputEl = document.getElementById('vehicle_brand_search');
+                    if (brandSelect) brandSelect.value = brand;
+                    if (brandSearchInputEl) brandSearchInputEl.value = brand;
+                }
+                vehiclePlateDropdown.classList.add('d-none');
+                checkCustomerByFields({ silent: true });
+            });
+        });
+    }
+
+    if (vehiclePlateInput) {
+        vehiclePlateInput.addEventListener('focus', function() {
+            if (allKnownPlates && allKnownPlates.length > 0) {
+                renderVehiclePlateDropdown(this.value);
+            }
+        });
+        vehiclePlateInput.addEventListener('input', function() {
+            if (allKnownPlates && allKnownPlates.length > 0) {
+                renderVehiclePlateDropdown(this.value);
             }
         });
     }
+
+    // Close vehicle plate dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('#vehicle_plate') && !e.target.closest('#vehicle_plate_dropdown')) {
+            if (vehiclePlateDropdown) vehiclePlateDropdown.classList.add('d-none');
+        }
+    });
 
     // Searchable brand dropdown
     const brandSearchInput = document.getElementById('vehicle_brand_search');
@@ -1086,19 +1093,61 @@ document.addEventListener('DOMContentLoaded', function () {
     const btnClearMember = document.getElementById('btnClearMember');
     const btnDetachMember = document.getElementById('btnDetachMember');
     const washMemberIdInput = document.getElementById('wash_member_id');
-    const memberStatusBadge = document.getElementById('memberStatusBadge');
     const memberVehiclesWrap = document.getElementById('memberVehiclesWrap');
     const memberVehiclesChips = document.getElementById('memberVehiclesChips');
+    const modeCustomerUmum = document.getElementById('modeCustomerUmum');
+    const modeCustomerMember = document.getElementById('modeCustomerMember');
+    const panelCustomerUmum = document.getElementById('panelCustomerUmum');
+    const panelCustomerMember = document.getElementById('panelCustomerMember');
+    const memberSearchBoxWrap = document.getElementById('memberSearchBoxWrap');
+
+    function setCustomerMode(mode) {
+        if (mode === 'member') {
+            if (modeCustomerMember) modeCustomerMember.checked = true;
+            if (panelCustomerUmum) panelCustomerUmum.style.display = 'none';
+            if (panelCustomerMember) panelCustomerMember.style.display = 'block';
+            if (currentMember && currentMember.id) {
+                if (memberSearchBoxWrap) memberSearchBoxWrap.style.display = 'none';
+                const card = document.getElementById('memberInfoCard');
+                if (card) card.style.display = 'block';
+            } else {
+                if (memberSearchBoxWrap) memberSearchBoxWrap.style.display = 'block';
+                const card = document.getElementById('memberInfoCard');
+                if (card) card.style.display = 'none';
+                if (memberSearchInput) setTimeout(() => memberSearchInput.focus(), 50);
+            }
+        } else {
+            if (modeCustomerUmum) modeCustomerUmum.checked = true;
+            if (panelCustomerUmum) panelCustomerUmum.style.display = 'block';
+            if (panelCustomerMember) panelCustomerMember.style.display = 'none';
+        }
+    }
+
+    if (modeCustomerUmum) {
+        modeCustomerUmum.addEventListener('change', function() {
+            if (this.checked) {
+                if (currentMember && currentMember.id) {
+                    clearMember();
+                }
+                setCustomerMode('umum');
+            }
+        });
+    }
+
+    if (modeCustomerMember) {
+        modeCustomerMember.addEventListener('change', function() {
+            if (this.checked) {
+                setCustomerMode('member');
+            }
+        });
+    }
 
     function resetMemberInfo() {
         if (!washMemberIdInput || !washMemberIdInput.value) {
             currentMember = null;
             const card = document.getElementById('memberInfoCard');
             if (card) card.style.display = 'none';
-            if (memberStatusBadge) {
-                memberStatusBadge.className = 'badge bg-light text-secondary border';
-                memberStatusBadge.innerHTML = '👤 Pelanggan Umum';
-            }
+            if (memberSearchBoxWrap) memberSearchBoxWrap.style.display = 'block';
             if (memberVehiclesWrap) memberVehiclesWrap.style.display = 'none';
         }
     }
@@ -1128,16 +1177,12 @@ document.addEventListener('DOMContentLoaded', function () {
             washMemberIdInput.value = currentMember.id;
         }
 
-        if (memberSearchInput && currentMember.number) {
-            memberSearchInput.value = `[${currentMember.number}] ${currentMember.name}`;
-        }
+        const nameInput = document.getElementById('customer_name');
+        const phoneInput = document.getElementById('customer_phone');
+        if (nameInput && currentMember.name) nameInput.value = currentMember.name;
+        if (phoneInput && data.member_phone) phoneInput.value = data.member_phone;
 
-        if (btnClearMember) btnClearMember.style.display = 'block';
-
-        if (memberStatusBadge) {
-            memberStatusBadge.className = 'badge bg-warning text-dark border border-warning';
-            memberStatusBadge.innerHTML = `<i class="fas fa-crown me-1"></i> Member: ${escapeHtml(currentMember.levelName)}`;
-        }
+        setCustomerMode('member');
 
         const card = document.getElementById('memberInfoCard');
         const nameEl = document.getElementById('memberInfoName');
@@ -1147,11 +1192,13 @@ document.addEventListener('DOMContentLoaded', function () {
         const visitsEl = document.getElementById('memberInfoVisits');
 
         if (nameEl) nameEl.textContent = currentMember.name || '-';
-        if (numberEl) numberEl.textContent = currentMember.number || '-';
+        if (numberEl) numberEl.textContent = currentMember.number ? (currentMember.number + (data.member_phone ? ' • ' + data.member_phone : '')) : '-';
         if (levelEl) levelEl.textContent = currentMember.levelName;
         if (discountEl) discountEl.textContent = 'Diskon ' + currentMember.discountPercent + '%';
         if (visitsEl) visitsEl.textContent = currentMember.totalVisits + ' Kunjungan';
-        if (card) card.style.display = '';
+        
+        if (memberSearchBoxWrap) memberSearchBoxWrap.style.display = 'none';
+        if (card) card.style.display = 'block';
 
         // Handle vehicles
         if (memberVehiclesWrap && memberVehiclesChips && currentMember.vehicles.length > 0) {
@@ -1160,8 +1207,9 @@ document.addEventListener('DOMContentLoaded', function () {
             currentMember.vehicles.forEach((veh, idx) => {
                 const btn = document.createElement('button');
                 btn.type = 'button';
-                btn.className = 'btn btn-sm btn-outline-primary py-0 px-2' + (idx === 0 ? ' active' : '');
-                btn.innerHTML = `<i class="fas fa-car me-1"></i> ${escapeHtml(veh.plate)} ${veh.brand ? '(' + escapeHtml(veh.brand) + ')' : ''}`;
+                btn.className = 'btn btn-sm btn-outline-warning text-dark py-0 px-2 fw-semibold' + (idx === 0 ? ' active' : '');
+                btn.style.fontSize = '11px';
+                btn.innerHTML = `<i class="fas fa-car me-1 text-primary"></i> ${escapeHtml(veh.plate)} ${veh.brand ? '<span class="text-muted">(' + escapeHtml(veh.brand) + ')</span>' : ''}`;
                 btn.addEventListener('click', function() {
                     memberVehiclesChips.querySelectorAll('button').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
@@ -1232,13 +1280,9 @@ document.addEventListener('DOMContentLoaded', function () {
         if (washMemberIdInput) washMemberIdInput.value = '';
         if (memberSearchInput) memberSearchInput.value = '';
         if (btnClearMember) btnClearMember.style.display = 'none';
-        if (memberStatusBadge) {
-            memberStatusBadge.className = 'badge bg-light text-secondary border';
-            memberStatusBadge.innerHTML = '👤 Pelanggan Umum';
-        }
         const card = document.getElementById('memberInfoCard');
         if (card) card.style.display = 'none';
-        const memberVehiclesWrap = document.getElementById('memberVehiclesWrap');
+        if (memberSearchBoxWrap) memberSearchBoxWrap.style.display = 'block';
         if (memberVehiclesWrap) memberVehiclesWrap.style.display = 'none';
         updateCartUI();
     }
@@ -1624,9 +1668,8 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('vehicle_brand_search').value = "";
         document.getElementById('vehicle_brand_dropdown').classList.add('d-none');
         document.getElementById('vehicle_plate').value = "";
-        document.getElementById('known_plate').value = "";
-        document.getElementById('known_plate_search').value = "";
-        document.getElementById('known_plate_dropdown').classList.add('d-none');
+        const vehiclePlateDropdownEl = document.getElementById('vehicle_plate_dropdown');
+        if (vehiclePlateDropdownEl) vehiclePlateDropdownEl.classList.add('d-none');
         document.getElementById('customer_name').value = "";
         document.getElementById('customer_phone').value = "";
         const sendWhatsapp = document.getElementById('send_whatsapp');
@@ -1635,7 +1678,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         document.getElementById('cash_amount').value = "";
         document.getElementById('changeAmount').textContent = "Rp 0";
-        document.getElementById('customerInfo').innerHTML = "";
+        const customerInfoEl = document.getElementById('customerInfo');
+        if (customerInfoEl) {
+            customerInfoEl.innerHTML = "";
+            customerInfoEl.style.display = 'none';
+        }
         document.getElementById('voucherSection').style.display = 'none';
         document.getElementById('use_voucher').checked = false;
         const voucherCodeEl = document.getElementById('voucher_code');
@@ -1650,6 +1697,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (saveLaterRadio) saveLaterRadio.checked = false;
         if (skipAutoRedeemInput) skipAutoRedeemInput.value = '0';
         clearMember();
+        setCustomerMode('umum');
         
         resetServiceSelection();
 
@@ -2195,10 +2243,13 @@ document.addEventListener('DOMContentLoaded', function () {
         height: 100%;
         border: 1px solid #e2e8f0;
         border-radius: 1rem;
-        padding: 0.8rem;
+        padding: 0.85rem;
         transition: border-color 0.2s ease, box-shadow 0.2s ease;
         cursor: pointer;
         background: #fff;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
     }
 
     .service-card:hover {
@@ -2312,9 +2363,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     .service-rule-picker .form-select {
         border-radius: 0.6rem;
-        font-size: 0.76rem;
-        padding-top: 0.3rem;
-        padding-bottom: 0.3rem;
+        font-size: 0.74rem;
+        font-weight: 500;
+        padding-top: 0.32rem;
+        padding-bottom: 0.32rem;
+        padding-right: 1.5rem;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
     }
 
     .service-rule-mobile-options {
@@ -2355,19 +2411,19 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     .service-meta {
-        margin-top: 0.6rem;
+        margin-top: auto;
+        padding-top: 0.6rem;
         display: flex;
-        align-items: flex-start;
-        justify-content: flex-start;
+        align-items: center;
+        justify-content: space-between;
         flex-wrap: wrap;
-        gap: 0.5rem;
+        gap: 0.4rem;
     }
 
     .service-price {
-        font-size: 0.9rem;
-        font-weight: 700;
+        font-size: 0.95rem;
+        font-weight: 800;
         color: #2563eb;
-        width: 100%;
         line-height: 1.2;
     }
 
@@ -3057,7 +3113,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     #vehicle_brand_dropdown,
-    #known_plate_dropdown {
+    #vehicle_plate_dropdown {
         background: white;
         border: 1px solid #dee2e6;
         border-radius: 0.7rem;
@@ -3067,13 +3123,13 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     #vehicle_brand_dropdown .list-group-item,
-    #known_plate_dropdown .list-group-item {
+    #vehicle_plate_dropdown .list-group-item {
         padding: 0.5rem 1rem;
         font-size: 0.9rem;
     }
 
     [data-bs-theme="dark"] #vehicle_brand_dropdown,
-    [data-bs-theme="dark"] #known_plate_dropdown {
+    [data-bs-theme="dark"] #vehicle_plate_dropdown {
         background: #0f172a;
         border-color: #334155;
         color: #e2e8f0;
@@ -3086,7 +3142,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     [data-bs-theme="dark"] #vehicle_brand_dropdown .list-group-item-action:hover,
-    [data-bs-theme="dark"] #known_plate_dropdown .list-group-item-action:hover {
+    [data-bs-theme="dark"] #vehicle_plate_dropdown .list-group-item-action:hover {
         background: #334155;
     }
 </style>
