@@ -136,10 +136,24 @@ class WashEmployeeController extends Controller
                 ->whereIn('name', ['karyawan-wash', 'kasir-wash', 'employee'])
                 ->value('id');
 
+            $rawEmail = trim((string) ($validated['email'] ?? ''));
+            if ($rawEmail !== '') {
+                $email = $rawEmail;
+            } else {
+                $cleanBase = \Illuminate\Support\Str::slug($validated['username'], '_');
+                $candidate = ($cleanBase ?: 'wash_user') . '@mstore.local';
+                $idx = 1;
+                while (User::query()->where('email', $candidate)->exists()) {
+                    $candidate = ($cleanBase ?: 'wash_user') . '_' . $idx . '@mstore.local';
+                    $idx++;
+                }
+                $email = $candidate;
+            }
+
             $user = User::create([
                 'name' => $validated['name'],
                 'username' => $validated['username'],
-                'email' => $validated['email'] ?? null,
+                'email' => $email,
                 'phone' => $validated['phone'] ?? null,
                 'password' => $validated['password'],
                 'role_id' => $roleId,

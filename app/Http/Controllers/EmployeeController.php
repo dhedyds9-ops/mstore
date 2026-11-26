@@ -753,15 +753,15 @@ class EmployeeController extends Controller implements HasMiddleware
         $userId = $id ? Employee::find($id)?->user_id : null;
 
         $rules = [
-            'full_name' => ['required', 'string', 'max:255', Rule::unique('employees', 'full_name')->ignore($id)],
-            'user_id' => ['nullable', 'exists:users,id', Rule::unique('employees', 'user_id')->ignore($id)],
+            'full_name' => ['required', 'string', 'max:255', Rule::unique('employees', 'full_name')->ignore($id)->whereNull('deleted_at')],
+            'user_id' => ['nullable', 'exists:users,id', Rule::unique('employees', 'user_id')->ignore($id)->whereNull('deleted_at')],
             'wash_employee_id' => ['nullable', 'exists:wash_employees,id'],
             'date_of_birth' => ['nullable', 'date'],
             'gender' => ['nullable', Rule::in(['Laki-laki', 'Perempuan'])],
             'address' => ['nullable', 'string'],
             'phone' => ['required', 'string', 'max:30'],
             'email' => ['nullable', 'email', 'max:255'],
-            'nik' => ['nullable', 'string', 'max:32', Rule::unique('employees', 'nik')->ignore($id)],
+            'nik' => ['nullable', 'string', 'max:32', Rule::unique('employees', 'nik')->ignore($id)->whereNull('deleted_at')],
             'position' => ['required', 'string', 'max:255'],
             'department' => ['nullable', 'string', 'max:255'],
             'join_date' => ['nullable', 'date'],
@@ -776,7 +776,7 @@ class EmployeeController extends Controller implements HasMiddleware
             'bank_name' => ['nullable', 'string', 'max:255'],
             'bank_account_number' => ['nullable', 'string', 'max:255'],
             'bank_account_name' => ['nullable', 'string', 'max:255'],
-            'attendance_card_code' => ['nullable', 'string', 'max:255', Rule::unique('employees', 'attendance_card_code')->ignore($id)],
+            'attendance_card_code' => ['nullable', 'string', 'max:255', Rule::unique('employees', 'attendance_card_code')->ignore($id)->whereNull('deleted_at')],
             'document' => ['nullable', 'file', 'mimes:pdf,doc,docx', 'max:2048'],
             'id_card_photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'id_card_photo_base64' => ['nullable', 'string'],
@@ -792,8 +792,12 @@ class EmployeeController extends Controller implements HasMiddleware
         }
 
         $messages = [
-            'full_name.unique' => 'Nama karyawan ini sudah terdaftar di sistem.',
-            'nik.unique' => 'Nomor KTP/NIK ini sudah terdaftar di sistem.',
+            'full_name.unique' => __('Nama lengkap karyawan ini sudah terdaftar di sistem.'),
+            'nik.unique' => __('Nomor KTP/NIK ini sudah terdaftar di sistem.'),
+            'user_id.unique' => __('Akun login pengguna ini sudah ditautkan ke karyawan lain.'),
+            'user_id.exists' => __('Akun pengguna yang dipilih tidak ditemukan.'),
+            'username.unique' => __('Username login ini sudah digunakan oleh akun lain.'),
+            'attendance_card_code.unique' => __('Kode kartu absensi / ID card ini sudah digunakan.'),
         ];
 
         return $request->validate($rules, $messages);
@@ -839,6 +843,9 @@ class EmployeeController extends Controller implements HasMiddleware
 
     private function employeeUsers(?int $excludeEmployeeId = null)
     {
+        $currentEmployee = $excludeEmployeeId ? Employee::find($excludeEmployeeId) : null;
+        $currentUserId = $currentEmployee?->user_id;
+
         $linkedUserIds = Employee::query()
             ->when($excludeEmployeeId, fn ($q) => $q->where('id', '!=', $excludeEmployeeId))
             ->whereNotNull('user_id')
@@ -847,8 +854,13 @@ class EmployeeController extends Controller implements HasMiddleware
 
         return User::query()
             ->with('role')
-            ->whereHas('role', function ($query) {
-                $query->whereIn('name', $this->employeeSyncService->allowedRoles());
+            ->where(function ($query) use ($currentUserId) {
+                $query->whereHas('role', function ($rq) {
+                    $rq->whereIn('name', $this->employeeSyncService->allowedRoles());
+                });
+                if ($currentUserId) {
+                    $query->orWhere('id', $currentUserId);
+                }
             })
             ->whereNotIn('id', $linkedUserIds)
             ->orderBy('name')

@@ -389,10 +389,24 @@ class UserController extends Controller implements HasMiddleware
             $username = $this->buildUsernameFromName($validated['name'], $validated['email'] ?? null);
         }
 
+        $rawEmail = trim((string) ($validated['email'] ?? ''));
+        if ($rawEmail !== '') {
+            $email = $rawEmail;
+        } else {
+            $cleanBase = \Illuminate\Support\Str::slug($username, '_');
+            $candidate = ($cleanBase ?: 'user') . '@mstore.local';
+            $idx = 1;
+            while (User::query()->where('email', $candidate)->exists()) {
+                $candidate = ($cleanBase ?: 'user') . '_' . $idx . '@mstore.local';
+                $idx++;
+            }
+            $email = $candidate;
+        }
+
         $createData = [
             'name' => $validated['name'],
             'job_title' => $jobTitle ?: null,
-            'email' => $validated['email'] ?? null,
+            'email' => $email,
             'username' => $username,
             'radius_username' => $validated['radius_username'] ?? null,
             'password' => \Illuminate\Support\Facades\Hash::make('Password123!'),
@@ -531,10 +545,27 @@ class UserController extends Controller implements HasMiddleware
             $username = $this->buildUsernameFromName($validated['name'], $validated['email'] ?? null, (int) $user->id);
         }
 
+        $rawEmail = trim((string) ($validated['email'] ?? ''));
+        if ($rawEmail !== '') {
+            $email = $rawEmail;
+        } else {
+            $email = $user->email;
+            if (! $email) {
+                $cleanBase = \Illuminate\Support\Str::slug($username, '_');
+                $candidate = ($cleanBase ?: 'user') . '@mstore.local';
+                $idx = 1;
+                while (User::query()->where('email', $candidate)->where('id', '!=', $user->id)->exists()) {
+                    $candidate = ($cleanBase ?: 'user') . '_' . $idx . '@mstore.local';
+                    $idx++;
+                }
+                $email = $candidate;
+            }
+        }
+
         $updateData = [
             'name' => $validated['name'],
             'job_title' => $validated['job_title'] ?? null,
-            'email' => $validated['email'] ?? null,
+            'email' => $email,
             'username' => $username,
             'role_id' => $validated['role_id'],
             'company_id' => $validated['company_id'],

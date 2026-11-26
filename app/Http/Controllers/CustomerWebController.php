@@ -550,6 +550,9 @@ class CustomerWebController extends Controller implements HasMiddleware
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
         ], [
+            'user_id.unique' => 'Akun pengguna ini sudah ditautkan ke pelanggan lain.',
+            'username.unique' => 'Username portal pelanggan ini sudah digunakan.',
+            'email.unique' => 'Email ini sudah digunakan oleh akun lain.',
             'password.min' => 'Password portal pelanggan minimal :min karakter (sekarang 6).',
             'password.confirmed' => 'Konfirmasi Password tidak cocok dengan Password.',
         ]);
