@@ -847,9 +847,8 @@ class WashTransactionController extends Controller implements HasMiddleware
                         $stockItem->decrement('current_stock', $item['quantity']);
                         
                         // Create stock movement record
-                        WashStockMovement::create([
+                        $movementData = [
                             'wash_stock_item_id' => $stockItem->id,
-                            'transaction_id' => $transaction->id,
                             'movement_type' => 'out',
                             'quantity' => $item['quantity'],
                             'unit_price' => $stockItem->last_buy_price,
@@ -857,7 +856,13 @@ class WashTransactionController extends Controller implements HasMiddleware
                             'movement_date' => now()->toDateString(),
                             'notes' => 'Penjualan: ' . $item['service_name'],
                             'user_id' => Auth::id(),
-                        ]);
+                        ];
+
+                        if (\Illuminate\Support\Facades\Schema::hasColumn('wash_stock_movements', 'wash_transaction_id')) {
+                            $movementData['wash_transaction_id'] = $transaction->id;
+                        }
+
+                        WashStockMovement::create($movementData);
                     }
                 }
             }

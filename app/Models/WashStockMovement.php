@@ -10,6 +10,7 @@ class WashStockMovement extends Model
     protected $fillable = [
         'wash_stock_item_id',
         'transaction_id',
+        'wash_transaction_id',
         'movement_type',
         'quantity',
         'unit_price',
@@ -34,5 +35,10 @@ class WashStockMovement extends Model
     public function transaction(): BelongsTo
     {
         return $this->belongsTo(Transaction::class);
+    }
+
+    public function washTransaction(): BelongsTo
+    {
+        return $this->belongsTo(WashTransaction::class, 'wash_transaction_id');
     }
 }
