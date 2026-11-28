@@ -202,7 +202,8 @@
                         <th style="min-width: 140px;" class="py-3 text-end">{{ __('Harga Satuan / Total') }}</th>
                         <th style="min-width: 140px;" class="py-3 text-center">{{ __('Stok Fisik') }}</th>
                         <th style="min-width: 150px;" class="py-3">{{ __('Supplier / Faktur') }}</th>
-                        <th style="min-width: 180px;" class="py-3 pe-4">{{ __('Petugas & Catatan') }}</th>
+                        <th style="min-width: 180px;" class="py-3">{{ __('Petugas & Catatan') }}</th>
+                        <th style="min-width: 110px;" class="py-3 text-center pe-4">{{ __('Aksi') }}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y">
@@ -273,20 +274,38 @@
                                 <span class="text-muted small">-</span>
                             @endif
                         </td>
-                        <td class="pe-4">
+                        <td>
                             <div class="text-muted small">
                                 <i class="fa-solid fa-user me-1 text-secondary"></i>{{ $m->user?->name ?: 'Sistem' }}
                             </div>
                             @if($m->notes)
-                                <div class="text-dark small text-truncate" style="max-width: 220px;" title="{{ $m->notes }}">
+                                <div class="text-dark small text-truncate" style="max-width: 200px;" title="{{ $m->notes }}">
                                     {{ $m->notes }}
                                 </div>
+                            @endif
+                        </td>
+                        <td class="pe-4 text-center">
+                            @if(Auth::user()->hasPermission('atk.manage'))
+                                @if($m->type === 'in')
+                                    <div class="d-inline-flex align-items-center gap-1">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary px-2 py-1" data-bs-toggle="modal" data-bs-target="#editMovementModal{{ $m->id }}" title="{{ __('Edit Informasi (Faktur/Supplier/Catatan)') }}">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger px-2 py-1" data-bs-toggle="modal" data-bs-target="#cancelMovementModal{{ $m->id }}" title="{{ __('Batalkan & Hapus Barang Masuk') }}">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </div>
+                                @else
+                                    <span class="text-muted small">-</span>
+                                @endif
+                            @else
+                                <span class="text-muted small">-</span>
                             @endif
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" class="text-center py-5">
+                        <td colspan="9" class="text-center py-5">
                             <div class="text-muted">
                                 <i class="fa-solid fa-boxes-packing fs-1 text-secondary-subtle mb-3 d-block"></i>
                                 <h6 class="fw-bold text-dark mb-1">{{ __('Belum Ada Riwayat Mutasi / Barang Masuk') }}</h6>
@@ -316,5 +335,146 @@
         </div>
         @endif
     </div>
+
+    {{-- Modals Edit & Batalkan / Hapus Barang Masuk --}}
+    @if(Auth::user()->hasPermission('atk.manage'))
+        @foreach($movements as $m)
+            @if($m->type === 'in')
+                {{-- Modal Edit Informasi --}}
+                <div class="modal fade" id="editMovementModal{{ $m->id }}" tabindex="-1" aria-labelledby="editMovementModalLabel{{ $m->id }}" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 shadow-lg rounded-4">
+                            <div class="modal-header border-bottom px-4 py-3 bg-light rounded-top-4">
+                                <h5 class="modal-title fs-6 fw-bold text-dark d-flex align-items-center gap-2" id="editMovementModalLabel{{ $m->id }}">
+                                    <i class="fa-solid fa-pen-to-square text-primary"></i>
+                                    <span>{{ __('Edit Informasi Barang Masuk') }}</span>
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form action="{{ route('atk.stock-movements.update', $m->id) }}" method="POST">
+                                @csrf
+                                @method('PUT')
+                                <div class="modal-body p-4">
+                                    <div class="p-3 bg-light rounded-3 border mb-3">
+                                        <div class="small text-muted">{{ __('Produk') }}:</div>
+                                        <div class="fw-bold text-dark">{{ $m->product?->name ?? 'Produk' }}</div>
+                                        <div class="d-flex justify-content-between mt-2 pt-2 border-top small">
+                                            <span class="text-muted">{{ __('Jumlah Masuk') }}: <strong class="text-success">+{{ $m->quantity }} {{ $m->product?->unit ?: 'Pcs' }}</strong></span>
+                                            <span class="text-muted">{{ __('Total Biaya') }}: <strong class="text-dark">Rp {{ number_format($m->total_cost, 0, ',', '.') }}</strong></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-semibold">{{ __('Tanggal Masuk') }}</label>
+                                        <input type="date" name="movement_date" class="form-control" value="{{ $m->created_at ? $m->created_at->format('Y-m-d') : today()->toDateString() }}">
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-semibold">{{ __('Supplier') }}</label>
+                                        <select name="supplier_id" class="form-select">
+                                            <option value="">{{ __('-- Pilih Supplier --') }}</option>
+                                            @foreach($suppliers as $sup)
+                                                <option value="{{ $sup->id }}" {{ (string)$m->supplier_id === (string)$sup->id ? 'selected' : '' }}>
+                                                    {{ $sup->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-semibold">{{ __('Atau Ketik Supplier Baru') }}</label>
+                                        <input type="text" name="supplier_name" class="form-control" placeholder="{{ __('Nama supplier baru (opsional)...') }}">
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-semibold">{{ __('Nomor Faktur / Nota') }}</label>
+                                        <input type="text" name="invoice_number" class="form-control" value="{{ $m->invoice_number }}" placeholder="{{ __('Contoh: INV-2026/001') }}">
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-semibold">{{ __('Catatan') }}</label>
+                                        <textarea name="notes" class="form-control" rows="2" placeholder="{{ __('Keterangan mutasi...') }}">{{ $m->notes }}</textarea>
+                                    </div>
+
+                                    <div class="alert alert-info py-2 px-3 small rounded-3 mb-0">
+                                        <i class="fa-solid fa-circle-info me-1"></i>
+                                        {{ __('Untuk mengubah jumlah Qty atau Harga Beli, silakan gunakan tombol Batalkan & Hapus lalu input ulang agar stok fisik dan mutasi kas toko tetap sinkron.') }}
+                                    </div>
+                                </div>
+                                <div class="modal-footer bg-light px-4 py-3 rounded-bottom-4 border-top">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">{{ __('Batal') }}</button>
+                                    <button type="submit" class="btn btn-sm btn-primary px-3 shadow-sm">
+                                        <i class="fa-solid fa-floppy-disk me-1"></i>{{ __('Simpan Perubahan') }}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Modal Batalkan / Hapus --}}
+                <div class="modal fade" id="cancelMovementModal{{ $m->id }}" tabindex="-1" aria-labelledby="cancelMovementModalLabel{{ $m->id }}" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 shadow-lg rounded-4">
+                            <div class="modal-header border-bottom px-4 py-3 bg-danger-subtle rounded-top-4">
+                                <h5 class="modal-title fs-6 fw-bold text-danger d-flex align-items-center gap-2" id="cancelMovementModalLabel{{ $m->id }}">
+                                    <i class="fa-solid fa-triangle-exclamation"></i>
+                                    <span>{{ __('Batalkan & Hapus Barang Masuk') }}</span>
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form action="{{ route('atk.stock-movements.destroy', $m->id) }}" method="POST">
+                                @csrf
+                                @method('DELETE')
+                                <div class="modal-body p-4">
+                                    <p class="text-dark mb-3">
+                                        {{ __('Apakah Anda yakin ingin membatalkan transaksi barang masuk ini?') }}
+                                    </p>
+
+                                    <div class="p-3 bg-light rounded-3 border mb-3">
+                                        <div class="d-flex justify-content-between mb-1.5">
+                                            <span class="text-muted small">{{ __('Produk') }}:</span>
+                                            <span class="fw-bold text-dark">{{ $m->product?->name ?? 'Produk' }}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-1.5">
+                                            <span class="text-muted small">{{ __('Jumlah Dibatalkan') }}:</span>
+                                            <span class="fw-bold text-danger">-{{ number_format($m->quantity, 0, ',', '.') }} {{ $m->product?->unit ?: 'Pcs' }}</span>
+                                        </div>
+                                        @if($m->total_cost > 0)
+                                        <div class="d-flex justify-content-between mb-1.5">
+                                            <span class="text-muted small">{{ __('Total Nilai Pembelian') }}:</span>
+                                            <span class="fw-bold text-dark">Rp {{ number_format($m->total_cost, 0, ',', '.') }}</span>
+                                        </div>
+                                        @endif
+                                        <div class="d-flex justify-content-between">
+                                            <span class="text-muted small">{{ __('Tanggal Masuk') }}:</span>
+                                            <span class="text-dark small">{{ $m->created_at ? $m->created_at->format('d/m/Y H:i') : '-' }}</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="alert alert-warning py-2.5 px-3 small rounded-3 mb-0">
+                                        <div class="fw-semibold mb-1"><i class="fa-solid fa-circle-exclamation me-1"></i>{{ __('Dampak Rollback Otomatis:') }}</div>
+                                        <ul class="ps-3 mb-0 small">
+                                            <li>{{ __('Stok produk di sistem akan otomatis dikurangi kembali sejumlah') }} <strong>-{{ $m->quantity }} {{ $m->product?->unit ?: 'Pcs' }}</strong>.</li>
+                                            @if($m->total_cost > 0)
+                                            <li>{{ __('Jika pembelian dicatat memotong kas toko, saldo Kas Utama akan otomatis dikembalikan sebesar') }} <strong>Rp {{ number_format($m->total_cost, 0, ',', '.') }}</strong>.</li>
+                                            @endif
+                                            <li>{{ __('Data mutasi masuk ini akan dihapus dari riwayat.') }}</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="modal-footer bg-light px-4 py-3 rounded-bottom-4 border-top">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">{{ __('Batal / Kembali') }}</button>
+                                    <button type="submit" class="btn btn-sm btn-danger px-3 shadow-sm">
+                                        <i class="fa-solid fa-trash-can me-1"></i>{{ __('Ya, Batalkan & Hapus') }}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            @endif
+        @endforeach
+    @endif
 </div>
 @endsection

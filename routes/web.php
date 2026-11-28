@@ -968,7 +968,7 @@ Route::get('/webhooks/payment/return', [\App\Http\Controllers\PaymentController:
         
         // Stock Movements / Barang Masuk Routes
         Route::get('stock-movements/export', [\App\Http\Controllers\AtkStockMovementController::class, 'export'])->name('stock-movements.export');
-        Route::resource('stock-movements', \App\Http\Controllers\AtkStockMovementController::class)->only(['index', 'create', 'store']);
+        Route::resource('stock-movements', \App\Http\Controllers\AtkStockMovementController::class)->only(['index', 'create', 'store', 'update', 'destroy']);
         
         // Cash Register Routes
         Route::get('/cash-registers', [\App\Http\Controllers\AtkCashRegisterController::class, 'index'])->name('cash-registers.index')->middleware('permission:atk.manage');

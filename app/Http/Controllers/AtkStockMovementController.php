@@ -24,7 +24,7 @@ class AtkStockMovementController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('permission:atk.view', only: ['index', 'export']),
-            new Middleware('permission:atk.manage', only: ['create', 'store', 'destroy']),
+            new Middleware('permission:atk.manage', only: ['create', 'store', 'update', 'destroy']),
         ];
     }
 
@@ -223,6 +223,11 @@ class AtkStockMovementController extends Controller implements HasMiddleware
                         );
                     } catch (\Throwable $e) {}
                 }
+
+                // Tautkan id expense ke mutasi stok masuk
+                $movement->reference_type = 'transaction';
+                $movement->reference_id = $expense->id;
+                $movement->save();
             }
 
             $successMsg = "Stok masuk berhasil dicatat! {$product->name} bertambah +{$quantity} " . ($product->unit ?: 'Pcs') . " (Stok fisik saat ini: {$after} " . ($product->unit ?: 'Pcs') . ").";
@@ -232,6 +237,134 @@ class AtkStockMovementController extends Controller implements HasMiddleware
             }
 
             return redirect()->route('atk.stock-movements.index')->with('success', $successMsg);
+        });
+    }
+
+    public function update(Request $request, AtkStockMovement $stockMovement)
+    {
+        $validated = $request->validate([
+            'supplier_id' => 'nullable',
+            'supplier_name' => 'nullable|string|max:255',
+            'invoice_number' => 'nullable|string|max:100',
+            'notes' => 'nullable|string|max:500',
+            'movement_date' => 'nullable|date',
+        ]);
+
+        $supplierId = ! empty($validated['supplier_id']) ? (int) $validated['supplier_id'] : null;
+        if (empty($supplierId) && ! empty($validated['supplier_name'])) {
+            try {
+                $sup = AtkSupplier::firstOrCreate(['name' => trim($validated['supplier_name'])]);
+                $supplierId = $sup->id;
+            } catch (\Throwable $e) {}
+        }
+
+        $stockMovement->supplier_id = $supplierId;
+        $stockMovement->invoice_number = $validated['invoice_number'] ?? null;
+        $stockMovement->notes = $validated['notes'] ?? null;
+
+        if (! empty($validated['movement_date'])) {
+            $movementTime = $stockMovement->created_at ? $stockMovement->created_at->format('H:i:s') : now()->format('H:i:s');
+            $stockMovement->created_at = Carbon::parse($validated['movement_date'])->setTimeFromTimeString($movementTime);
+        }
+
+        $stockMovement->save();
+
+        return redirect()->back()->with('success', 'Data mutasi barang masuk berhasil diperbarui.');
+    }
+
+    public function destroy(Request $request, AtkStockMovement $stockMovement)
+    {
+        if ($stockMovement->type !== 'in') {
+            return redirect()->back()->with('error', 'Hanya data Barang Masuk yang dapat dibatalkan melalui menu ini.');
+        }
+
+        return DB::transaction(function () use ($stockMovement) {
+            $product = AtkProduct::lockForUpdate()->find($stockMovement->atk_product_id);
+            $qty = (int) $stockMovement->quantity;
+
+            if ($product) {
+                $currentStock = (int) ($product->stock ?? 0);
+                if ($currentStock < $qty) {
+                    return redirect()->back()->with('error', "Gagal membatalkan: Sisa stok saat ini ({$currentStock}) lebih kecil dari jumlah masuk yang ingin dibatalkan ({$qty}). Sebagian barang mungkin sudah terjual di POS. Harap lakukan penyesuaian stok manual.");
+                }
+
+                $newStock = $currentStock - $qty;
+                $product->stock = $newStock;
+                $product->current_stock = $newStock;
+                $product->save();
+            }
+
+            // Rollback Kas jika ada transaksi pengeluaran kas toko terkait
+            $expense = null;
+            if ($stockMovement->reference_type === 'transaction' && $stockMovement->reference_id) {
+                $expense = Transaction::find($stockMovement->reference_id);
+            } elseif ($stockMovement->total_cost > 0) {
+                // Fallback pencarian transaksi kas lama jika reference_id belum terikat
+                $expense = Transaction::where('type', 'expense')
+                    ->where('category', 'Pembelian Stok ATK')
+                    ->where('amount', $stockMovement->total_cost)
+                    ->whereDate('transaction_date', $stockMovement->created_at ? $stockMovement->created_at->toDateString() : now()->toDateString())
+                    ->latest()
+                    ->first();
+            }
+
+            $refundAmount = 0;
+            if ($expense) {
+                $refundAmount = (float) $expense->amount;
+                $cash = Cash::where('name', 'Kas Utama')->first() ?? Cash::first();
+                if ($cash) {
+                    $cashBalanceBefore = (float) $cash->balance;
+                    $cash->balance = $cashBalanceBefore + $refundAmount;
+                    $cash->save();
+
+                    // Catat mutasi pengembalian dana kas
+                    AtkCashMovement::create([
+                        'atk_cash_register_id' => null,
+                        'movement_type' => 'income',
+                        'amount' => $refundAmount,
+                        'balance_before' => $cashBalanceBefore,
+                        'balance_after' => $cash->balance,
+                        'reference_type' => 'transaction_cancel',
+                        'reference_id' => $expense->id,
+                        'description' => "Pengembalian dana batal barang masuk: {$stockMovement->notes}",
+                        'created_by' => Auth::id(),
+                    ]);
+                }
+
+                // Jurnal pembalik akuntansi jika ada
+                if (! empty($expense->reference_number)) {
+                    $expAccId = Account::where('code', '6004')->value('id');
+                    $cashAccId = Account::where('code', '1001')->value('id');
+                    if ($expAccId && $cashAccId) {
+                        try {
+                            $poster = app(AccountingPoster::class);
+                            $poster->post(
+                                'REV-' . $expense->reference_number,
+                                now()->toDateString(),
+                                "Batal Pembelian Stok ATK (Ref: {$expense->reference_number})",
+                                [
+                                    ['account_id' => $cashAccId, 'debit' => $refundAmount, 'credit' => 0, 'unit' => 'ATK'],
+                                    ['account_id' => $expAccId, 'debit' => 0, 'credit' => $refundAmount, 'unit' => 'ATK'],
+                                ],
+                                null,
+                                false
+                            );
+                        } catch (\Throwable $e) {}
+                    }
+                }
+
+                $expense->delete();
+            }
+
+            $productName = $product ? $product->name : 'Produk';
+            $stockMovement->delete();
+
+            $msg = "Transaksi barang masuk berhasil dibatalkan dan dihapus! Stok {$productName} telah dikurangi kembali -{$qty}.";
+            if ($refundAmount > 0) {
+                $msg .= " Saldo Kas Toko telah dikembalikan sebesar Rp " . number_format($refundAmount, 0, ',', '.') . ".";
+            }
+
+            return redirect()->route('atk.stock-movements.index')->with('success', $msg);
         });
     }
 
